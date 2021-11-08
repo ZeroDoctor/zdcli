@@ -14,29 +14,30 @@ import (
 // TODO: add std input func to command info
 
 type Info struct {
-	command string
-	args    []string
-	dir     string
-	ctx     context.Context
-	verbose bool
+	Command string
+	Args    []string
+	Dir     string
+	Ctx     context.Context
+	Verbose bool
 
-	outBufSize int
-	outBuffer  string
-	outFunc    func(msg []byte) (int, error)
+	OutBufSize int
+	OutBuffer  string
+	OutFunc    func(msg []byte) (int, error)
 
-	errBufSize int
-	errBuffer  string
-	errFunc    func(msg []byte) (int, error)
+	ErrBufSize int
+	ErrBuffer  string
+	ErrFunc    func(msg []byte) (int, error)
 }
 
 func (c Info) parseCommand() (string, []string) {
-	split := strings.Split(c.command, " ")
-	return split[0], append(split[1:], c.args...)
+	split := strings.Split(c.Command, " ")
+	return split[0], append(split[1:], c.Args...)
 }
 
 func readWithFunc(bufferSize int, fn func(msg []byte) (int, error), reader io.ReadCloser, wg *sync.WaitGroup, errChan chan error) {
 	wg.Add(1)
 	defer wg.Done()
+	defer reader.Close()
 	if fn == nil {
 		return
 	}
@@ -46,7 +47,6 @@ func readWithFunc(bufferSize int, fn func(msg []byte) (int, error), reader io.Re
 		_, err := reader.Read(buffer)
 		if err != nil {
 			fmt.Printf("closing stream: [error=%s]\n", err)
-			reader.Close()
 			return
 		}
 		if len(buffer) > 0 {
@@ -56,30 +56,31 @@ func readWithFunc(bufferSize int, fn func(msg []byte) (int, error), reader io.Re
 				return
 			}
 		}
+		buffer = make([]byte, bufferSize)
 	}
 }
 
 func Exec(info *Info) error {
-	hasFunc := info.outFunc != nil || info.errFunc != nil
+	hasFunc := info.OutFunc != nil || info.ErrFunc != nil
 
-	if info.dir == "" {
-		info.dir = "."
+	if info.Dir == "" {
+		info.Dir = "."
 	}
-	if info.outBufSize <= 0 {
-		info.outBufSize = 1
+	if info.OutBufSize <= 0 {
+		info.OutBufSize = 1
 	}
-	if info.errBufSize <= 0 {
-		info.errBufSize = 1
+	if info.ErrBufSize <= 0 {
+		info.ErrBufSize = 1
 	}
-	if info.ctx == nil {
-		info.ctx = context.Background()
+	if info.Ctx == nil {
+		info.Ctx = context.Background()
 	}
 
 	command, args := info.parseCommand()
-	cmd := exec.CommandContext(info.ctx, command, args...)
-	cmd.Dir = info.dir
-	if info.verbose {
-		fmt.Printf("exec:\n\t[command=%s]\n\t[args=%v]\n\t[dir=%s]\n", command, args, info.dir)
+	cmd := exec.CommandContext(info.Ctx, command, args...)
+	cmd.Dir = info.Dir
+	if info.Verbose {
+		fmt.Printf("exec:\n\t[command=%s]\n\t[args=%v]\n\t[dir=%s]\n", command, args, info.Dir)
 	}
 
 	var errChan chan error
@@ -90,29 +91,29 @@ func Exec(info *Info) error {
 	}
 
 	var wg sync.WaitGroup
-	if info.outFunc != nil {
+	if info.OutFunc != nil {
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
 			return fmt.Errorf("failed to get stdout pipe %s", err.Error())
 		}
-		go readWithFunc(info.outBufSize, info.outFunc, stdout, &wg, errChan)
+		go readWithFunc(info.OutBufSize, info.OutFunc, stdout, &wg, errChan)
 	}
 
-	if info.errFunc != nil {
+	if info.ErrFunc != nil {
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
 			return fmt.Errorf("failed to get stderr pipe %s", err.Error())
 		}
-		go readWithFunc(info.errBufSize, info.errFunc, stderr, &wg, errChan)
+		go readWithFunc(info.ErrBufSize, info.ErrFunc, stderr, &wg, errChan)
 	}
 
 	var bout bytes.Buffer
-	if info.outFunc == nil {
+	if info.OutFunc == nil {
 		cmd.Stdout = &bout
 	}
 
 	var berr bytes.Buffer
-	if info.errFunc == nil {
+	if info.ErrFunc == nil {
 		cmd.Stderr = &berr
 	}
 
@@ -144,8 +145,8 @@ func Exec(info *Info) error {
 	}
 	err = cmd.Wait()
 
-	info.outBuffer = bout.String()
-	info.errBuffer = berr.String()
+	info.OutBuffer = bout.String()
+	info.ErrBuffer = berr.String()
 
 	return err
 }
