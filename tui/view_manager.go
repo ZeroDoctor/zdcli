@@ -8,8 +8,8 @@ import (
 
 type View interface {
 	Layout(*gocui.Gui) error
-	PrintView(*gocui.Gui, *sync.WaitGroup)
-	Display(*gocui.Gui, string)
+	PrintView()
+	Display(string)
 	Name() string
 	Channel() chan interface{}
 }
@@ -18,18 +18,21 @@ type ViewManager struct {
 	currentView int
 	views       []View
 	wg          sync.WaitGroup
+
+	shutdown chan bool
 }
 
 func NewViewManager(g *gocui.Gui, views []View, currentView int) *ViewManager {
 	vm := &ViewManager{
 		views:       views,
 		currentView: currentView,
+		shutdown:    make(chan bool),
 	}
 
 	for _, view := range views {
 		vm.wg.Add(1)
 		go func(view View, wg *sync.WaitGroup) {
-			view.PrintView(g, wg)
+			view.PrintView()
 			wg.Done()
 		}(view, &vm.wg)
 	}
@@ -38,16 +41,22 @@ func NewViewManager(g *gocui.Gui, views []View, currentView int) *ViewManager {
 }
 
 func (vm *ViewManager) Layout(g *gocui.Gui) error {
+	// TODO: handle view collisions
 	for _, view := range vm.views {
 		if err := view.Layout(g); err != nil {
-			panic(err)
+			return err
 		}
+	}
+
+	if _, err := g.SetCurrentView(vm.views[vm.currentView].Name()); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (vm *ViewManager) Wait() { vm.wg.Wait() }
+func (vm *ViewManager) Wait()               { vm.wg.Wait() }
+func (vm *ViewManager) Shutdown() chan bool { return vm.shutdown }
 
 func (vm *ViewManager) SetCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.View, error) {
 	if _, err := g.SetCurrentView(name); err != nil {
@@ -57,10 +66,44 @@ func (vm *ViewManager) SetCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.Vi
 	return g.SetViewOnTop(name)
 }
 
+func (vm ViewManager) SendView(viewname string, data interface{}) error {
+	for _, view := range vm.views {
+		if view.Name() == viewname {
+			view.Channel() <- data
+
+			return nil
+		}
+	}
+
+	return gocui.ErrUnknownView
+}
+
+func (vm *ViewManager) AddView(g *gocui.Gui, view View) error {
+	vm.wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		view.PrintView()
+		wg.Done()
+	}(&vm.wg)
+
+	if err := view.Layout(g); err != nil {
+		return err
+	}
+
+	if _, err := vm.SetCurrentViewOnTop(g, view.Name()); err != nil {
+		return err
+	}
+
+	vm.views = append(vm.views, view)
+
+	return nil
+}
+
+// TODO: remove view
+
 // # for keybindings
 
 func (vm *ViewManager) NextView(g *gocui.Gui, v *gocui.View) error {
-	nextIndex := vm.currentView % len(vm.views)
+	nextIndex := (vm.currentView + 1) % len(vm.views)
 
 	name := vm.views[nextIndex].Name()
 
@@ -74,6 +117,7 @@ func (vm *ViewManager) NextView(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (vm *ViewManager) Quit(g *gocui.Gui, v *gocui.View) error {
+	close(vm.shutdown)
 	for _, view := range vm.views {
 		close(view.Channel())
 	}

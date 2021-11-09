@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 
 	"context"
 )
@@ -18,7 +19,6 @@ type Info struct {
 	Args    []string
 	Dir     string
 	Ctx     context.Context
-	Verbose bool
 
 	OutBufSize int
 	OutBuffer  string
@@ -34,21 +34,40 @@ func (c Info) parseCommand() (string, []string) {
 	return split[0], append(split[1:], c.Args...)
 }
 
+func removeEmpty(buffer []byte) []byte {
+	first := -1
+
+	var result []byte
+	for i, b := range buffer {
+		if b != 0 && first == -1 {
+			first = i
+		}
+
+		if b == 0 && first != -1 {
+			result = append(result, buffer[first:i]...)
+			first = -1
+		}
+	}
+
+	if first != -1 {
+		result = append(result, buffer[first:]...)
+	}
+
+	return result
+}
+
 func readWithFunc(bufferSize int, fn func(msg []byte) (int, error), reader io.ReadCloser, wg *sync.WaitGroup, errChan chan error) {
-	wg.Add(1)
 	defer wg.Done()
 	defer reader.Close()
-	if fn == nil {
-		return
-	}
 
 	buffer := make([]byte, bufferSize)
 	for {
 		_, err := reader.Read(buffer)
 		if err != nil {
-			fmt.Printf("closing stream: [error=%s]\n", err)
+			errChan <- fmt.Errorf("closing stream: [error=%s]", err)
 			return
 		}
+		buffer = removeEmpty(buffer)
 		if len(buffer) > 0 {
 			_, err := fn(buffer)
 			if err != nil {
@@ -61,16 +80,16 @@ func readWithFunc(bufferSize int, fn func(msg []byte) (int, error), reader io.Re
 }
 
 func Exec(info *Info) error {
-	hasFunc := info.OutFunc != nil || info.ErrFunc != nil
+	hasFunc := info.ErrFunc != nil || info.OutFunc != nil
 
 	if info.Dir == "" {
 		info.Dir = "."
 	}
-	if info.OutBufSize <= 0 {
-		info.OutBufSize = 1
-	}
 	if info.ErrBufSize <= 0 {
 		info.ErrBufSize = 1
+	}
+	if info.OutBufSize <= 0 {
+		info.OutBufSize = 1
 	}
 	if info.Ctx == nil {
 		info.Ctx = context.Background()
@@ -79,9 +98,6 @@ func Exec(info *Info) error {
 	command, args := info.parseCommand()
 	cmd := exec.CommandContext(info.Ctx, command, args...)
 	cmd.Dir = info.Dir
-	if info.Verbose {
-		fmt.Printf("exec:\n\t[command=%s]\n\t[args=%v]\n\t[dir=%s]\n", command, args, info.Dir)
-	}
 
 	var errChan chan error
 	var doneChan chan bool
@@ -91,30 +107,32 @@ func Exec(info *Info) error {
 	}
 
 	var wg sync.WaitGroup
-	if info.OutFunc != nil {
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			return fmt.Errorf("failed to get stdout pipe %s", err.Error())
-		}
-		go readWithFunc(info.OutBufSize, info.OutFunc, stdout, &wg, errChan)
-	}
-
 	if info.ErrFunc != nil {
 		stderr, err := cmd.StderrPipe()
 		if err != nil {
 			return fmt.Errorf("failed to get stderr pipe %s", err.Error())
 		}
+		wg.Add(1)
 		go readWithFunc(info.ErrBufSize, info.ErrFunc, stderr, &wg, errChan)
 	}
 
-	var bout bytes.Buffer
-	if info.OutFunc == nil {
-		cmd.Stdout = &bout
+	if info.OutFunc != nil {
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			return fmt.Errorf("failed to get stdout pipe %s", err.Error())
+		}
+		wg.Add(1)
+		go readWithFunc(info.OutBufSize, info.OutFunc, stdout, &wg, errChan)
 	}
 
 	var berr bytes.Buffer
 	if info.ErrFunc == nil {
 		cmd.Stderr = &berr
+	}
+
+	var bout bytes.Buffer
+	if info.OutFunc == nil {
+		cmd.Stdout = &bout
 	}
 
 	err := cmd.Start()
@@ -125,6 +143,7 @@ func Exec(info *Info) error {
 	if hasFunc {
 		go func() {
 			wg.Wait()
+			time.Sleep(500 * time.Millisecond)
 			close(doneChan)
 		}()
 
@@ -143,10 +162,18 @@ func Exec(info *Info) error {
 		}
 		close(errChan)
 	}
+	if err != nil {
+		cmd.Wait()
+		info.ErrBuffer = berr.String()
+		info.OutBuffer = bout.String()
+
+		return err
+	}
+
 	err = cmd.Wait()
 
-	info.OutBuffer = bout.String()
 	info.ErrBuffer = berr.String()
+	info.OutBuffer = bout.String()
 
 	return err
 }

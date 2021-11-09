@@ -1,6 +1,10 @@
 package tui
 
-import "github.com/awesome-gocui/gocui"
+import (
+	"log"
+
+	"github.com/awesome-gocui/gocui"
+)
 
 type KeyManager struct {
 	g *gocui.Gui
@@ -9,10 +13,10 @@ type KeyManager struct {
 func NewKeyManager(g *gocui.Gui, vm *ViewManager) *KeyManager {
 	km := &KeyManager{g: g}
 	if err := km.SetKey("", gocui.KeyCtrlC, gocui.ModNone, vm.Quit); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	if err := km.SetKey("", gocui.KeyTab, gocui.ModNone, vm.NextView); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	return km
 }
@@ -20,6 +24,8 @@ func NewKeyManager(g *gocui.Gui, vm *ViewManager) *KeyManager {
 func (km *KeyManager) SetKey(viewname string, key interface{}, mod gocui.Modifier, handler func(*gocui.Gui, *gocui.View) error) error {
 	return km.g.SetKeybinding(viewname, key, mod, handler)
 }
+
+// TODO: improve up and down movement in context of text wrapping
 
 func UpScreen(g *gocui.Gui, v *gocui.View) error {
 	if v == nil {
@@ -35,7 +41,11 @@ func UpScreen(g *gocui.Gui, v *gocui.View) error {
 
 	ox, oy := v.Origin()
 	if oy > 0 {
-		if err := v.SetOrigin(ox, oy-1); err != nil {
+		var w int
+		if w, _ = HasWrapped(cy, v); w > 0 {
+			w -= 1
+		}
+		if err := v.SetOrigin(ox, oy-1-w); err != nil {
 			return err
 		}
 	}
@@ -48,16 +58,23 @@ func DownScreen(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
+	lines := v.ViewLinesHeight()
 	cx, cy := v.Cursor()
-	if err := v.SetCursor(cx, cy+1); err != nil {
-		return err
-	}
-
-	_, rows := v.Size()
-	if cy > rows {
-		ox, oy := v.Origin()
-		if err := v.SetOrigin(ox, oy+1); err != nil {
+	if cy < lines-1 {
+		if err := v.SetCursor(cx, cy+1); err != nil {
 			return err
+		}
+
+		_, y := v.Size()
+		if cy+1 > y-1 && cy+1 < lines-1 {
+			var w int
+			if w, _ = HasWrapped(cy, v); w > 0 {
+				w -= 1
+			}
+			ox, oy := v.Origin()
+			if err := v.SetOrigin(ox, oy+1+w); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -65,3 +82,11 @@ func DownScreen(g *gocui.Gui, v *gocui.View) error {
 }
 
 // TODO: LeftScreen and RightScreen
+
+// # helper function
+
+func HasWrapped(y int, v *gocui.View) (int, error) {
+	_, maxY := v.Size()
+	line, err := v.Line(y)
+	return (len(line) / (maxY + 1)), err
+}

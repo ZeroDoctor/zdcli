@@ -1,25 +1,49 @@
 package main
 
 import (
-	"fmt"
+	"errors"
+	"log"
 
-	"github.com/zerodoctor/zdcli/command"
+	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/logger"
+	"github.com/zerodoctor/zdcli/tui"
+	"github.com/zerodoctor/zdcli/view"
 )
-
-func PrintCommand(msg []byte) (int, error) {
-	fmt.Printf("%s", string(msg))
-	return len(msg), nil
-}
 
 func main() {
 	logger.Init()
-	info := command.Info{
-		Command: "curl https://www.zerodoc.dev",
 
-		OutBufSize: 100,
-		OutFunc:    PrintCommand,
+	g, err := gocui.NewGui(gocui.OutputNormal, false)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
-	command.Exec(&info)
+	g.Mouse = false
+	g.Cursor = true
+	g.Highlight = true
+	g.SelFgColor = gocui.ColorCyan
+
+	vm := tui.NewViewManager(g, []tui.View{view.NewHeader(g), view.NewScreen(g)}, 1)
+
+	g.SetManagerFunc(vm.Layout)
+	km := tui.NewKeyManager(g, vm)
+
+	km.SetKey("screen", rune('j'), gocui.ModNone, tui.DownScreen)
+	km.SetKey("screen", rune('k'), gocui.ModNone, tui.UpScreen)
+
+	go update(g, vm)
+
+	err = vm.AddView(g, view.NewCommand(g, ExecCommand(vm)))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
+		log.Fatal(err)
+	}
+
+	vm.Wait()
+	g.Close()
+
+	logger.Print("Good Bye.")
 }
