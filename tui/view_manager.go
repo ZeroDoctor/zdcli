@@ -2,6 +2,7 @@ package tui
 
 import (
 	"sync"
+	"time"
 
 	"github.com/awesome-gocui/gocui"
 )
@@ -69,7 +70,19 @@ func (vm *ViewManager) SetCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.Vi
 func (vm ViewManager) SendView(viewname string, data interface{}) error {
 	for _, view := range vm.views {
 		if view.Name() == viewname {
-			view.Channel() <- data
+			retryCount := 3
+			count := 0
+
+		loop:
+			for count < retryCount {
+				select {
+				case view.Channel() <- data:
+					break loop
+				default:
+					time.Sleep(100 * time.Millisecond)
+					count++
+				}
+			}
 
 			return nil
 		}

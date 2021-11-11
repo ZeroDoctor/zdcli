@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/awesome-gocui/gocui"
@@ -37,21 +36,20 @@ func ExecCommand(vm *tui.ViewManager) func(*gocui.View) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		vm.SendView("screen", view.NewData("msg", fmt.Sprintf("running %v %v...\n", com, len(com))))
 		info := command.Info{
 			Command: com,
 			Ctx:     ctx,
 
 			OutBufSize: 100,
 			OutFunc: func(msg []byte) (int, error) {
-				vm.SendView("screen", view.NewData("msg", string(msg)))
+				vm.SendView("screen", view.NewData("msg", string(msg)+"\n"))
 				return len(msg), nil
 			},
 		}
 
 		err := command.Exec(&info)
 		if err != nil {
-			vm.SendView("screen", view.NewData("msg", err.Error()))
+			vm.SendView("screen", view.NewData("msg", err.Error()+"\n"))
 		}
 
 		vm.SendView("header", view.NewData("msg", "Done - "+com))

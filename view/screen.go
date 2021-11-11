@@ -15,7 +15,7 @@ type Screen struct {
 func NewScreen(g *gocui.Gui) *Screen {
 	s := &Screen{
 		g:       g,
-		msgChan: make(chan interface{}, 100),
+		msgChan: make(chan interface{}, 10000),
 	}
 	return s
 }
