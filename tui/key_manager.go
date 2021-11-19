@@ -25,7 +25,7 @@ func (km *KeyManager) SetKey(viewname string, key interface{}, mod gocui.Modifie
 	return km.g.SetKeybinding(viewname, key, mod, handler)
 }
 
-// TODO: improve up and down movement in context of text wrapping
+// TODO: improve up and down movement in context of text wrapping!
 
 func UpScreen(g *gocui.Gui, v *gocui.View) error {
 	if v == nil {

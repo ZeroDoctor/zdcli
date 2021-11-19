@@ -42,7 +42,7 @@ func ExecCommand(vm *tui.ViewManager) func(*gocui.View) error {
 
 			OutBufSize: 100,
 			OutFunc: func(msg []byte) (int, error) {
-				vm.SendView("screen", view.NewData("msg", string(msg)+"\n"))
+				vm.SendView("screen", view.NewData("msg", string(msg)))
 				return len(msg), nil
 			},
 		}
@@ -54,6 +54,5 @@ func ExecCommand(vm *tui.ViewManager) func(*gocui.View) error {
 
 		vm.SendView("header", view.NewData("msg", "Done - "+com))
 		return nil
-
 	}
 }

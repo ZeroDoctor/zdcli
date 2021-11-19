@@ -143,7 +143,7 @@ func Exec(info *Info) error {
 	if hasFunc {
 		go func() {
 			wg.Wait()
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			close(doneChan)
 		}()
 
