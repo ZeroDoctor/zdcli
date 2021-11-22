@@ -66,6 +66,15 @@ func (h *Header) Display(msg string) {
 			return err
 		}
 
+		screen, err := g.View("screen")
+		if err == nil {
+			cx, cy := screen.Cursor()
+			sx, sy := screen.Size()
+			ox, oy := screen.Origin()
+			l, _ := screen.Line(cy)
+			msg += fmt.Sprintf("[c:(%d, %d) o:(%d, %d) s:(%d, %d)] (%d)", cx, cy, ox, oy, sx, sy, len(l))
+		}
+
 		v.Clear()
 		fmt.Fprint(v, msg)
 		return nil

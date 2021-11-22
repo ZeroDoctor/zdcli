@@ -26,28 +26,11 @@ func (km *KeyManager) SetKey(viewname string, key interface{}, mod gocui.Modifie
 }
 
 // TODO: improve up and down movement in context of text wrapping!
+// figure out how to set correct cursor position with wrapped text
 
 func UpScreen(g *gocui.Gui, v *gocui.View) error {
 	if v == nil {
 		return nil
-	}
-
-	cx, cy := v.Cursor()
-	if cy > 0 {
-		if err := v.SetCursor(cx, cy-1); err != nil {
-			return err
-		}
-	}
-
-	ox, oy := v.Origin()
-	if oy > 0 {
-		var w int
-		if w, _ = HasWrapped(cy, v); w > 0 {
-			w -= 1
-		}
-		if err := v.SetOrigin(ox, oy-1-w); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -58,23 +41,27 @@ func DownScreen(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 
-	lines := v.ViewLinesHeight()
 	cx, cy := v.Cursor()
-	if cy < lines-1 {
-		if err := v.SetCursor(cx, cy+1); err != nil {
-			return err
-		}
 
-		_, y := v.Size()
-		if cy+1 > y-1 && cy+1 < lines-1 {
-			var w int
-			if w, _ = HasWrapped(cy, v); w > 0 {
-				w -= 1
-			}
-			ox, oy := v.Origin()
-			if err := v.SetOrigin(ox, oy+1+w); err != nil {
-				return err
-			}
+	line, err := v.Line(cy)
+	if err != nil {
+		return err
+	}
+
+	sx, sy := v.Size()
+
+	if len(line) > sx && cx < sx {
+		return v.SetCursor(len(line)-(len(line)-sx), cy)
+	}
+
+	if cx >= len(line) {
+		cx = len(line) - 1
+	}
+
+	ox, oy := v.Origin()
+	if err = v.SetCursor(cx, cy+1); err == nil && cy+1 >= sy {
+		if err = v.SetOrigin(ox, oy+1); err != nil {
+			return err
 		}
 	}
 
@@ -82,11 +69,3 @@ func DownScreen(g *gocui.Gui, v *gocui.View) error {
 }
 
 // TODO: LeftScreen and RightScreen
-
-// # helper function
-
-func HasWrapped(y int, v *gocui.View) (int, error) {
-	_, maxY := v.Size()
-	line, err := v.Line(y)
-	return (len(line) / (maxY + 1)), err
-}
