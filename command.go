@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"time"
 
 	"github.com/awesome-gocui/gocui"
@@ -32,9 +30,8 @@ func update(g *gocui.Gui, vm *tui.ViewManager) {
 	go clock(vm)
 }
 
-func ExecCommand(vm *tui.ViewManager) func(*gocui.View) error {
-	return func(v *gocui.View) error {
-		com := v.Buffer()
+func ExecCommand(vm *tui.ViewManager) func(string) error {
+	return func(com string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
@@ -49,16 +46,6 @@ func ExecCommand(vm *tui.ViewManager) func(*gocui.View) error {
 			OutFunc: func(msg []byte) (int, error) {
 				vm.SendView("screen", view.NewData("msg", string(msg)))
 				return len(msg), nil
-			},
-			InFunc: func(wc io.WriteCloser) error {
-				var line string
-				_, err := fmt.Scanln(&line)
-				if err != nil {
-					return err
-				}
-				wc.Write([]byte(line))
-
-				return nil
 			},
 		}
 

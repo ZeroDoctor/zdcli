@@ -12,10 +12,10 @@ type Command struct {
 	g       *gocui.Gui
 	msgChan chan interface{}
 
-	fn func(v *gocui.View) error
+	fn func(string) error
 }
 
-func NewCommand(g *gocui.Gui, fn func(*gocui.View) error) *Command {
+func NewCommand(g *gocui.Gui, fn func(string) error) *Command {
 	c := &Command{
 		g:       g,
 		fn:      fn,
@@ -85,10 +85,13 @@ func (c *Command) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier
 	case key == gocui.KeyTab:
 
 	case key == gocui.KeyEnter:
-		err := c.fn(v)
-		if err != nil {
-			log.Fatal(err)
-		}
+		buf := v.Buffer()
+		go func(buf string) {
+			err := c.fn(buf)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}(buf)
 
 		v.SetCursor(0, 0)
 		v.Clear()

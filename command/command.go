@@ -64,11 +64,12 @@ func readWithFunc(fn func(msg []byte) (int, error), reader io.ReadCloser, wg *sy
 	defer reader.Close()
 
 	scanner := bufio.NewScanner(reader)
+	scanner.Split(bufio.ScanLines)
 	for scanner.Scan() {
 		if scanner.Err() != nil {
-			errChan <- scanner.Err()
+			break
 		}
-		fn(scanner.Bytes())
+		fn([]byte(scanner.Text() + "\n"))
 	}
 
 	if scanner.Err() != nil {
