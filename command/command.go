@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -20,13 +21,15 @@ type Info struct {
 	Dir     string
 	Ctx     context.Context
 
-	OutBufSize int
-	OutBuffer  string
-	OutFunc    func(msg []byte) (int, error)
+	CombindOutErr bool
 
-	ErrBufSize int
-	ErrBuffer  string
-	ErrFunc    func(msg []byte) (int, error)
+	OutBuffer string
+	OutFunc   func(msg []byte) (int, error)
+
+	InFunc func(io.WriteCloser) error
+
+	ErrBuffer string
+	ErrFunc   func(msg []byte) (int, error)
 }
 
 func (c Info) parseCommand() (string, []string) {
@@ -56,41 +59,31 @@ func removeEmpty(buffer []byte) []byte {
 	return result
 }
 
-func readWithFunc(bufferSize int, fn func(msg []byte) (int, error), reader io.ReadCloser, wg *sync.WaitGroup, errChan chan error) {
+func readWithFunc(fn func(msg []byte) (int, error), reader io.ReadCloser, wg *sync.WaitGroup, errChan chan error) {
 	defer wg.Done()
 	defer reader.Close()
 
-	buffer := make([]byte, bufferSize)
-	for {
-		_, err := reader.Read(buffer)
-		if err != nil {
-			errChan <- fmt.Errorf("closing stream: [error=%s]", err)
-			return
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		if scanner.Err() != nil {
+			errChan <- scanner.Err()
 		}
-		buffer = removeEmpty(buffer)
-		if len(buffer) > 0 {
-			_, err := fn(buffer)
-			if err != nil {
-				errChan <- err
-				return
-			}
-		}
-		buffer = make([]byte, bufferSize)
+		fn(scanner.Bytes())
+	}
+
+	if scanner.Err() != nil {
+		errChan <- scanner.Err()
 	}
 }
 
 func Exec(info *Info) error {
-	hasFunc := info.ErrFunc != nil || info.OutFunc != nil
+	var err error
+	hasFunc := info.ErrFunc != nil || info.OutFunc != nil || info.InFunc != nil
 
 	if info.Dir == "" {
 		info.Dir = "."
 	}
-	if info.ErrBufSize <= 0 {
-		info.ErrBufSize = 1
-	}
-	if info.OutBufSize <= 0 {
-		info.OutBufSize = 1
-	}
+
 	if info.Ctx == nil {
 		info.Ctx = context.Background()
 	}
@@ -113,7 +106,7 @@ func Exec(info *Info) error {
 			return fmt.Errorf("failed to get stderr pipe %s", err.Error())
 		}
 		wg.Add(1)
-		go readWithFunc(info.ErrBufSize, info.ErrFunc, stderr, &wg, errChan)
+		go readWithFunc(info.ErrFunc, stderr, &wg, errChan)
 	}
 
 	if info.OutFunc != nil {
@@ -122,7 +115,29 @@ func Exec(info *Info) error {
 			return fmt.Errorf("failed to get stdout pipe %s", err.Error())
 		}
 		wg.Add(1)
-		go readWithFunc(info.OutBufSize, info.OutFunc, stdout, &wg, errChan)
+		go readWithFunc(info.OutFunc, stdout, &wg, errChan)
+	}
+
+	stdInChan := make(chan bool, 1)
+	if info.InFunc != nil {
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			return fmt.Errorf("failed to get stdin pipe %s", err.Error())
+		}
+
+		go func() {
+			defer stdin.Close()
+			select {
+			case <-stdInChan:
+			default:
+				err := info.InFunc(stdin)
+				if err != nil {
+					errChan <- err
+					return
+				}
+
+			}
+		}()
 	}
 
 	var berr bytes.Buffer
@@ -135,11 +150,12 @@ func Exec(info *Info) error {
 		cmd.Stdout = &bout
 	}
 
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return fmt.Errorf("failed to start %s", err.Error())
 	}
 
+	var errs []error
 	if hasFunc {
 		go func() {
 			wg.Wait()
@@ -152,22 +168,22 @@ func Exec(info *Info) error {
 			select {
 			case <-doneChan:
 				break loop
-			case newErr := <-errChan:
-				if err != nil {
-					err = fmt.Errorf("[%v] [%v]", err, newErr)
-					continue
-				}
-				err = newErr
+			case err := <-errChan:
+				errs = append(errs, err)
 			}
 		}
 		close(errChan)
 	}
-	if err != nil {
+
+	if errs != nil {
 		cmd.Wait()
+
 		info.ErrBuffer = berr.String()
 		info.OutBuffer = bout.String()
 
-		return err
+		close(stdInChan)
+
+		return combindErrs(errs)
 	}
 
 	err = cmd.Wait()
@@ -175,5 +191,17 @@ func Exec(info *Info) error {
 	info.ErrBuffer = berr.String()
 	info.OutBuffer = bout.String()
 
-	return err
+	close(stdInChan)
+
+	return combindErrs(errs)
+}
+
+func combindErrs(errs []error) error {
+	var errStr strings.Builder
+
+	for _, err := range errs {
+		errStr.WriteString("[" + err.Error() + "]")
+	}
+
+	return fmt.Errorf("%s", errStr.String())
 }

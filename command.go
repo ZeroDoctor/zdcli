@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"time"
 
 	"github.com/awesome-gocui/gocui"
@@ -40,10 +42,23 @@ func ExecCommand(vm *tui.ViewManager) func(*gocui.View) error {
 			Command: com,
 			Ctx:     ctx,
 
-			OutBufSize: 100,
+			ErrFunc: func(msg []byte) (int, error) {
+				vm.SendView("screen", view.NewData("msg", string(msg)))
+				return len(msg), nil
+			},
 			OutFunc: func(msg []byte) (int, error) {
 				vm.SendView("screen", view.NewData("msg", string(msg)))
 				return len(msg), nil
+			},
+			InFunc: func(wc io.WriteCloser) error {
+				var line string
+				_, err := fmt.Scanln(&line)
+				if err != nil {
+					return err
+				}
+				wc.Write([]byte(line))
+
+				return nil
 			},
 		}
 
