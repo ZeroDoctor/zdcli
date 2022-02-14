@@ -74,22 +74,13 @@ func Exec(info *Info) error {
 	// var stdin io.WriteCloser
 	var errChan chan error
 	if info.InFunc != nil {
-		errChan = make(chan error, 2)
-
 		cmd.Stdin = os.Stdin
+		// errChan = make(chan error, 2)
+		//
 		// stdin, err = cmd.StdinPipe()
 		// if err != nil {
 		// 	return fmt.Errorf("failed to get stdin pipe %s", err.Error())
 		// }
-		//
-		// go func() {
-		// 	defer stdin.Close()
-		// 	_, err := info.InFunc(stdin)
-		// 	if err != nil {
-		// 		errChan <- err
-		// 		return
-		// 	}
-		// }()
 	}
 
 	var berr bytes.Buffer
@@ -107,10 +98,21 @@ func Exec(info *Info) error {
 	}
 
 	var errs []error
+	if info.InFunc != nil {
+		// _, err := info.InFunc(stdin)
+		// if err != nil {
+		// 	errs = append(errs, fmt.Errorf("failed at writing [error=%w]", err))
+		// }
+		// err = stdin.Close()
+		// if err != nil {
+		// 	errs = append(errs, fmt.Errorf("failed at closing write [error=%w]", err))
+		// }
+		// time.Sleep(1000 * time.Millisecond)
+	}
+
 	if err = cmd.Wait(); err != nil {
 		errs = append(errs, fmt.Errorf("failed at wait [error=%w]", err))
 	}
-
 	info.ErrBuffer = berr.String()
 	info.OutBuffer = bout.String()
 

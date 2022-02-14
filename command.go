@@ -49,7 +49,7 @@ func ExecCommand(vm *tui.ViewManager, StdInChan chan string, com string) error {
 			for {
 				in := <-StdInChan
 				vm.SendView("screen", tui.NewData("msg", "got back "+in+"\n"))
-				return w.Write([]byte(in))
+				return io.WriteString(w, in)
 			}
 		},
 	}
