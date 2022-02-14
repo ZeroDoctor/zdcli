@@ -7,7 +7,6 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui"
-	"github.com/zerodoctor/zdcli/view"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorCyan
 
-	vm := tui.NewViewManager(g, []tui.View{view.NewHeader(g), view.NewScreen(g)}, 1)
+	vm := tui.NewViewManager(g, []tui.View{tui.NewHeader(g), tui.NewScreen(g)}, 1)
 
 	g.SetManagerFunc(vm.Layout)
 	km := tui.NewKeyManager(g, vm)
@@ -33,7 +32,12 @@ func main() {
 
 	go update(g, vm)
 
-	err = vm.AddView(g, view.NewCommand(g, ExecCommand(vm)))
+	state := tui.CommandState{
+		VM:    vm,
+		Fn:    ExecCommand,
+		StdIn: make(chan string, 5),
+	}
+	err = vm.AddView(g, tui.NewCommand(g, state))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

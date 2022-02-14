@@ -1,9 +1,8 @@
-package view
+package tui
 
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/awesome-gocui/gocui"
 )
@@ -12,14 +11,21 @@ type Command struct {
 	g       *gocui.Gui
 	msgChan chan interface{}
 
-	fn func(string) error
+	running bool
+	CommandState
 }
 
-func NewCommand(g *gocui.Gui, fn func(string) error) *Command {
+type CommandState struct {
+	VM    *ViewManager
+	Fn    func(*ViewManager, chan string, string) error
+	StdIn chan string
+}
+
+func NewCommand(g *gocui.Gui, state CommandState) *Command {
 	c := &Command{
-		g:       g,
-		fn:      fn,
-		msgChan: make(chan interface{}, 100),
+		g:            g,
+		msgChan:      make(chan interface{}, 100),
+		CommandState: state,
 	}
 	return c
 }
@@ -86,12 +92,27 @@ func (c *Command) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier
 
 	case key == gocui.KeyEnter:
 		buf := v.Buffer()
-		go func(buf string) {
-			err := c.fn(buf)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}(buf)
+		if !c.running {
+			c.running = true
+			go func(buf string) {
+				c.StdIn = make(chan string, 100)
+				if err := c.Fn(c.VM, c.StdIn, buf); err != nil {
+					c.VM.SendView("screen", Data{
+						Type: "msg", Msg: err.Error(),
+					})
+				}
+
+				defer func() {
+					close(c.StdIn)
+					c.running = false
+					c.VM.SendView("screen", Data{
+						Type: "msg", Msg: "command has ended\n",
+					})
+				}()
+			}(buf)
+		} else {
+			c.StdIn <- buf
+		}
 
 		v.SetCursor(0, 0)
 		v.Clear()
