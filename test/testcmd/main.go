@@ -15,13 +15,72 @@ import (
 func main() {
 	var err error
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// var proc *sys.Process
+	// proc, err = sys.NewProcess("ping www.google.com", nil, "")
+	// if err != nil {
+	// 	fmt.Println("[ERROR]", err.Error())
+	// 	return
+	// }
+	//
+	// done := make(chan bool, 1)
+	// r, w, err := os.Pipe()
+	// if err != nil {
+	// 	fmt.Println("[ERROR]", err.Error())
+	// 	return
+	// }
+	//
+	// proc.SetInWriter(os.Stdin)
+	// proc.SetOutReader(w)
+	// proc.SetErrReader(os.Stderr)
+	//
+	// err = proc.Start()
+	// if err != nil {
+	// 	fmt.Println("[ERROR]", err.Error())
+	// 	return
+	// }
+	//
+	// // reader := bufio.NewReader(r)
+	//
+	// time.Sleep(1 * time.Second)
+	// go func() {
+	// 	for {
+	// 		select {
+	// 		case <-done:
+	// 			r.Close()
+	// 			return
+	// 		default:
+	// 		}
+	//
+	// 		var buf bytes.Buffer
+	// 		_, err := io.Copy(&buf, r)
+	// 		if err != nil {
+	// 			fmt.Println("[ERROR]", err.Error())
+	// 		}
+	//
+	// 		fmt.Println(buf.String())
+	// 	}
+	// }()
+	//
+	// state, err := proc.Wait()
+	// if err != nil {
+	// 	fmt.Println("[ERROR]", err.Error())
+	// 	return
+	// }
+	// err = w.Close()
+	// if err != nil {
+	// 	fmt.Println("[ERROR]", err.Error())
+	// }
+	//
+	// close(done)
+	// fmt.Println(state)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
 	info := command.Info{
-		Command: "bash -c",
+		Command: "../test.exe",
 		Args: []string{
-			"/mnt/c/Users/Daniel/Documents/zerodoc/zdcli/test/test",
+			"",
 		},
 		Ctx: ctx,
 
