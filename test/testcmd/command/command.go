@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -74,16 +73,16 @@ func Exec(info *Info) error {
 	done := make(chan bool, 1)
 	var errChan chan error
 	if info.InFunc != nil {
-		r, w, err := os.Pipe()
-		if err != nil {
-			return fmt.Errorf("failed to create pipe [error=%w]", err)
-		}
+
+		r, w := io.Pipe()
 		cmd.Stdin = r
 
 		go func() {
 			select {
 			case <-done:
-				w.Close()
+				if err = w.Close(); err != nil {
+					fmt.Println("[error]", err.Error())
+				}
 				return
 			default:
 			}
@@ -94,9 +93,10 @@ func Exec(info *Info) error {
 				return
 			}
 
-			if err != nil {
-				fmt.Println("[error]", err.Error())
-			}
+			// err = w.Close()
+			// if err != nil {
+			// 	fmt.Println("[error]", err.Error())
+			// }
 		}()
 	}
 
@@ -115,18 +115,7 @@ func Exec(info *Info) error {
 	}
 
 	var errs []error
-	if info.InFunc != nil {
-		// _, err := info.InFunc(stdin)
-		// if err != nil {
-		// 	errs = append(errs, fmt.Errorf("failed at writing [error=%w]", err))
-		// }
-		// err = stdin.Close()
-		// if err != nil {
-		// 	errs = append(errs, fmt.Errorf("failed at closing write [error=%w]", err))
-		// }
-		// time.Sleep(1000 * time.Millisecond)
-	}
-
+	fmt.Println("[parent] waiting...")
 	if err = cmd.Wait(); err != nil {
 
 		if info.Ctx.Err() != nil {
@@ -135,6 +124,7 @@ func Exec(info *Info) error {
 
 		errs = append(errs, fmt.Errorf("failed at wait [error=%w]", err))
 	}
+	fmt.Println("[parent] done waiting...")
 
 	close(done)
 

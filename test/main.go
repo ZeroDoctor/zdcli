@@ -17,20 +17,21 @@ func main() {
 	time.Sleep(1 * time.Second)
 	fmt.Println("output...")
 
-	fmt.Print("Enter something:")
+	fmt.Print("Enter something: ")
 
 	var line string
-	scanner := bufio.NewScanner(os.Stdin)
+	reader := bufio.NewReader(os.Stdin)
 
-	if scanner.Scan() {
-		line = scanner.Text()
-	}
-
-	if scanner.Err() != nil {
-		fmt.Println(scanner.Err())
-	}
+	line, _ = reader.ReadString('\n')
 
 	fmt.Println("got:", line)
+	fmt.Println("okay try again in a sec")
+	time.Sleep(1 * time.Second)
+
+	fmt.Print("okay go: ")
+	line, _ = reader.ReadString('\n')
+
+	fmt.Println("nice, just got:", line)
 
 	fmt.Println("see ya!")
 }

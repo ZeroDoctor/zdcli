@@ -77,6 +77,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
+	scanner := bufio.NewScanner(os.Stdin)
+
 	info := command.Info{
 		Command: "../test.exe",
 		Args: []string{
@@ -94,7 +96,6 @@ func main() {
 		},
 		InFunc: func(w io.WriteCloser) (int, error) {
 			var line string
-			scanner := bufio.NewScanner(os.Stdin)
 
 			if scanner.Scan() {
 				line = scanner.Text()
@@ -104,7 +105,7 @@ func main() {
 				return 0, fmt.Errorf("failed at scanner [error=%w]", scanner.Err())
 			}
 
-			return io.WriteString(w, line)
+			return w.Write([]byte(line + "\n"))
 		},
 	}
 
