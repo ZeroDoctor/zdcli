@@ -6,6 +6,8 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+	"sync"
+	"time"
 
 	"context"
 )
@@ -21,12 +23,13 @@ type Info struct {
 	CombindOutErr bool
 
 	OutBuffer string
-	OutFunc   func(msg []byte) (int, error)
+	OutFunc   func([]byte) (int, error)
 
-	InFunc func(io.WriteCloser) (int, error)
+	InFunc func(io.WriteCloser, <-chan struct{}) (int, error)
+	InChan chan string
 
 	ErrBuffer string
-	ErrFunc   func(msg []byte) (int, error)
+	ErrFunc   func([]byte) (int, error)
 }
 
 func (c Info) parseCommand() (string, []string) {
@@ -34,12 +37,11 @@ func (c Info) parseCommand() (string, []string) {
 	return split[0], append(split[1:], c.Args...)
 }
 
-type InOut struct {
+type Output struct {
 	fn func(msg []byte) (int, error)
 }
 
-func (o *InOut) Write(msg []byte) (int, error) { return o.fn(msg) }
-func (o *InOut) Read(msg []byte) (int, error)  { return o.fn(msg) }
+func (o *Output) Write(msg []byte) (int, error) { return o.fn(msg) }
 
 func Exec(info *Info) error {
 	var err error
@@ -57,51 +59,51 @@ func Exec(info *Info) error {
 	cmd.Dir = info.Dir
 
 	if info.ErrFunc != nil {
-		out := &InOut{
+		out := &Output{
 			fn: info.ErrFunc,
 		}
 		cmd.Stderr = out
 	}
 
 	if info.OutFunc != nil {
-		out := &InOut{
+		out := &Output{
 			fn: info.OutFunc,
 		}
 		cmd.Stdout = out
 	}
 
-	done := make(chan bool, 1)
+	var wg sync.WaitGroup
+	done := make(chan struct{}, 1)
 	errChan := make(chan error, 4)
-	if info.InFunc != nil {
 
+	if info.InFunc != nil {
 		r, w := io.Pipe()
 		cmd.Stdin = r
 
-		go func() {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			defer func() {
+				if err = w.Close(); err != nil {
+					errChan <- err
+				}
+			}()
+
 			for {
 				select {
 				case <-done:
-					if err = w.Close(); err != nil {
-						fmt.Println("[error]", err.Error())
-					}
-					fmt.Println("closing")
 					return
 				default:
 				}
 
-				_, err := info.InFunc(w)
+				_, err := info.InFunc(w, done)
 				if err != nil {
-					fmt.Println("got error", err.Error())
 					errChan <- err
-					if err = w.Close(); err != nil {
-						fmt.Println("got error", err.Error())
-						errChan <- err
-					}
 					return
 				}
-				fmt.Println("done writing")
+				time.Sleep(1 * time.Millisecond)
 			}
-		}()
+		}(&wg)
 	}
 
 	var berr bytes.Buffer
@@ -119,18 +121,16 @@ func Exec(info *Info) error {
 	}
 
 	var errs []error
-	fmt.Println("[parent] waiting...")
 	if err = cmd.Wait(); err != nil {
-
 		if info.Ctx.Err() != nil {
 			errs = append(errs, fmt.Errorf("context [error=%w]", info.Ctx.Err()))
 		}
 
 		errs = append(errs, fmt.Errorf("failed at wait [error=%w]", err))
 	}
-	fmt.Println("[parent] done waiting...")
 
 	close(done)
+	wg.Wait()
 
 	info.ErrBuffer = berr.String()
 	info.OutBuffer = bout.String()

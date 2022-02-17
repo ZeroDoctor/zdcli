@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
+	"sync"
+	"time"
 
 	"context"
 )
@@ -22,12 +23,13 @@ type Info struct {
 	CombindOutErr bool
 
 	OutBuffer string
-	OutFunc   func(msg []byte) (int, error)
+	OutFunc   func([]byte) (int, error)
 
-	InFunc func(io.WriteCloser) (int, error)
+	InFunc func(io.WriteCloser, <-chan struct{}) (int, error)
+	InChan chan string
 
 	ErrBuffer string
-	ErrFunc   func(msg []byte) (int, error)
+	ErrFunc   func([]byte) (int, error)
 }
 
 func (c Info) parseCommand() (string, []string) {
@@ -35,12 +37,11 @@ func (c Info) parseCommand() (string, []string) {
 	return split[0], append(split[1:], c.Args...)
 }
 
-type InOut struct {
+type Output struct {
 	fn func(msg []byte) (int, error)
 }
 
-func (o *InOut) Write(msg []byte) (int, error) { return o.fn(msg) }
-func (o *InOut) Read(msg []byte) (int, error)  { return o.fn(msg) }
+func (o *Output) Write(msg []byte) (int, error) { return o.fn(msg) }
 
 func Exec(info *Info) error {
 	var err error
@@ -58,38 +59,49 @@ func Exec(info *Info) error {
 	cmd.Dir = info.Dir
 
 	if info.ErrFunc != nil {
-		out := &InOut{
+		out := &Output{
 			fn: info.ErrFunc,
 		}
 		cmd.Stderr = out
 	}
 
 	if info.OutFunc != nil {
-		out := &InOut{
+		out := &Output{
 			fn: info.OutFunc,
 		}
 		cmd.Stdout = out
 	}
 
-	// var stdin io.WriteCloser
-	var errChan chan error
-	if info.InFunc != nil {
-		errChan = make(chan error, 2)
+	var wg sync.WaitGroup
+	done := make(chan struct{}, 1)
+	errChan := make(chan error, 4)
 
-		cmd.Stdin = os.Stdin
-		// stdin, err = cmd.StdinPipe()
-		// if err != nil {
-		// 	return fmt.Errorf("failed to get stdin pipe %s", err.Error())
-		// }
-		//
-		// go func() {
-		// 	defer stdin.Close()
-		// 	_, err := info.InFunc(stdin)
-		// 	if err != nil {
-		// 		errChan <- err
-		// 		return
-		// 	}
-		// }()
+	if info.InFunc != nil {
+		w, err := cmd.StdinPipe()
+		if err != nil {
+			return err
+		}
+
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			defer func() {
+				if err = w.Close(); err != nil {
+					errChan <- err
+				}
+			}()
+
+			for {
+				_, err := info.InFunc(w, done)
+				if err != nil {
+					if err.Error() != "EOF" {
+						errChan <- err
+					}
+					return
+				}
+				time.Sleep(1 * time.Millisecond)
+			}
+		}(&wg)
 	}
 
 	var berr bytes.Buffer
@@ -108,8 +120,15 @@ func Exec(info *Info) error {
 
 	var errs []error
 	if err = cmd.Wait(); err != nil {
+		if info.Ctx.Err() != nil {
+			errs = append(errs, fmt.Errorf("context [error=%w]", info.Ctx.Err()))
+		}
+
 		errs = append(errs, fmt.Errorf("failed at wait [error=%w]", err))
 	}
+
+	close(done)
+	wg.Wait()
 
 	info.ErrBuffer = berr.String()
 	info.OutBuffer = bout.String()

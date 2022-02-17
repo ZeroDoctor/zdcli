@@ -1,4 +1,4 @@
-package tui 
+package view
 
 type Data struct {
 	Type string

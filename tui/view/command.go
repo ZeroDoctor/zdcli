@@ -1,10 +1,11 @@
-package tui
+package view
 
 import (
 	"errors"
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/zerodoctor/zdcli/tui"
 )
 
 type Command struct {
@@ -12,16 +13,10 @@ type Command struct {
 	msgChan chan interface{}
 
 	running bool
-	CommandState
+	tui.CommandState
 }
 
-type CommandState struct {
-	VM    *ViewManager
-	Fn    func(*ViewManager, chan string, string) error
-	StdIn chan string
-}
-
-func NewCommand(g *gocui.Gui, state CommandState) *Command {
+func NewCommand(g *gocui.Gui, state tui.CommandState) *Command {
 	c := &Command{
 		g:            g,
 		msgChan:      make(chan interface{}, 100),
@@ -96,19 +91,22 @@ func (c *Command) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier
 			c.running = true
 			go func(buf string) {
 				c.StdIn = make(chan string, 100)
-				if err := c.Fn(c.VM, c.StdIn, buf); err != nil {
+
+				c.VM.SendView("screen", Data{
+					Type: "msg", Msg: fmt.Sprintf("[zd] starting fork [cmd=%s]\n", buf),
+				})
+
+				if err := c.Fork(c.VM, c.StdIn, buf); err != nil {
 					c.VM.SendView("screen", Data{
-						Type: "msg", Msg: err.Error(),
+						Type: "msg", Msg: "[zd] " + err.Error(),
 					})
 				}
 
-				defer func() {
-					close(c.StdIn)
-					c.running = false
-					c.VM.SendView("screen", Data{
-						Type: "msg", Msg: "command has ended\n",
-					})
-				}()
+				close(c.StdIn)
+				c.running = false
+				c.VM.SendView("screen", Data{
+					Type: "msg", Msg: "[zd] fork exited\n\n",
+				})
 			}(buf)
 		} else {
 			c.StdIn <- buf
