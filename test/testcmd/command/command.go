@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -72,32 +71,36 @@ func Exec(info *Info) error {
 	}
 
 	done := make(chan bool, 1)
-	var errChan chan error
+	errChan := make(chan error, 4)
 	if info.InFunc != nil {
 
-		_, w := io.Pipe()
-		cmd.Stdin = os.Stdin
+		r, w := io.Pipe()
+		cmd.Stdin = r
 
 		go func() {
-			select {
-			case <-done:
-				if err = w.Close(); err != nil {
-					fmt.Println("[error]", err.Error())
+			for {
+				select {
+				case <-done:
+					if err = w.Close(); err != nil {
+						fmt.Println("[error]", err.Error())
+					}
+					fmt.Println("closing")
+					return
+				default:
 				}
-				return
-			default:
+
+				_, err := info.InFunc(w)
+				if err != nil {
+					fmt.Println("got error", err.Error())
+					errChan <- err
+					if err = w.Close(); err != nil {
+						fmt.Println("got error", err.Error())
+						errChan <- err
+					}
+					return
+				}
+				fmt.Println("done writing")
 			}
-
-			// _, err := info.InFunc(w)
-			// if err != nil {
-			// 	errChan <- err
-			// 	return
-			// }
-
-			// err = w.Close()
-			// if err != nil {
-			// 	fmt.Println("[error]", err.Error())
-			// }
 		}()
 	}
 

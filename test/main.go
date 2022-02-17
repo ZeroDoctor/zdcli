@@ -35,6 +35,7 @@ func main() {
 	fmt.Println("nice, just got:", line)
 
 	fmt.Print("again: ")
+	reader = bufio.NewReader(os.Stdin)
 	line, _ = reader.ReadString('\n')
 	fmt.Println("alright this is it:", line)
 
