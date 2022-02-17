@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -74,8 +75,8 @@ func Exec(info *Info) error {
 	var errChan chan error
 	if info.InFunc != nil {
 
-		r, w := io.Pipe()
-		cmd.Stdin = r
+		_, w := io.Pipe()
+		cmd.Stdin = os.Stdin
 
 		go func() {
 			select {
@@ -87,11 +88,11 @@ func Exec(info *Info) error {
 			default:
 			}
 
-			_, err := info.InFunc(w)
-			if err != nil {
-				errChan <- err
-				return
-			}
+			// _, err := info.InFunc(w)
+			// if err != nil {
+			// 	errChan <- err
+			// 	return
+			// }
 
 			// err = w.Close()
 			// if err != nil {

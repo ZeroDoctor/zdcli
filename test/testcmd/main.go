@@ -97,7 +97,7 @@ func main() {
 		InFunc: func(w io.WriteCloser) (int, error) {
 			var line string
 
-			if scanner.Scan() {
+			for scanner.Scan() {
 				line = scanner.Text()
 			}
 
