@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -24,12 +25,15 @@ type Info struct {
 
 	OutBuffer string
 	OutFunc   func([]byte) (int, error)
+	Stdout    *os.File
 
 	InFunc func(io.WriteCloser, <-chan struct{}) (int, error)
 	InChan chan string
+	Stdin  *os.File
 
 	ErrBuffer string
 	ErrFunc   func([]byte) (int, error)
+	Stderr    *os.File
 }
 
 func (c Info) parseCommand() (string, []string) {
@@ -57,6 +61,7 @@ func Exec(info *Info) error {
 	command, args := info.parseCommand()
 	cmd := exec.CommandContext(info.Ctx, command, args...)
 	cmd.Dir = info.Dir
+	// cmd.SysProcAttr = &syscall.SysProcAttr{}
 
 	if info.ErrFunc != nil {
 		out := &Output{
@@ -77,10 +82,11 @@ func Exec(info *Info) error {
 	errChan := make(chan error, 4)
 
 	if info.InFunc != nil {
-		w, err := cmd.StdinPipe()
+		r, w, err := os.Pipe()
 		if err != nil {
 			return err
 		}
+		cmd.Stdin = r
 
 		wg.Add(1)
 		go func(wg *sync.WaitGroup) {
@@ -111,6 +117,18 @@ func Exec(info *Info) error {
 	var bout bytes.Buffer
 	if info.OutFunc == nil {
 		cmd.Stdout = &bout
+	}
+
+	if info.Stderr != nil {
+		cmd.Stderr = info.Stderr
+	}
+
+	if info.Stdout != nil {
+		cmd.Stdout = info.Stdout
+	}
+
+	if info.Stdin != nil {
+		cmd.Stdin = info.Stdin
 	}
 
 	if err = cmd.Start(); err != nil {

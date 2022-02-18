@@ -9,7 +9,7 @@ import (
 	"github.com/zerodoctor/zdcli/tui/view"
 )
 
-func StartTui() {
+func StartTui() tui.ExitMsg {
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -43,4 +43,5 @@ func StartTui() {
 	vm.Wait()
 	g.Close()
 
+	return vm.ExitMsg()
 }

@@ -7,6 +7,18 @@ import (
 	"github.com/awesome-gocui/gocui"
 )
 
+type exit int8
+
+const (
+	EXIT_SUC exit = iota
+	EXIT_CMD
+)
+
+type ExitMsg struct {
+	Code exit
+	Msg  string
+}
+
 type View interface {
 	Layout(*gocui.Gui) error
 	PrintView()
@@ -19,8 +31,10 @@ type ViewManager struct {
 	currentView int
 	views       []View
 	wg          sync.WaitGroup
+	g           *gocui.Gui
 
 	shutdown chan bool
+	exitMsg  ExitMsg
 }
 
 func NewViewManager(g *gocui.Gui, views []View, currentView int) *ViewManager {
@@ -28,6 +42,9 @@ func NewViewManager(g *gocui.Gui, views []View, currentView int) *ViewManager {
 		views:       views,
 		currentView: currentView,
 		shutdown:    make(chan bool),
+		g:           g,
+
+		exitMsg: ExitMsg{Code: EXIT_SUC}, // TODO: redo exit handling
 	}
 
 	for _, view := range views {
@@ -113,6 +130,27 @@ func (vm *ViewManager) AddView(g *gocui.Gui, view View) error {
 
 // TODO: remove view
 
+func (vm *ViewManager) RemoveView(g *gocui.Gui, name string) error {
+	var view View
+	var index int
+
+	for i, v := range vm.views {
+		if v.Name() == name {
+			view = v
+			index = i
+		}
+	}
+
+	close(view.Channel())
+	g.DeleteView(name)
+
+	// remove view from slice
+	vm.views[index] = vm.views[len(vm.views)-1]
+	vm.views = vm.views[:len(vm.views)-1]
+
+	return nil
+}
+
 // # for keybindings
 
 func (vm *ViewManager) NextView(g *gocui.Gui, v *gocui.View) error {
@@ -132,7 +170,12 @@ func (vm *ViewManager) NextView(g *gocui.Gui, v *gocui.View) error {
 func (vm *ViewManager) Quit(g *gocui.Gui, v *gocui.View) error {
 	close(vm.shutdown)
 	for _, view := range vm.views {
-		close(view.Channel())
+		if view.Channel() != nil {
+			close(view.Channel())
+		}
 	}
+
 	return gocui.ErrQuit
 }
+
+func (vm *ViewManager) ExitMsg() ExitMsg { return vm.exitMsg }

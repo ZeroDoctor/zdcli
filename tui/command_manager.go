@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/command"
 )
 
@@ -60,10 +61,28 @@ func (s *State) Exec(cmd string) error {
 
 	switch split[0] {
 	case "exec":
-		s.state.Push(NewForkState(s.vm, s.state, strings.Join(split[1:], " ")))
+		cmd = strings.Join(split[1:], " ")
+
+		s.state.Push(NewForkState(s.vm, s.state, cmd))
 		return nil
 
 	case "lua":
+		cmd = strings.Join(split[2:], " ")
+
+		if len(split) > 2 && split[1] == "--tty" {
+			s.vm.exitMsg = ExitMsg{
+				Code: EXIT_CMD,
+				Msg:  cmd,
+			}
+
+			s.vm.g.UpdateAsync(func(g *gocui.Gui) error {
+				return s.vm.Quit(s.vm.g, nil)
+			})
+
+			return nil
+		}
+
+		s.state.Push(NewLuaState(s.vm, s.state, cmd))
 		return nil
 
 	case "go":
@@ -110,6 +129,10 @@ func (fs *ForkState) Start(cmd string) error {
 			case <-done:
 				return 0, command.ErrEndOfFile
 			case in := <-fs.stdin:
+				if len(in) <= 0 {
+					return 0, nil
+				}
+
 				fs.vm.SendView("screen", NewData("msg", in+"\n"))
 				return io.WriteString(w, in+"\r\n")
 			}
@@ -142,13 +165,14 @@ type LuaState struct {
 	state *Stack
 }
 
-func NewLuaState(vm *ViewManager, state *Stack) *LuaState {
+func NewLuaState(vm *ViewManager, state *Stack, cmd string) *LuaState {
 	lua := &LuaState{
 		vm:    vm,
 		stdin: make(chan string, 5),
 		state: state,
 	}
 
+	go lua.Start(cmd)
 	return lua
 }
 
@@ -157,7 +181,8 @@ func (ls *LuaState) Start(cmd string) error {
 	defer cancel()
 
 	info := command.Info{
-		Command: "lua " + cmd,
+		Command: "lua build-app.lua " + cmd, // TODO: allow user to set lua endpoint
+		Dir:     "./lua/",                   // TODO: allow user to set lua direcoty
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {
@@ -183,7 +208,7 @@ func (ls *LuaState) Start(cmd string) error {
 		ls.vm.SendView("screen", NewData("msg", err.Error()+"\n"))
 	}
 	close(ls.stdin)
-	ls.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] closing script %s\n", cmd)))
+	ls.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] closing script %s\n\n", cmd)))
 
 	ls.vm.SendView("header", NewData("msg", "Done - "+cmd))
 
