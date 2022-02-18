@@ -2,17 +2,17 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
 	"strings"
 	"sync"
-	"time"
 
 	"context"
 )
 
-// TODO: add std input func to command info
+var ErrEndOfFile error = errors.New("EOF")
 
 type Info struct {
 	Command string
@@ -94,12 +94,11 @@ func Exec(info *Info) error {
 			for {
 				_, err := info.InFunc(w, done)
 				if err != nil {
-					if err.Error() != "EOF" {
+					if err != ErrEndOfFile {
 						errChan <- err
 					}
 					return
 				}
-				time.Sleep(1 * time.Millisecond)
 			}
 		}(&wg)
 	}

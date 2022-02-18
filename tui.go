@@ -21,6 +21,7 @@ func StartTui() {
 	g.SelFgColor = gocui.ColorCyan
 
 	vm := tui.NewViewManager(g, []tui.View{view.NewHeader(g), view.NewScreen(g)}, 1)
+	cm := tui.NewCommandManager(vm)
 
 	g.SetManagerFunc(vm.Layout)
 	km := tui.NewKeyManager(g, vm)
@@ -30,12 +31,7 @@ func StartTui() {
 
 	go update(g, vm)
 
-	state := tui.CommandState{
-		VM:    vm,
-		Fork:  ExecCommand,
-		StdIn: make(chan string, 5),
-	}
-	err = vm.AddView(g, view.NewCommand(g, state))
+	err = vm.AddView(g, view.NewCommand(g, cm))
 	if err != nil {
 		log.Fatal(err.Error())
 	}

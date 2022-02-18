@@ -12,22 +12,21 @@ type Command struct {
 	g       *gocui.Gui
 	msgChan chan interface{}
 
-	running bool
-	tui.CommandState
+	*tui.CommandManager
 }
 
-func NewCommand(g *gocui.Gui, state tui.CommandState) *Command {
+func NewCommand(g *gocui.Gui, cm *tui.CommandManager) *Command {
 	c := &Command{
-		g:            g,
-		msgChan:      make(chan interface{}, 100),
-		CommandState: state,
+		g:              g,
+		msgChan:        make(chan interface{}, 100),
+		CommandManager: cm,
 	}
 	return c
 }
 
 func (c Command) Name() string               { return "command" }
 func (c *Command) Channel() chan interface{} { return c.msgChan }
-func (c *Command) Send(msg Data)             { c.msgChan <- msg }
+func (c *Command) Send(msg tui.Data)         { c.msgChan <- msg }
 
 func (c *Command) Layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
@@ -47,7 +46,7 @@ func (c *Command) Layout(g *gocui.Gui) error {
 func (c *Command) PrintView() {
 	for msg := range c.msgChan {
 		var str string
-		m := msg.(Data)
+		m := msg.(tui.Data)
 
 		switch m.Type {
 		}
@@ -87,30 +86,7 @@ func (c *Command) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier
 
 	case key == gocui.KeyEnter:
 		buf := v.Buffer()
-		if !c.running {
-			c.running = true
-			go func(buf string) {
-				c.StdIn = make(chan string, 100)
-
-				c.VM.SendView("screen", Data{
-					Type: "msg", Msg: fmt.Sprintf("[zd] starting fork [cmd=%s]\n", buf),
-				})
-
-				if err := c.Fork(c.VM, c.StdIn, buf); err != nil {
-					c.VM.SendView("screen", Data{
-						Type: "msg", Msg: "[zd] " + err.Error(),
-					})
-				}
-
-				close(c.StdIn)
-				c.running = false
-				c.VM.SendView("screen", Data{
-					Type: "msg", Msg: "[zd] fork exited\n\n",
-				})
-			}(buf)
-		} else {
-			c.StdIn <- buf
-		}
+		c.Cmd(buf)
 
 		v.SetCursor(0, 0)
 		v.Clear()
