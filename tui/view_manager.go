@@ -5,51 +5,37 @@ import (
 	"time"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/zerodoctor/zdcli/tui/comp"
+	"github.com/zerodoctor/zdcli/tui/inter"
 )
 
-type exit int8
-
-const (
-	EXIT_SUC exit = iota
-	EXIT_CMD
-)
-
-type ExitMsg struct {
-	Code exit
-	Msg  string
-}
-
-type View interface {
-	Layout(*gocui.Gui) error
-	PrintView()
-	Display(string)
-	Name() string
-	Channel() chan interface{}
+func NewData(t, m string) comp.Data {
+	return comp.Data{Type: t, Msg: m}
 }
 
 type ViewManager struct {
 	currentView int
-	views       []View
+	views       []inter.IView
 	wg          sync.WaitGroup
 	g           *gocui.Gui
 
 	shutdown chan bool
-	exitMsg  ExitMsg
+	ExitMsg  comp.ExitMessage
 }
 
-func NewViewManager(g *gocui.Gui, views []View, currentView int) *ViewManager {
+func NewViewManager(g *gocui.Gui, views []inter.IView, currentView int) *ViewManager {
 	vm := &ViewManager{
 		views:       views,
 		currentView: currentView,
 		shutdown:    make(chan bool),
 		g:           g,
 
-		exitMsg: ExitMsg{Code: EXIT_SUC}, // TODO: redo exit handling
+		ExitMsg: comp.ExitMessage{Code: comp.EXIT_SUC}, // TODO: redo exit handling
 	}
 
 	for _, view := range views {
 		vm.wg.Add(1)
-		go func(view View, wg *sync.WaitGroup) {
+		go func(view inter.IView, wg *sync.WaitGroup) {
 			view.PrintView()
 			wg.Done()
 		}(view, &vm.wg)
@@ -108,7 +94,7 @@ func (vm ViewManager) SendView(viewname string, data interface{}) error {
 	return gocui.ErrUnknownView
 }
 
-func (vm *ViewManager) AddView(g *gocui.Gui, view View) error {
+func (vm *ViewManager) AddView(g *gocui.Gui, view inter.IView) error {
 	vm.wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		view.PrintView()
@@ -131,7 +117,7 @@ func (vm *ViewManager) AddView(g *gocui.Gui, view View) error {
 // TODO: remove view
 
 func (vm *ViewManager) RemoveView(g *gocui.Gui, name string) error {
-	var view View
+	var view inter.IView
 	var index int
 
 	for i, v := range vm.views {
@@ -178,4 +164,7 @@ func (vm *ViewManager) Quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
 }
 
-func (vm *ViewManager) ExitMsg() ExitMsg { return vm.exitMsg }
+func (vm *ViewManager) G() *gocui.Gui { return vm.g }
+
+func (vm *ViewManager) GetExitMsg() comp.ExitMessage   { return vm.ExitMsg }
+func (vm *ViewManager) SetExitMsg(em comp.ExitMessage) { vm.ExitMsg = em }

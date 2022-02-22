@@ -13,7 +13,10 @@ import (
 	"context"
 )
 
-var ErrEndOfFile error = errors.New("EOF")
+var (
+	ErrEndOfFile error = errors.New("EOF")
+	ErrStdInNone error = errors.New("got nothing from stdin")
+)
 
 type Info struct {
 	Command string
@@ -27,7 +30,7 @@ type Info struct {
 	OutFunc   func([]byte) (int, error)
 	Stdout    *os.File
 
-	InFunc func(io.WriteCloser, <-chan struct{}) (int, error)
+	InFunc func(context.Context) (string, error)
 	InChan chan string
 	Stdin  *os.File
 
@@ -98,12 +101,27 @@ func Exec(info *Info) error {
 			}()
 
 			for {
-				_, err := info.InFunc(w, done)
-				if err != nil {
-					if err != ErrEndOfFile {
-						errChan <- err
-					}
+				select {
+				case <-info.Ctx.Done():
 					return
+				case <-done:
+					return
+				default:
+					in, err := info.InFunc(info.Ctx)
+					if err == ErrStdInNone {
+						continue
+					}
+
+					if err != nil {
+						errChan <- err
+						return
+					}
+
+					_, err = io.WriteString(w, in+"\r\n")
+					if err != nil {
+						errChan <- err
+						return
+					}
 				}
 			}
 		}(&wg)

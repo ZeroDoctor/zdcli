@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/zerodoctor/zdcli/tui"
+	"github.com/zerodoctor/zdcli/tui/comp"
 )
 
 type Screen struct {
@@ -16,14 +16,14 @@ type Screen struct {
 func NewScreen(g *gocui.Gui) *Screen {
 	s := &Screen{
 		g:       g,
-		msgChan: make(chan interface{}, 10000),
+		msgChan: make(chan interface{}, 100000),
 	}
 	return s
 }
 
 func (s Screen) Name() string               { return "screen" }
 func (s *Screen) Channel() chan interface{} { return s.msgChan }
-func (s *Screen) Send(msg tui.Data)         { s.msgChan <- msg }
+func (s *Screen) Send(msg comp.Data)        { s.msgChan <- msg }
 
 func (s *Screen) Layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
@@ -41,7 +41,7 @@ func (s *Screen) Layout(g *gocui.Gui) error {
 func (s *Screen) PrintView() {
 	for msg := range s.msgChan {
 		var str string
-		m := msg.(tui.Data)
+		m := msg.(comp.Data)
 
 		switch m.Type {
 		case "msg":

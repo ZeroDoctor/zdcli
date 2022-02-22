@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/zerodoctor/zdcli/logger"
-	"github.com/zerodoctor/zdcli/tui"
+	"github.com/zerodoctor/zdcli/tui/comp"
 )
 
 func main() {
@@ -25,7 +25,7 @@ func main() {
 		exit := StartTui()
 
 		switch exit.Code {
-		case tui.EXIT_CMD:
+		case comp.EXIT_CMD:
 			StartCmd(exit.Msg)
 			time.Sleep(100 * time.Millisecond)
 			continue
