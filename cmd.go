@@ -18,8 +18,8 @@ func StartLua(cmd string) {
 	defer cancel()
 
 	info := command.Info{
-		Command: "lua build-app.lua " + cmd, // TODO: allow user to set lua endpoint
-		Dir:     util.EXEC_PATH + "../lua/", // TODO: allow user to set lua direcoty
+		Command: "lua build-app.lua " + cmd,  // TODO: allow user to set lua endpoint
+		Dir:     util.EXEC_PATH + "/../lua/", // TODO: allow user to set lua direcoty
 		Ctx:     ctx,
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
@@ -39,7 +39,7 @@ func StartEdit(cmd string) {
 	var cmdArr []string
 	split := strings.Split(cmd, " ")
 	for _, str := range split {
-		if len(str) > 4 && str[len(str)-4:] != ".lua" {
+		if len(str) >= 4 && str[len(str)-4:] != ".lua" {
 			cmdArr = append(cmdArr, str+".lua")
 			continue
 		} else if len(str) < 4 {
@@ -52,7 +52,7 @@ func StartEdit(cmd string) {
 
 	info := command.Info{
 		Command: "nvim " + strings.Join(cmdArr, " "),
-		Dir:     "./lua/scripts/",
+		Dir:     util.EXEC_PATH + "/../lua/scripts/",
 		Ctx:     ctx,
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
