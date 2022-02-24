@@ -2,11 +2,14 @@ package cmdstate
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/util"
 )
 
 var (
@@ -86,6 +89,19 @@ func (s *State) Exec(cmd string) error {
 	case "go":
 		return nil
 
+	case "ls":
+		path := util.EXEC_PATH + "/../lua/scripts"
+		files, err := ioutil.ReadDir(path)
+		if err != nil {
+			return err
+		}
+
+		for _, file := range files {
+			str := fmt.Sprintf("%s | %s | %d | %s\n", file.Mode(), file.Name(), file.Size(), file.ModTime())
+			s.vm.SendView("screen", NewData("msg", str))
+		}
+
+		return nil
 	}
 
 	return ErrUnknownCommand

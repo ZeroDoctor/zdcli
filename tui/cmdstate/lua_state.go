@@ -8,6 +8,7 @@ import (
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/util"
 )
 
 type LuaState struct {
@@ -34,8 +35,8 @@ func (ls *LuaState) Start(cmd string) error {
 	ls.cancel = cancel
 
 	info := command.Info{
-		Command: "lua build-app.lua " + cmd, // TODO: allow user to set lua endpoint
-		Dir:     "./lua/",                   // TODO: allow user to set lua direcoty
+		Command: "lua build-app.lua " + cmd,  // TODO: allow user to set lua endpoint
+		Dir:     util.EXEC_PATH + "/../lua/", // TODO: allow user to set lua direcoty
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {

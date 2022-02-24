@@ -13,18 +13,25 @@ func main() {
 	logger.Init()
 
 	vargs := os.Args
-	if len(vargs) > 2 {
+	if len(vargs) >= 2 {
 		cmd := strings.Join(vargs[1:], " ")
 		logger.Info("exec:", cmd)
 
-		if len(vargs) > 3 {
-			switch vargs[1] {
-			case "--edit":
+		switch vargs[1] {
+		case "--edit", "-e":
+			if len(vargs) >= 3 {
 				cmd = strings.Join(vargs[2:], " ")
 				StartEdit(cmd)
 
 				return
 			}
+
+			logger.Error("must provide file name")
+			return
+		case "--ls", "-l":
+			StartLs()
+
+			return
 		}
 
 		StartLua(cmd)
