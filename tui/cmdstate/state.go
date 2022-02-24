@@ -34,10 +34,6 @@ func (s *State) Exec(cmd string) error {
 
 	switch split[0] {
 	case "exec":
-		s.state.Push(NewForkState(s.vm, s.state, cmd))
-		return nil
-
-	case "lua":
 		if len(split) > 2 && (split[1] == "--tty" || split[1] == "-t") {
 			cmd = strings.Join(split[2:], " ")
 
@@ -53,10 +49,38 @@ func (s *State) Exec(cmd string) error {
 			return nil
 		}
 
+		s.state.Push(NewForkState(s.vm, s.state, cmd))
+		return nil
+
+	case "lua":
+		if len(split) > 2 && (split[1] == "--tty" || split[1] == "-t") {
+			cmd = strings.Join(split[2:], " ")
+
+			s.vm.SetExitMsg(comp.ExitMessage{
+				Code: comp.EXIT_LUA,
+				Msg:  cmd,
+			})
+
+			s.vm.G().UpdateAsync(func(g *gocui.Gui) error {
+				return s.vm.Quit(s.vm.G(), nil)
+			})
+
+			return nil
+		}
+
 		s.state.Push(NewLuaState(s.vm, s.state, cmd))
 		return nil
 
 	case "edit":
+		s.vm.SetExitMsg(comp.ExitMessage{
+			Code: comp.EXIT_EDT,
+			Msg:  cmd,
+		})
+
+		s.vm.G().UpdateAsync(func(*gocui.Gui) error {
+			return s.vm.Quit(s.vm.G(), nil)
+		})
+
 		return nil
 
 	case "go":

@@ -16,7 +16,18 @@ func main() {
 	if len(vargs) > 2 {
 		cmd := strings.Join(vargs[1:], " ")
 		logger.Info("exec:", cmd)
-		StartCmd(cmd)
+
+		if len(vargs) > 3 {
+			switch vargs[1] {
+			case "--edit":
+				cmd = strings.Join(vargs[2:], " ")
+				StartEdit(cmd)
+
+				return
+			}
+		}
+
+		StartLua(cmd)
 		return
 	}
 
@@ -25,10 +36,18 @@ func main() {
 		exit := StartTui()
 
 		switch exit.Code {
-		case comp.EXIT_CMD:
-			StartCmd(exit.Msg)
+		case comp.EXIT_EDT:
+			StartEdit(exit.Msg)
 			time.Sleep(100 * time.Millisecond)
 			continue
+
+		case comp.EXIT_CMD:
+
+		case comp.EXIT_LUA:
+			StartLua(exit.Msg)
+			time.Sleep(100 * time.Millisecond)
+			continue
+
 		}
 
 		running = false
