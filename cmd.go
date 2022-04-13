@@ -18,8 +18,8 @@ func StartLua(cmd string) {
 	defer cancel()
 
 	info := command.Info{
-		Command: "lua build-app.lua " + cmd,  // TODO: allow user to set lua endpoint
-		Dir:     util.EXEC_PATH + "/../lua/", // TODO: allow user to set lua direcoty
+		Command: "lua build-app.lua " + cmd, // TODO: allow user to set lua endpoint
+		Dir:     util.EXEC_PATH + "/lua/",   // TODO: allow user to set lua direcoty
 		Ctx:     ctx,
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
@@ -52,7 +52,7 @@ func StartEdit(cmd string) {
 
 	info := command.Info{
 		Command: "nvim " + strings.Join(cmdArr, " "),
-		Dir:     util.EXEC_PATH + "/../lua/scripts/",
+		Dir:     util.EXEC_PATH + "/lua/scripts/",
 		Ctx:     ctx,
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
@@ -66,7 +66,7 @@ func StartEdit(cmd string) {
 }
 
 func StartLs() {
-	path := util.EXEC_PATH + "/../lua/scripts"
+	path := util.EXEC_PATH + "/lua/scripts"
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		logger.Errorf("failed ls [error=%s]", err.Error())

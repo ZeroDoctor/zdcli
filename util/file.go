@@ -1,8 +1,10 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var EXEC_PATH string
@@ -26,6 +28,12 @@ func GetExecPath() (string, error) {
 	if err != nil {
 		return path, err
 	}
+
+	index := strings.LastIndex(path, "/")
+	if index == -1 {
+		return path, fmt.Errorf("exec path is messed up [path=%s]", path)
+	}
+	path = path[:index]
 
 	return path, err
 }
