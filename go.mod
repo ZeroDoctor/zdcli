@@ -4,14 +4,16 @@ go 1.17
 
 require (
 	github.com/awesome-gocui/gocui v1.0.1
+	github.com/calyptia/go-bubble-table v0.1.0
+	github.com/charmbracelet/lipgloss v0.5.0
+	github.com/evertras/bubble-table v0.11.0
 	github.com/zerodoctor/go-logging v0.0.0-20210519025948-00476137f6e3
 )
 
 require (
-	github.com/calyptia/go-bubble-table v0.1.0 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/charmbracelet/bubbles v0.10.3 // indirect
 	github.com/charmbracelet/bubbletea v0.20.0 // indirect
-	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.0.0 // indirect

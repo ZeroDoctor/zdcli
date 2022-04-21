@@ -10,6 +10,7 @@ import (
 
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/logger"
+	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
 )
 
@@ -73,8 +74,17 @@ func StartLs() {
 		return
 	}
 
+	var data [][]interface{}
+
 	for _, file := range files {
-		str := fmt.Sprintf("%s | %s | %d | %s\n", file.Mode(), file.Name(), file.Size(), file.ModTime())
-		fmt.Print(str)
+		data = append(data, []interface{}{file.Mode(), file.Name(), file.Size(), file.ModTime()})
 	}
+
+	table, err := ui.NewTable([]string{"Mode", "Name", "Size", "Modify Time"}, data, 60, 60)
+	if err != nil {
+		logger.Errorf("failed to create ls table [error=%s]", err.Error())
+		return
+	}
+
+	fmt.Println(table.View())
 }
