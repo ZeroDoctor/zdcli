@@ -13,6 +13,8 @@ type Command struct {
 	g       *gocui.Gui
 	msgChan chan interface{}
 
+	w, h int
+
 	*tui.CommandManager
 }
 
@@ -28,9 +30,14 @@ func NewCommand(g *gocui.Gui, cm *tui.CommandManager) *Command {
 func (c Command) Name() string               { return "command" }
 func (c *Command) Channel() chan interface{} { return c.msgChan }
 func (c *Command) Send(msg comp.Data)        { c.msgChan <- msg }
+func (c Command) Width() int                 { return c.w }
+func (c Command) Height() int                { return c.h }
 
 func (c *Command) Layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
+
+	c.w = (maxX - 1) - (0)
+	c.h = (maxY - 1) - ((maxY - (maxY / 15)) - 1)
 	if v, err := g.SetView(c.Name(), 0, (maxY-(maxY/15))-1, maxX-1, maxY-1, 0); err != nil {
 		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err

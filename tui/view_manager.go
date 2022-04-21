@@ -70,6 +70,16 @@ func (vm *ViewManager) SetCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.Vi
 	return g.SetViewOnTop(name)
 }
 
+func (vm ViewManager) GetView(viewname string) (inter.IView, error) {
+	for _, view := range vm.views {
+		if view.Name() == viewname {
+			return view, nil
+		}
+	}
+
+	return nil, gocui.ErrUnknownView
+}
+
 func (vm ViewManager) SendView(viewname string, data interface{}) error {
 	for _, view := range vm.views {
 		if view.Name() == viewname {

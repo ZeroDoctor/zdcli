@@ -12,6 +12,8 @@ type Header struct {
 	g       *gocui.Gui
 	msgChan chan interface{}
 
+	w, h int
+
 	msg     string
 	permMsg string
 }
@@ -27,10 +29,14 @@ func NewHeader(g *gocui.Gui) *Header {
 func (h Header) Name() string               { return "header" }
 func (h *Header) Channel() chan interface{} { return h.msgChan }
 func (h *Header) Send(msg comp.Data)        { h.msgChan <- msg }
+func (h Header) Width() int                 { return h.w }
+func (h Header) Height() int                { return h.h }
 
 func (h *Header) Layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
 
+	h.w = (maxX - 1) - (0)
+	h.h = (maxY / 15) - (0)
 	if v, err := g.SetView(h.Name(), 0, 0, maxX-1, (maxY / 15), 0); err != nil {
 		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err

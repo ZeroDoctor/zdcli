@@ -31,7 +31,10 @@ func GetExecPath() (string, error) {
 
 	index := strings.LastIndex(path, "/")
 	if index == -1 {
-		return path, fmt.Errorf("exec path is messed up [path=%s]", path)
+		index = strings.LastIndex(path, "\\")
+		if index == -1 {
+			return path, fmt.Errorf("exec path is messed up [path=%s]", path)
+		}
 	}
 	path = path[:index]
 

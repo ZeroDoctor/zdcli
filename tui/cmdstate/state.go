@@ -2,13 +2,13 @@ package cmdstate
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
 )
 
@@ -90,16 +90,35 @@ func (s *State) Exec(cmd string) error {
 		return nil
 
 	case "ls":
-		path := util.EXEC_PATH + "/../lua/scripts"
+		path := util.EXEC_PATH + "/lua/scripts"
 		files, err := ioutil.ReadDir(path)
 		if err != nil {
 			return err
 		}
 
+		var data [][]interface{}
+
 		for _, file := range files {
-			str := fmt.Sprintf("%s | %s | %d | %s\n", file.Mode(), file.Name(), file.Size(), file.ModTime())
-			s.vm.SendView("screen", NewData("msg", str))
+			data = append(data, []interface{}{
+				file.Mode(), file.Name(), file.Size(), file.ModTime(),
+			})
 		}
+
+		screen, err := s.vm.GetView("screen")
+		if err != nil {
+			return err
+		}
+
+		table, err := ui.NewTable(
+			[]string{"Mode", "Name", "Size", "Modify Time"},
+			data,
+			screen.Width(), 10*len(data),
+		)
+		if err != nil {
+			return err
+		}
+
+		s.vm.SendView("screen", NewData("msg", table.View()+"\n"))
 
 		return nil
 	}

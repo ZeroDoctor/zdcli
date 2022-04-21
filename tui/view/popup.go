@@ -22,6 +22,9 @@ func NewPopup(g *gocui.Gui, name string) *Popup {
 	return p
 }
 
+func (p Popup) Width() int  { return 0 }
+func (p Popup) Height() int { return 0 }
+
 func (p *Popup) Layout(*gocui.Gui) error {
 	return nil
 }
