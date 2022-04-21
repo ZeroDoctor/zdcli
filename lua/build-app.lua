@@ -1,4 +1,5 @@
 local util = require('lib.util')
+local table_dump = require("lib.table_dump")
 
 local function main() 
 	if #arg < 1 then
@@ -34,16 +35,16 @@ local function main()
 	print('currently in '..env_type)
 	for i=command_start, #arg do
 		local command = util:trim_all(arg[i])
-                print(command)
-		local fn = app[command]
-		if fn == nil then
+    
+		if app[command] == nil then
 			print('error: failed to find command: '..command)
 			return
-		else
-			print('step: '..command..'...')
-			fn(env_type)
 		end
+    
+    print('step: '..command..'('..env_type..')'..'...')
+    app[command](app, env_type)
 	end
+  
 end
 
 main()

@@ -1,9 +1,5 @@
 local module = {}
 
-local env_type = 'dev'
-function module:set_env(env) env_type = env end
-function module:get_env() return env_type end
-
 local is_windows = false
 local success = true
 
