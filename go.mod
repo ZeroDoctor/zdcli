@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/awesome-gocui/gocui v1.0.1
-	github.com/calyptia/go-bubble-table v0.1.0
 	github.com/charmbracelet/lipgloss v0.5.0
 	github.com/evertras/bubble-table v0.11.0
 	github.com/zerodoctor/go-logging v0.0.0-20210519025948-00476137f6e3
@@ -17,9 +16,7 @@ require (
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.0.0 // indirect
-	github.com/juju/ansiterm v0.0.0-20210929141451-8b71cc96ebdc // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/lunixbochs/vtclean v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect

@@ -80,7 +80,7 @@ func StartLs() {
 		data = append(data, []interface{}{file.Mode(), file.Name(), file.Size(), file.ModTime()})
 	}
 
-	table, err := ui.NewTable([]string{"Mode", "Name", "Size", "Modify Time"}, data, 60, 60)
+	table, err := ui.NewTable([]string{"Mode", "Name", "Size", "Modify Time"}, data, 0, 0)
 	if err != nil {
 		logger.Errorf("failed to create ls table [error=%s]", err.Error())
 		return
