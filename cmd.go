@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/logger"
@@ -15,13 +14,10 @@ import (
 )
 
 func StartLua(cmd string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
-	defer cancel()
-
 	info := command.Info{
 		Command: "lua build-app.lua " + cmd, // TODO: allow user to set lua endpoint
 		Dir:     util.EXEC_PATH + "/lua/",   // TODO: allow user to set lua direcoty
-		Ctx:     ctx,
+		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
 		Stdin:   os.Stdin,
@@ -34,9 +30,6 @@ func StartLua(cmd string) {
 }
 
 func StartEdit(cmd string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Minute)
-	defer cancel()
-
 	var cmdArr []string
 	split := strings.Split(cmd, " ")
 	for _, str := range split {
@@ -54,7 +47,7 @@ func StartEdit(cmd string) {
 	info := command.Info{
 		Command: "nvim " + strings.Join(cmdArr, " "),
 		Dir:     util.EXEC_PATH + "/lua/scripts/",
-		Ctx:     ctx,
+		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
 		Stdin:   os.Stdin,
