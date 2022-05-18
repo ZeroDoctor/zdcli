@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
 	"github.com/zerodoctor/zdcli/tui/ui"
-	"github.com/zerodoctor/zdcli/util"
 )
 
 var (
@@ -23,12 +23,13 @@ func NewData(t, m string) comp.Data {
 
 type State struct {
 	vm inter.IViewManager
+	cfg *config.Config
 
 	state *comp.Stack
 }
 
-func NewState(vm inter.IViewManager, state *comp.Stack) *State {
-	return &State{vm: vm, state: state}
+func NewState(vm inter.IViewManager, state *comp.Stack, cfg *config.Config) *State {
+	return &State{vm: vm, state: state, cfg: cfg}
 }
 
 func (s *State) Exec(cmd string) error {
@@ -52,7 +53,7 @@ func (s *State) Exec(cmd string) error {
 			return nil
 		}
 
-		s.state.Push(NewForkState(s.vm, s.state, cmd))
+		s.state.Push(NewForkState(s.vm, s.state, cmd, s.cfg))
 		return nil
 
 	case "lua":
@@ -71,7 +72,7 @@ func (s *State) Exec(cmd string) error {
 			return nil
 		}
 
-		s.state.Push(NewLuaState(s.vm, s.state, cmd))
+		s.state.Push(NewLuaState(s.vm, s.state, cmd, s.cfg))
 		return nil
 
 	case "edit":
@@ -90,7 +91,7 @@ func (s *State) Exec(cmd string) error {
 		return nil
 
 	case "ls":
-		path := util.EXEC_PATH + "/lua/scripts"
+		path := s.cfg.RootScriptDir + "/scripts"
 		files, err := ioutil.ReadDir(path)
 		if err != nil {
 			return err

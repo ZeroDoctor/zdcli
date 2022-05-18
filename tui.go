@@ -7,12 +7,13 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/tui"
+	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
 	"github.com/zerodoctor/zdcli/tui/view"
 )
 
-func StartTui() comp.ExitMessage {
+func StartTui(cfg *config.Config) comp.ExitMessage {
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -24,7 +25,7 @@ func StartTui() comp.ExitMessage {
 	g.SelFgColor = gocui.ColorCyan
 
 	vm := tui.NewViewManager(g, []inter.IView{view.NewHeader(g), view.NewScreen(g)}, 1)
-	cm := tui.NewCommandManager(vm)
+	cm := tui.NewCommandManager(vm, cfg)
 
 	g.SetManagerFunc(vm.Layout)
 	km := tui.NewKeyManager(g, vm)

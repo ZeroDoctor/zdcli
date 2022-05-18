@@ -10,13 +10,14 @@ import (
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/ui"
-	"github.com/zerodoctor/zdcli/util"
+	"github.com/zerodoctor/zdcli/config"
 )
 
-func StartLua(cmd string) {
+func StartLua(cmd string, cfg *config.Config) {
 	info := command.Info{
-		Command: "bash -i -c 'lua5.3 build-app.lua " + cmd + "'", // TODO: allow user to set lua endpoint
-		Dir:     util.EXEC_PATH + "/lua/",                        // TODO: allow user to set lua direcoty
+		Command: cfg.ShellCmd, // TODO: allow user to set lua endpoint
+		Args: []string{cfg.LuaCmd+" build-app.lua " + cmd},
+		Dir:     cfg.RootScriptDir,                        // TODO: allow user to set lua direcoty
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
@@ -29,7 +30,7 @@ func StartLua(cmd string) {
 	}
 }
 
-func StartEdit(cmd string) {
+func StartEdit(cmd string, cfg *config.Config) {
 	var cmdArr []string
 	split := strings.Split(cmd, " ")
 	for _, str := range split {
@@ -45,8 +46,8 @@ func StartEdit(cmd string) {
 	}
 
 	info := command.Info{
-		Command: "nvim " + strings.Join(cmdArr, " "),
-		Dir:     util.EXEC_PATH + "/lua/scripts/",
+		Command: cfg.EditorCmd +" " + strings.Join(cmdArr, " "),
+		Dir:     cfg.RootScriptDir + "/scripts/",
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
@@ -59,8 +60,8 @@ func StartEdit(cmd string) {
 	}
 }
 
-func StartLs() {
-	path := util.EXEC_PATH + "/lua/scripts"
+func StartLs(cfg *config.Config) {
+	path := cfg.RootScriptDir + "/scripts"
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		logger.Errorf("failed ls [error=%s]", err.Error())

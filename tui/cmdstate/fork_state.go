@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/zerodoctor/zdcli/command"
+	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
 )
@@ -15,13 +16,15 @@ type ForkState struct {
 	stdin  chan string
 	state  *comp.Stack
 	cancel func()
+	cfg *config.Config
 }
 
-func NewForkState(vm inter.IViewManager, state *comp.Stack, cmd string) *ForkState {
+func NewForkState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *config.Config) *ForkState {
 	fork := &ForkState{
 		vm:    vm,
 		stdin: make(chan string, 5),
 		state: state,
+		cfg: cfg,
 	}
 
 	go fork.Start(cmd)
@@ -34,7 +37,8 @@ func (fs *ForkState) Start(cmd string) error {
 	fs.cancel = cancel
 
 	info := command.Info{
-		Command: cmd,
+		Command: fs.cfg.ShellCmd,
+		Args: []string{cmd},
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {

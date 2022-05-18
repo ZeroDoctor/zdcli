@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 
+	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/tui/cmdstate"
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/tui/inter"
@@ -13,13 +14,13 @@ type CommandManager struct {
 	state comp.Stack
 }
 
-func NewCommandManager(vm *ViewManager) *CommandManager {
+func NewCommandManager(vm *ViewManager, cfg *config.Config) *CommandManager {
 	cm := &CommandManager{
 		vm:    vm,
 		state: comp.NewStack(),
 	}
 
-	cm.state.Push(cmdstate.NewState(vm, &cm.state))
+	cm.state.Push(cmdstate.NewState(vm, &cm.state, cfg))
 
 	return cm
 }
