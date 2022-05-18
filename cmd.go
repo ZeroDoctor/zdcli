@@ -15,8 +15,8 @@ import (
 
 func StartLua(cmd string) {
 	info := command.Info{
-		Command: "lua build-app.lua " + cmd, // TODO: allow user to set lua endpoint
-		Dir:     util.EXEC_PATH + "/lua/",   // TODO: allow user to set lua direcoty
+		Command: "bash -i -c 'lua5.3 build-app.lua " + cmd + "'", // TODO: allow user to set lua endpoint
+		Dir:     util.EXEC_PATH + "/lua/",                        // TODO: allow user to set lua direcoty
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,

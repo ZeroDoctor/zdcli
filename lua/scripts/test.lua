@@ -1,5 +1,4 @@
 local app = require('lib.app')
-local util = require('lib.util')
 
 local test = app:extend()
 
@@ -18,8 +17,6 @@ function test:get_name(env_type)
   else
     print('why...')
   end
-      
-  
 end
 
 return test

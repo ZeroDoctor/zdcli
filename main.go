@@ -1,42 +1,35 @@
 package main
 
 import (
-	"os"
 	"strings"
 	"time"
 
+	"github.com/alecthomas/kong"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/comp"
 )
 
-func main() {
-	logger.Init()
+// TODO: Take a look at gocmd and urfave/cli
 
-	vargs := os.Args
-	if len(vargs) >= 2 {
-		cmd := strings.Join(vargs[1:], " ")
-		logger.Info("exec:", cmd)
+type EditCmd struct {
+	Name string `arg:"" optional:"" help:"name of lua script to edit"`
+}
 
-		switch vargs[1] {
-		case "--edit", "-e":
-			if len(vargs) >= 3 {
-				cmd = strings.Join(vargs[2:], " ")
-				StartEdit(cmd)
+func (e *EditCmd) Run() error {
+	StartEdit(e.Name)
+	return nil
+}
 
-				return
-			}
+type ListCmd struct{}
 
-			logger.Error("must provide file name")
-			return
-		case "--ls", "-l":
-			StartLs()
+func (l *ListCmd) Run() error {
+	StartLs()
+	return nil
+}
 
-			return
-		}
+type UiCmd struct{}
 
-		StartLua(cmd)
-		return
-	}
+func (u *UiCmd) Run() error {
 
 	running := true
 	for running {
@@ -58,6 +51,38 @@ func main() {
 		}
 
 		running = false
+	}
+
+	return nil
+}
+
+type RunCmd struct {
+	Script []string `arg:"" help:"script name and its arguments"`
+}
+
+func (r *RunCmd) Run() error {
+	StartLua(strings.Join(r.Script, " "))
+	return nil
+}
+
+var cli struct {
+	Edit EditCmd `cmd:"" help:"edit a lua script"`
+	List ListCmd `cmd:"" help:"list current lua script"`
+	Ui   UiCmd   `cmd:"" help:"show a terminal user interface"`
+	Run  RunCmd  `cmd:"" help:"run a lua script"`
+}
+
+func main() {
+	logger.Init()
+	ctx := kong.Parse(&cli)
+
+	err := ctx.Run()
+	if err == nil {
+		return
+	}
+
+	if len(ctx.Command()) > 0 {
+		StartEdit(ctx.Command())
 	}
 
 	logger.Print("Good Bye.")
