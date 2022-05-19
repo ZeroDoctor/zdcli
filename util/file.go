@@ -40,3 +40,27 @@ func GetExecPath() (string, error) {
 
 	return path, err
 }
+
+func GetFile(filename string) (os.FileInfo, error) {
+	return os.Stat(filename)
+}
+
+// FolderExists checks if a folder exists
+func FolderExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if err != nil || os.IsNotExist(err) {
+		return false
+	}
+
+	return info.IsDir()
+}
+
+// FileExists checks if a file exists
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if err != nil || os.IsNotExist(err) {
+		return false
+	}
+
+	return !info.IsDir()
+}
