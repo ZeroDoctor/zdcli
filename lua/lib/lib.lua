@@ -4,4 +4,5 @@ return {
   file = require("file"),
   util = require("util"),
   app = require("app"),
+	flags = require("flags")
 }

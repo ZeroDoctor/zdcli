@@ -2,7 +2,7 @@ local util = require('lib.util')
 
 local function main()
 	if #arg < 1 then
-		print('error: app name not given')
+		util.perror('app name not given')
 		return
 	end
 
@@ -22,12 +22,12 @@ local function main()
 
 	local app = require('scripts.'..app_name)
 	if app == nil then
-		print('error: failed to find app name: '..app_name)
+		util.perror('failed to find app name: '..app_name)
 		return
 	end
 
 	if command_start > #arg then
-		print('error: command not found for app: '..app_name)
+		util.perror('command not found for app: '..app_name)
 		return
 	end
 
@@ -36,7 +36,7 @@ local function main()
 		local command = util:trim_all(arg[i])
 
 		if app[command] == nil then
-			print('error: failed to find command: '..command)
+			util.perror('failed to find command: '..command)
 			return
 		end
 
