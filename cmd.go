@@ -25,7 +25,7 @@ function script:hello_world(env_type)
 end
 
 return script
-	`
+`
 
 	if i := strings.LastIndex(name, ".lua"); i == -1 {
 		name += ".lua"

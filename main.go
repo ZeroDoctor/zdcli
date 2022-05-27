@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"os"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
+	"github.com/zerodoctor/zdcli/alert"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/comp"
@@ -102,6 +105,41 @@ func main() {
 			Action: func(ctx *cli.Context) error {
 				RunUI(cfg)
 				return nil
+			},
+		},
+		{
+			Name:  "alert",
+			Usage: "notifies user when an event happens",
+			Subcommands: []*cli.Command{
+				{
+					Name:    "endpoint",
+					Aliases: []string{"e"},
+					Usage:   "create an alert when endpoint fails or returns status code not between 200-299",
+					Flags: []cli.Flag{
+						&cli.StringFlag{
+							Name:     "route",
+							Usage:    "an endpoint i.e. https://google.com",
+							Required: true,
+						},
+						&cli.StringFlag{
+							Name:     "message",
+							Usage:    "a message to display when route/endpoint fails",
+							Required: true,
+						},
+					},
+					Action: func(ctx *cli.Context) error {
+						c, cancel := context.WithCancel(ctx.Context)
+						defer cancel()
+
+						alert.WatchEndpoint(c, ctx.String("route"), ctx.String("message"))
+						time.Sleep(10 * time.Second)
+
+						return nil
+					},
+				},
+			},
+			Action: func(ctx *cli.Context) error {
+				return errors.New("must provide additional subcommand(s)")
 			},
 		},
 	}
