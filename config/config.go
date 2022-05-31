@@ -8,11 +8,11 @@ import (
 )
 
 type Config struct {
-	LuaCmd string
-	EditorCmd string
-	RootScriptDir string
+	LuaCmd         string
+	EditorCmd      string
+	RootScriptDir  string
 	ServerEndPoint string
-	ShellCmd string
+	ShellCmd       string
 }
 
 func (c *Config) Save() error {
@@ -25,9 +25,10 @@ func (c *Config) Save() error {
 }
 
 func (c *Config) Load() error {
-	data, err := ioutil.ReadFile(util.EXEC_PATH+"/zdconfig.toml")
+	data, err := ioutil.ReadFile(util.EXEC_PATH + "/zdconfig.toml")
 	if err != nil {
-		return err
+		c = Init()
+		return c.Save()
 	}
 
 	return toml.Unmarshal(data, c)
