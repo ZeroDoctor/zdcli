@@ -13,7 +13,7 @@ import (
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/util"
+	zdgoutil "github.com/zerodoctor/zdgo-util"
 )
 
 func RunUI(cfg *config.Config) {
@@ -40,108 +40,151 @@ func RunUI(cfg *config.Config) {
 	}
 }
 
+func NewCmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:    "new",
+		Aliases: []string{"n"},
+		Usage:   "create a new lua script",
+		Action: func(ctx *cli.Context) error {
+			for _, arg := range ctx.Args().Slice() {
+				CreateLua(arg, cfg)
+			}
+
+			return nil
+		},
+	}
+}
+
+func RemoveCmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:    "remove",
+		Aliases: []string{"rm"},
+		Usage:   "remove a lua script or a directory",
+		Action: func(ctx *cli.Context) error {
+			for _, arg := range ctx.Args().Slice() {
+				RemoveLua(arg, cfg)
+			}
+
+			return nil
+		},
+	}
+}
+
+func EditCmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:    "edit",
+		Aliases: []string{"e"},
+		Usage:   "edits a lua script",
+		Action: func(ctx *cli.Context) error {
+			StartEdit(ctx.Args().Get(0), cfg)
+			return nil
+		},
+	}
+}
+
+func ListCmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:    "list",
+		Aliases: []string{"ls"},
+		Usage:   "list current lua scripts",
+		Action: func(ctx *cli.Context) error {
+			StartLs(cfg)
+			return nil
+		},
+	}
+}
+
+func SetupCmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:  "setup",
+		Usage: "setup lua, editor, and dir configs",
+	}
+}
+
+func UICmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:  "ui",
+		Usage: "opens a custom terminal emulator",
+		Action: func(ctx *cli.Context) error {
+			RunUI(cfg)
+			return nil
+		},
+	}
+}
+
+func AlertCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "alert",
+		Usage: "notifies user when an event happens",
+		Subcommands: []*cli.Command{
+			{
+				Name:    "endpoint",
+				Aliases: []string{"e"},
+				Usage:   "create an alert when endpoint fails or returns status code not between 200-299",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "route",
+						Usage:    "an endpoint i.e. https://google.com",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "message",
+						Usage:    "a message to display when route/endpoint fails",
+						Required: true,
+					},
+					&cli.IntFlag{
+						Name:    "check-duration",
+						Aliases: []string{"c"},
+						Usage:   "period (in seconds) alert checks endpoint",
+					},
+				},
+
+				Action: func(ctx *cli.Context) error {
+					c, cancel := context.WithCancel(ctx.Context)
+					defer cancel()
+
+					checkDur := 5 * time.Second
+					if sec := ctx.Int("check-duration"); sec > 0 {
+						checkDur = time.Duration(sec) * time.Second
+					}
+
+					a := alert.WatchEndpoint(
+						c,
+						ctx.String("route"),
+						ctx.String("message"),
+						checkDur,
+					)
+					a.Wait()
+
+					return nil
+				},
+			},
+		},
+
+		Action: func(ctx *cli.Context) error {
+			cli.ShowAppHelp(ctx)
+			return errors.New("must provide additional subcommand(s)")
+		},
+	}
+}
+
 func main() {
 	logger.Init()
 
 	cfg := &config.Config{}
 	if err := cfg.Load(); err != nil {
-		cfg.ShellCmd = "bash -c -i"
-		cfg.EditorCmd = "nvim"
-		cfg.LuaCmd = "lua"
-		cfg.RootScriptDir = util.EXEC_PATH + "/lua"
+		logger.Errorf("failed to save/load config [error=%s]", err.Error())
 	}
 
 	app := cli.NewApp()
 	app.Commands = []*cli.Command{
-		{
-			Name:    "new",
-			Aliases: []string{"n"},
-			Usage:   "create a new lua script",
-			Action: func(ctx *cli.Context) error {
-				for _, arg := range ctx.Args().Slice() {
-					CreateLua(arg, cfg)
-				}
-
-				return nil
-			},
-		},
-		{
-			Name:    "remove",
-			Aliases: []string{"rm"},
-			Usage:   "remove a lua script or a directory",
-			Action: func(ctx *cli.Context) error {
-				for _, arg := range ctx.Args().Slice() {
-					RemoveLua(arg, cfg)
-				}
-
-				return nil
-			},
-		},
-		{
-			Name:    "edit",
-			Aliases: []string{"e"},
-			Usage:   "edits a lua script",
-			Action: func(ctx *cli.Context) error {
-				StartEdit(ctx.Args().Get(0), cfg)
-				return nil
-			},
-		},
-		{
-			Name:    "list",
-			Aliases: []string{"ls"},
-			Usage:   "list current lua scripts",
-			Action: func(ctx *cli.Context) error {
-				StartLs(cfg)
-				return nil
-			},
-		},
-		{
-			Name:  "setup",
-			Usage: "setup lua, editor, and dir configs",
-		},
-		{
-			Name:  "ui",
-			Usage: "opens a custom terminal emulator",
-			Action: func(ctx *cli.Context) error {
-				RunUI(cfg)
-				return nil
-			},
-		},
-		{
-			Name:  "alert",
-			Usage: "notifies user when an event happens",
-			Subcommands: []*cli.Command{
-				{
-					Name:    "endpoint",
-					Aliases: []string{"e"},
-					Usage:   "create an alert when endpoint fails or returns status code not between 200-299",
-					Flags: []cli.Flag{
-						&cli.StringFlag{
-							Name:     "route",
-							Usage:    "an endpoint i.e. https://google.com",
-							Required: true,
-						},
-						&cli.StringFlag{
-							Name:     "message",
-							Usage:    "a message to display when route/endpoint fails",
-							Required: true,
-						},
-					},
-					Action: func(ctx *cli.Context) error {
-						c, cancel := context.WithCancel(ctx.Context)
-						defer cancel()
-
-						alert.WatchEndpoint(c, ctx.String("route"), ctx.String("message"))
-						time.Sleep(10 * time.Second)
-
-						return nil
-					},
-				},
-			},
-			Action: func(ctx *cli.Context) error {
-				return errors.New("must provide additional subcommand(s)")
-			},
-		},
+		NewCmd(cfg),
+		RemoveCmd(cfg),
+		EditCmd(cfg),
+		ListCmd(cfg),
+		SetupCmd(cfg),
+		UICmd(cfg),
+		AlertCmd(),
 	}
 
 	app.Action = func(ctx *cli.Context) error {
@@ -158,7 +201,14 @@ func main() {
 	sort.Sort(cli.FlagsByName(app.Flags))
 	sort.Sort(cli.CommandsByName(app.Commands))
 
-	err := app.Run(os.Args)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go zdgoutil.OnExit(func(s os.Signal, i ...interface{}) {
+		cancel()
+	})
+
+	err := app.RunContext(ctx, os.Args)
 	if err != nil {
 		logger.Fatalf("failed to run cli [error=%s]", err.Error())
 	}

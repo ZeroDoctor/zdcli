@@ -3,4 +3,6 @@ zdcli
 test
 testcmd
 zd
+*.toml
+*.db
 
