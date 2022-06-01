@@ -59,6 +59,10 @@ func (a *Alert) Listener() {
 			return
 		case <-a.tick.C:
 			trouble := a.action()
+			if trouble == nil {
+				continue
+			}
+
 			trouble.options = append(trouble.options, beeep.AppOption(trouble.title))
 			trouble.options = append(trouble.options, beeep.MessageOption(trouble.message))
 			if trouble != nil {

@@ -5,11 +5,13 @@ go 1.18
 require (
 	github.com/awesome-gocui/gocui v1.1.0
 	github.com/charmbracelet/lipgloss v0.5.0
-	github.com/evertras/bubble-table v0.12.0
+	github.com/evertras/bubble-table v0.12.1
 	github.com/gen2brain/beeep v0.0.0-20220518085355-d7852edf42fc
 	github.com/pelletier/go-toml/v2 v2.0.1
 	github.com/urfave/cli/v2 v2.8.1
+	github.com/zerodoctor/beeep v0.0.0-20220601134518-919e763802ab
 	github.com/zerodoctor/go-logging v0.0.0-20220526170309-80ad3351e22d
+	github.com/zerodoctor/zdgo-util v0.0.0-20220528015449-627ce57e8ee0
 )
 
 require (
@@ -34,8 +36,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	github.com/zerodoctor/beeep v0.0.0-20220528040536-42906ea61634 // indirect
-	github.com/zerodoctor/zdgo-util v0.0.0-20220528015449-627ce57e8ee0 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/text v0.3.7 // indirect
