@@ -66,6 +66,7 @@ func (a *Alert) Listener() {
 			trouble.options = append(trouble.options, beeep.AppOption(trouble.title))
 			trouble.options = append(trouble.options, beeep.MessageOption(trouble.message))
 			if trouble != nil {
+				logger.Warnf("send notification [title=%s] [message=%s]", trouble.title, trouble.message)
 				if err := beeep.Notify(trouble.options...); err != nil {
 					logger.Errorf("failed to send notification", err.Error())
 				}
