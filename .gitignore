@@ -5,4 +5,5 @@ testcmd
 zd
 *.toml
 *.db
+*.env
 

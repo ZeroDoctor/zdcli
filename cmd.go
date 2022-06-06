@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/TwiN/go-pastebin"
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
@@ -125,4 +126,76 @@ func StartLs(cfg *config.Config) {
 	}
 
 	fmt.Println(table.View())
+}
+
+type File struct {
+	Name    string
+	Type    string
+	Content []byte
+}
+
+func PasteBinUpload(paths []string) {
+	dir, err := os.Getwd()
+	if err != nil {
+		logger.Errorf("failed to get working directory [error=%s]", err.Error())
+		return
+	}
+
+	var files []File
+
+	for _, path := range paths {
+		path = dir + "/" + path
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			logger.Errorf("failed to read [file=%s] [error=%s]", path, err.Error())
+			continue
+		}
+
+		var fileType string
+		lastDot := strings.LastIndex(path, ".")
+		if lastDot <= -1 {
+			logger.Warnf("unable to determine type [file=%s]", path)
+		} else {
+			fileType = path[lastDot:]
+		}
+
+		var name string
+		lastSlash := strings.LastIndex(path, "/")
+		if lastSlash <= -1 {
+			logger.Errorf("malformed [file=%s] could find last dash")
+			continue
+		} else {
+			offset := len(path)
+			if lastDot > 0 {
+				offset = lastDot
+			}
+
+			name = path[lastSlash:offset]
+		}
+
+		files = append(files, File{
+			Name:    name,
+			Type:    fileType,
+			Content: content,
+		})
+	}
+
+	// TODO: integrate vault
+	client, err := pastebin.NewClient("", "", os.Getenv("PASTE_BIN_KEY"))
+	if err != nil {
+		logger.Errorf("failed to create paste bin client [error=%s]", err.Error())
+		return
+	}
+
+	for _, file := range files {
+		key, err := client.CreatePaste(
+			pastebin.NewCreatePasteRequest(file.Name, string(file.Content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, file.Type),
+		)
+		if err != nil {
+			logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", file.Name, err.Error())
+			continue
+		}
+
+		logger.Info("created paste [key=%s]", key)
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/alert"
 	"github.com/zerodoctor/zdcli/config"
@@ -37,6 +38,23 @@ func RunUI(cfg *config.Config) {
 		}
 
 		running = false
+	}
+}
+
+func NewPasteUpload() *cli.Command {
+	return &cli.Command{
+		Name: "paste",
+		Subcommands: []*cli.Command{
+			{
+				Name:    "upload",
+				Aliases: []string{"u"},
+				Usage:   "upload files to pastebin.com",
+				Action: func(ctx *cli.Context) error {
+					PasteBinUpload(ctx.Args().Slice())
+					return nil
+				},
+			},
+		},
 	}
 }
 
@@ -170,6 +188,10 @@ func AlertCmd() *cli.Command {
 
 func main() {
 	logger.Init()
+
+	if err := godotenv.Load(".env"); err != nil {
+		logger.Info("env file not found [error=%s]", err.Error())
+	}
 
 	cfg := &config.Config{}
 	if err := cfg.Load(); err != nil {
