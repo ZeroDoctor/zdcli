@@ -14,6 +14,7 @@ import (
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/comp"
+	"github.com/zerodoctor/zdcli/util"
 	zdgoutil "github.com/zerodoctor/zdgo-util"
 )
 
@@ -41,9 +42,10 @@ func RunUI(cfg *config.Config) {
 	}
 }
 
-func NewPasteUpload() *cli.Command {
+func PasteCmd() *cli.Command {
 	return &cli.Command{
-		Name: "paste",
+		Name:  "paste",
+		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
 		Subcommands: []*cli.Command{
 			{
 				Name:    "upload",
@@ -51,6 +53,16 @@ func NewPasteUpload() *cli.Command {
 				Usage:   "upload files to pastebin.com",
 				Action: func(ctx *cli.Context) error {
 					PasteBinUpload(ctx.Args().Slice())
+
+					return nil
+				},
+			},
+			{
+				Name:  "update",
+				Usage: "update files in pastebin.com while keep the same pastebin key",
+				Action: func(ctx *cli.Context) error {
+					PasteBinUpdate(ctx.Args().Slice())
+
 					return nil
 				},
 			},
@@ -189,7 +201,7 @@ func AlertCmd() *cli.Command {
 func main() {
 	logger.Init()
 
-	if err := godotenv.Load(".env"); err != nil {
+	if err := godotenv.Load(util.EXEC_PATH + "/.env"); err != nil {
 		logger.Info("env file not found [error=%s]", err.Error())
 	}
 
@@ -207,6 +219,7 @@ func main() {
 		SetupCmd(cfg),
 		UICmd(cfg),
 		AlertCmd(),
+		PasteCmd(),
 	}
 
 	app.Action = func(ctx *cli.Context) error {

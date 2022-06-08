@@ -128,12 +128,6 @@ func StartLs(cfg *config.Config) {
 	fmt.Println(table.View())
 }
 
-type File struct {
-	Name    string
-	Type    string
-	Content []byte
-}
-
 func PasteBinUpload(paths []string) {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -141,55 +135,43 @@ func PasteBinUpload(paths []string) {
 		return
 	}
 
-	var files []File
+	var files []*os.File
 
 	for _, path := range paths {
 		path = dir + "/" + path
-		content, err := ioutil.ReadFile(path)
+		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			logger.Errorf("failed to read [file=%s] [error=%s]", path, err.Error())
 			continue
 		}
 
-		var fileType string
-		lastDot := strings.LastIndex(path, ".")
-		if lastDot <= -1 {
-			logger.Warnf("unable to determine type [file=%s]", path)
-		} else {
-			fileType = path[lastDot:]
-		}
-
-		var name string
-		lastSlash := strings.LastIndex(path, "/")
-		if lastSlash <= -1 {
-			logger.Errorf("malformed [file=%s] could find last dash")
-			continue
-		} else {
-			offset := len(path)
-			if lastDot > 0 {
-				offset = lastDot
-			}
-
-			name = path[lastSlash:offset]
-		}
-
-		files = append(files, File{
-			Name:    name,
-			Type:    fileType,
-			Content: content,
-		})
+		files = append(files, file)
 	}
 
 	// TODO: integrate vault
-	client, err := pastebin.NewClient("", "", os.Getenv("PASTE_BIN_KEY"))
+	client, err := pastebin.NewClient(os.Getenv("PASTE_BIN_USER"), os.Getenv("PASTE_BIN_PASS"), os.Getenv("PASTE_BIN_KEY"))
 	if err != nil {
 		logger.Errorf("failed to create paste bin client [error=%s]", err.Error())
 		return
 	}
 
 	for _, file := range files {
+		content, err := ioutil.ReadAll(file)
+		if err != nil {
+			logger.Errorf("failed to read [file=%s] [error=%s]", file.Name(), err.Error())
+			continue
+		}
+
+		name := file.Name()
+		ftype := ""
+		index := strings.LastIndex(name, ".")
+		if index != -1 {
+			ftype = name[index:]
+			name = name[:index]
+		}
+
 		key, err := client.CreatePaste(
-			pastebin.NewCreatePasteRequest(file.Name, string(file.Content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, file.Type),
+			pastebin.NewCreatePasteRequest(name, string(content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, ftype),
 		)
 		if err != nil {
 			logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", file.Name, err.Error())
@@ -197,5 +179,44 @@ func PasteBinUpload(paths []string) {
 		}
 
 		logger.Info("created paste [key=%s]", key)
+		file.Close()
+	}
+}
+
+func PasteBinUpdate(paths []string) {
+	dir, err := os.Getwd()
+	if err != nil {
+		logger.Errorf("failed to get working directory [error=%s]", err.Error())
+		return
+	}
+
+	var files []*os.File
+
+	for _, path := range paths {
+		path = dir + "/" + path
+		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
+		if err != nil {
+			logger.Errorf("failed to read [file=%s] [error=%s]", path, err.Error())
+			continue
+		}
+
+		files = append(files, file)
+	}
+
+	// TODO: integrate vault
+	client, err := pastebin.NewClient(os.Getenv("PASTE_BIN_USER"), os.Getenv("PASTE_BIN_PASS"), os.Getenv("PASTE_BIN_KEY"))
+	if err != nil {
+		logger.Errorf("failed to create paste bin client [error=%s]", err.Error())
+		return
+	}
+
+	content, err := client.GetAllUserPastes()
+	if err != nil {
+		logger.Errorf("failed to get all users pastes [error=%s]", err.Error())
+		return
+	}
+
+	for _, paste := range content {
+		logger.Infof("[paste=%+v]\n", paste)
 	}
 }
