@@ -11,45 +11,49 @@ import (
 	"github.com/zerodoctor/zdcli/logger"
 )
 
+func UploadSubCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "upload",
+		Usage: "upload files in pastebin.com while keep the same pastebin key",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name: "folder",
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			var paths []string
+
+			if ctx.String("folder") != "" {
+				folder := ctx.String("folder")
+				files, err := ioutil.ReadDir(folder)
+				if err != nil {
+					logger.Errorf("failed to read [folder=%s] [error=%s]", folder, err.Error())
+					return nil
+				}
+
+				for _, file := range files {
+					if file.IsDir() {
+						continue
+					}
+
+					paths = append(paths, folder+"/"+file.Name())
+				}
+			}
+
+			paths = append(paths, ctx.Args().Slice()...)
+			PasteBinUpload(paths)
+
+			return nil
+		},
+	}
+}
+
 func PasteCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "paste",
 		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
 		Subcommands: []*cli.Command{
-			{
-				Name:  "upload",
-				Usage: "upload files in pastebin.com while keep the same pastebin key",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name: "folder",
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					var paths []string
-
-					if ctx.String("folder") != "" {
-						folder := ctx.String("folder")
-						files, err := ioutil.ReadDir(folder)
-						if err != nil {
-							logger.Errorf("failed to read [folder=%s] [error=%s]", folder, err.Error())
-							return nil
-						}
-
-						for _, file := range files {
-							if file.IsDir() {
-								continue
-							}
-
-							paths = append(paths, folder+"/"+file.Name())
-						}
-					}
-
-					paths = append(paths, ctx.Args().Slice()...)
-					PasteBinUpload(paths)
-
-					return nil
-				},
-			},
+			UploadSubCmd(),
 		},
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/cmd"
+	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/comp"
@@ -17,19 +18,35 @@ import (
 	zdgoutil "github.com/zerodoctor/zdgo-util"
 )
 
+func StartLua(cmd string, cfg *config.Config) {
+	info := command.Info{
+		Command: cfg.ShellCmd, // TODO: allow user to set lua endpoint
+		Args:    []string{cfg.LuaCmd + " build-app.lua " + cmd},
+		Dir:     cfg.RootScriptDir, // TODO: allow user to set lua direcoty
+		Ctx:     context.Background(),
+		Stdout:  os.Stdout,
+		Stderr:  os.Stderr,
+		Stdin:   os.Stdin,
+	}
+
+	err := command.Exec(&info)
+	if err != nil {
+		logger.Errorf("failed command [error=%s]", err.Error())
+	}
+}
+
 func RunUI(cfg *config.Config) {
 	running := true
 	for running {
 		exit := StartTui(cfg)
-
 		switch exit.Code {
 		case comp.EXIT_EDT:
-			cmd.StartEdit(exit.Msg, cfg)
+			cmd.EditLua(exit.Msg, cfg)
 			time.Sleep(100 * time.Millisecond)
 			continue
 
 		case comp.EXIT_LUA:
-			cmd.StartLua(exit.Msg, cfg)
+			StartLua(exit.Msg, cfg)
 			time.Sleep(100 * time.Millisecond)
 			continue
 
@@ -72,14 +89,14 @@ func main() {
 
 	app := cli.NewApp()
 	app.Commands = []*cli.Command{
-		cmd.NewCmd(cfg),
-		cmd.RemoveCmd(cfg),
-		cmd.EditCmd(cfg),
-		cmd.ListCmd(cfg),
-		SetupCmd(cfg),
-		UICmd(cfg),
+		cmd.NewLuaCmd(cfg),
+		cmd.RemoveLuaCmd(cfg),
+		cmd.EditLuaCmd(cfg),
+		cmd.ListLuaCmd(cfg),
 		cmd.AlertCmd(),
 		cmd.PasteCmd(),
+		SetupCmd(cfg),
+		UICmd(cfg),
 	}
 
 	app.Action = func(ctx *cli.Context) error {
@@ -88,8 +105,7 @@ func main() {
 			return nil
 		}
 
-		cmd.StartLua(strings.Join(ctx.Args().Slice(), " "), cfg)
-
+		StartLua(strings.Join(ctx.Args().Slice(), " "), cfg)
 		return nil
 	}
 
