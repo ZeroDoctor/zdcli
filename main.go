@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -11,7 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
-	"github.com/zerodoctor/zdcli/alert"
+	"github.com/zerodoctor/zdcli/cmd"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/comp"
@@ -26,12 +24,12 @@ func RunUI(cfg *config.Config) {
 
 		switch exit.Code {
 		case comp.EXIT_EDT:
-			StartEdit(exit.Msg, cfg)
+			cmd.StartEdit(exit.Msg, cfg)
 			time.Sleep(100 * time.Millisecond)
 			continue
 
 		case comp.EXIT_LUA:
-			StartLua(exit.Msg, cfg)
+			cmd.StartLua(exit.Msg, cfg)
 			time.Sleep(100 * time.Millisecond)
 			continue
 
@@ -42,104 +40,6 @@ func RunUI(cfg *config.Config) {
 		running = false
 	}
 }
-
-func PasteCmd() *cli.Command {
-	return &cli.Command{
-		Name:  "paste",
-		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
-		Subcommands: []*cli.Command{
-			{
-				Name:  "upload",
-				Usage: "upload files in pastebin.com while keep the same pastebin key",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name: "folder",
-					},
-				},
-				Action: func(ctx *cli.Context) error {
-					var paths []string
-
-					if ctx.String("folder") != "" {
-						folder := ctx.String("folder")
-						files, err := ioutil.ReadDir(folder)
-						if err != nil {
-							logger.Errorf("failed to read [folder=%s] [error=%s]", folder, err.Error())
-							return nil
-						}
-
-						for _, file := range files {
-							if file.IsDir() {
-								continue
-							}
-
-							paths = append(paths, folder+"/"+file.Name())
-						}
-					}
-
-					paths = append(paths, ctx.Args().Slice()...)
-					PasteBinUpload(paths)
-
-					return nil
-				},
-			},
-		},
-	}
-}
-
-func NewCmd(cfg *config.Config) *cli.Command {
-	return &cli.Command{
-		Name:    "new",
-		Aliases: []string{"n"},
-		Usage:   "create a new lua script",
-		Action: func(ctx *cli.Context) error {
-			for _, arg := range ctx.Args().Slice() {
-				CreateLua(arg, cfg)
-			}
-
-			return nil
-		},
-	}
-}
-
-func RemoveCmd(cfg *config.Config) *cli.Command {
-	return &cli.Command{
-		Name:    "remove",
-		Aliases: []string{"rm"},
-		Usage:   "remove a lua script or a directory",
-		Action: func(ctx *cli.Context) error {
-			for _, arg := range ctx.Args().Slice() {
-				RemoveLua(arg, cfg)
-			}
-
-			return nil
-		},
-	}
-}
-
-func EditCmd(cfg *config.Config) *cli.Command {
-	return &cli.Command{
-		Name:    "edit",
-		Aliases: []string{"e"},
-		Usage:   "edits a lua script",
-		Action: func(ctx *cli.Context) error {
-			StartEdit(ctx.Args().Get(0), cfg)
-			return nil
-		},
-	}
-}
-
-func ListCmd(cfg *config.Config) *cli.Command {
-	return &cli.Command{
-		Name:    "list",
-		Aliases: []string{"ls"},
-		Usage:   "list current lua scripts",
-		Action: func(ctx *cli.Context) error {
-			StartLs(cfg)
-			return nil
-		},
-	}
-}
-
 func SetupCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "setup",
@@ -158,62 +58,6 @@ func UICmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func AlertCmd() *cli.Command {
-	return &cli.Command{
-		Name:  "alert",
-		Usage: "notifies user when an event happens",
-		Subcommands: []*cli.Command{
-			{
-				Name:    "endpoint",
-				Aliases: []string{"e"},
-				Usage:   "create an alert when endpoint fails or returns status code not between 200-299",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:     "route",
-						Usage:    "an endpoint i.e. https://google.com",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "message",
-						Usage:    "a message to display when route/endpoint fails",
-						Required: true,
-					},
-					&cli.IntFlag{
-						Name:    "check-duration",
-						Aliases: []string{"c"},
-						Usage:   "period (in seconds) alert checks endpoint",
-					},
-				},
-
-				Action: func(ctx *cli.Context) error {
-					c, cancel := context.WithCancel(ctx.Context)
-					defer cancel()
-
-					checkDur := 5 * time.Second
-					if sec := ctx.Int("check-duration"); sec > 0 {
-						checkDur = time.Duration(sec) * time.Second
-					}
-
-					a := alert.WatchEndpoint(
-						c,
-						ctx.String("route"),
-						ctx.String("message"),
-						checkDur,
-					)
-					a.Wait()
-
-					return nil
-				},
-			},
-		},
-
-		Action: func(ctx *cli.Context) error {
-			cli.ShowAppHelp(ctx)
-			return errors.New("must provide additional subcommand(s)")
-		},
-	}
-}
-
 func main() {
 	logger.Init()
 
@@ -228,14 +72,14 @@ func main() {
 
 	app := cli.NewApp()
 	app.Commands = []*cli.Command{
-		NewCmd(cfg),
-		RemoveCmd(cfg),
-		EditCmd(cfg),
-		ListCmd(cfg),
+		cmd.NewCmd(cfg),
+		cmd.RemoveCmd(cfg),
+		cmd.EditCmd(cfg),
+		cmd.ListCmd(cfg),
 		SetupCmd(cfg),
 		UICmd(cfg),
-		AlertCmd(),
-		PasteCmd(),
+		cmd.AlertCmd(),
+		cmd.PasteCmd(),
 	}
 
 	app.Action = func(ctx *cli.Context) error {
@@ -244,7 +88,7 @@ func main() {
 			return nil
 		}
 
-		StartLua(strings.Join(ctx.Args().Slice(), " "), cfg)
+		cmd.StartLua(strings.Join(ctx.Args().Slice(), " "), cfg)
 
 		return nil
 	}
