@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -48,20 +49,35 @@ func PasteCmd() *cli.Command {
 		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
 		Subcommands: []*cli.Command{
 			{
-				Name:    "upload",
-				Aliases: []string{"u"},
-				Usage:   "upload files to pastebin.com",
-				Action: func(ctx *cli.Context) error {
-					PasteBinUpload(ctx.Args().Slice())
-
-					return nil
+				Name:  "upload",
+				Usage: "upload files in pastebin.com while keep the same pastebin key",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name: "folder",
+					},
 				},
-			},
-			{
-				Name:  "update",
-				Usage: "update files in pastebin.com while keep the same pastebin key",
 				Action: func(ctx *cli.Context) error {
-					PasteBinUpdate(ctx.Args().Slice())
+					var paths []string
+
+					if ctx.String("folder") != "" {
+						folder := ctx.String("folder")
+						files, err := ioutil.ReadDir(folder)
+						if err != nil {
+							logger.Errorf("failed to read [folder=%s] [error=%s]", folder, err.Error())
+							return nil
+						}
+
+						for _, file := range files {
+							if file.IsDir() {
+								continue
+							}
+
+							paths = append(paths, folder+"/"+file.Name())
+						}
+					}
+
+					paths = append(paths, ctx.Args().Slice()...)
+					PasteBinUpload(paths)
 
 					return nil
 				},

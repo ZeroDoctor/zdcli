@@ -129,78 +129,24 @@ func StartLs(cfg *config.Config) {
 }
 
 func PasteBinUpload(paths []string) {
-	dir, err := os.Getwd()
-	if err != nil {
-		logger.Errorf("failed to get working directory [error=%s]", err.Error())
-		return
-	}
-
-	var files []*os.File
-
+	fileMap := make(map[string]*os.File)
 	for _, path := range paths {
-		path = dir + "/" + path
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
 		if err != nil {
 			logger.Errorf("failed to read [file=%s] [error=%s]", path, err.Error())
-			continue
-		}
-
-		files = append(files, file)
-	}
-
-	// TODO: integrate vault
-	client, err := pastebin.NewClient(os.Getenv("PASTE_BIN_USER"), os.Getenv("PASTE_BIN_PASS"), os.Getenv("PASTE_BIN_KEY"))
-	if err != nil {
-		logger.Errorf("failed to create paste bin client [error=%s]", err.Error())
-		return
-	}
-
-	for _, file := range files {
-		content, err := ioutil.ReadAll(file)
-		if err != nil {
-			logger.Errorf("failed to read [file=%s] [error=%s]", file.Name(), err.Error())
 			continue
 		}
 
 		name := file.Name()
-		ftype := ""
 		index := strings.LastIndex(name, ".")
 		if index != -1 {
-			ftype = name[index:]
 			name = name[:index]
+			index = strings.LastIndex(name, "/")
+			if index != -1 {
+				name = name[index+1:]
+			}
 		}
-
-		key, err := client.CreatePaste(
-			pastebin.NewCreatePasteRequest(name, string(content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, ftype),
-		)
-		if err != nil {
-			logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", file.Name, err.Error())
-			continue
-		}
-
-		logger.Info("created paste [key=%s]", key)
-		file.Close()
-	}
-}
-
-func PasteBinUpdate(paths []string) {
-	dir, err := os.Getwd()
-	if err != nil {
-		logger.Errorf("failed to get working directory [error=%s]", err.Error())
-		return
-	}
-
-	var files []*os.File
-
-	for _, path := range paths {
-		path = dir + "/" + path
-		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
-		if err != nil {
-			logger.Errorf("failed to read [file=%s] [error=%s]", path, err.Error())
-			continue
-		}
-
-		files = append(files, file)
+		fileMap[name] = file
 	}
 
 	// TODO: integrate vault
@@ -216,7 +162,65 @@ func PasteBinUpdate(paths []string) {
 		return
 	}
 
+	var minecraftCli strings.Builder
 	for _, paste := range content {
-		logger.Infof("[paste=%+v]\n", paste)
+		if file, ok := fileMap[paste.Title]; ok {
+			client.DeletePaste(paste.Key)
+
+			content, err := ioutil.ReadAll(file)
+			if err != nil {
+				logger.Errorf("failed to read [file=%s] [error=%s]", file.Name(), err.Error())
+				continue
+			}
+
+			name := file.Name()
+			ftype := ""
+			index := strings.LastIndex(name, ".")
+			if index != -1 {
+				ftype = name[index+1:]
+			}
+
+			key, err := client.CreatePaste(
+				pastebin.NewCreatePasteRequest(paste.Title, string(content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, ftype),
+			)
+			if err != nil {
+				logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", paste.Title, err.Error())
+				continue
+			}
+
+			file.Close()
+			logger.Infof("update paste [file=%s] [key=%s]", paste.Title, key)
+			minecraftCli.WriteString("pastebin get " + key + " " + paste.Title + ".lua && ")
+			delete(fileMap, paste.Title)
+		}
 	}
+
+	for title, file := range fileMap {
+		content, err := ioutil.ReadAll(file)
+		if err != nil {
+			logger.Errorf("failed to read [file=%s] [error=%s]", file.Name(), err.Error())
+			continue
+		}
+
+		name := file.Name()
+		ftype := ""
+		index := strings.LastIndex(name, ".")
+		if index != -1 {
+			ftype = name[index+1:]
+		}
+
+		key, err := client.CreatePaste(
+			pastebin.NewCreatePasteRequest(title, string(content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, ftype),
+		)
+		if err != nil {
+			logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", title, err.Error())
+			continue
+		}
+
+		file.Close()
+		logger.Infof("create paste [file=%s] [key=%s]", title, key)
+		minecraftCli.WriteString("pastebin get " + key + " " + title + ".lua && ")
+	}
+
+	fmt.Println(minecraftCli.String()[:minecraftCli.Len()-len(" && ")])
 }
