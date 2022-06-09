@@ -79,6 +79,10 @@ func (a *Alert) Done() { a.tick.Stop() }
 func (a *Alert) Wait() { a.wg.Wait() }
 
 func WatchEndpoint(ctx context.Context, healthRoute string, message string, checkDur time.Duration, options ...beeep.Option) *Alert {
+	defer func() {
+		logger.Infof("alert on endpoint created for [route=%s]", healthRoute)
+	}()
+
 	title := fmt.Sprintf("Err With [Endpoint=%s]", healthRoute)
 
 	return NewAlert(ctx, checkDur, func() *Trouble {
