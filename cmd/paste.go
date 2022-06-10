@@ -17,7 +17,8 @@ func UploadSubCmd() *cli.Command {
 		Usage: "upload files in pastebin.com while keep the same pastebin key",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name: "folder",
+				Name:  "folder",
+				Usage: "will upload all files in directory",
 			},
 		},
 		Action: func(ctx *cli.Context) error {
