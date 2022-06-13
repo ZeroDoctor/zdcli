@@ -16,6 +16,16 @@ func UploadSubCmd() *cli.Command {
 		Name:  "upload",
 		Usage: "upload files in pastebin.com while keep the same pastebin key",
 		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:  "private",
+				Usage: "if set, cc:tweaked can no longer import automatically",
+			},
+			&cli.BoolFlag{
+				Name: "unlisted",
+			},
+			&cli.BoolFlag{
+				Name: "public",
+			},
 			&cli.StringFlag{
 				Name:  "folder",
 				Usage: "will upload all files in directory",
@@ -42,7 +52,15 @@ func UploadSubCmd() *cli.Command {
 			}
 
 			paths = append(paths, ctx.Args().Slice()...)
-			PasteBinUpload(paths)
+
+			visibility := pastebin.VisibilityPrivate
+			if ctx.Bool("unlisted") {
+				visibility = pastebin.VisibilityUnlisted
+			} else if ctx.Bool("public") {
+				visibility = pastebin.VisibilityPublic
+			}
+
+			PasteBinUpload(paths, visibility)
 
 			return nil
 		},
@@ -59,7 +77,7 @@ func PasteCmd() *cli.Command {
 	}
 }
 
-func PasteBinUpload(paths []string) {
+func PasteBinUpload(paths []string, visibility pastebin.Visibility) {
 	fileMap := make(map[string]*os.File)
 	for _, path := range paths {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
@@ -112,7 +130,7 @@ func PasteBinUpload(paths []string) {
 			}
 
 			key, err := client.CreatePaste(
-				pastebin.NewCreatePasteRequest(paste.Title, string(content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, ftype),
+				pastebin.NewCreatePasteRequest(paste.Title, string(content), pastebin.ExpirationNever, visibility, ftype),
 			)
 			if err != nil {
 				logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", paste.Title, err.Error())
@@ -141,7 +159,7 @@ func PasteBinUpload(paths []string) {
 		}
 
 		key, err := client.CreatePaste(
-			pastebin.NewCreatePasteRequest(title, string(content), pastebin.ExpirationNever, pastebin.VisibilityPrivate, ftype),
+			pastebin.NewCreatePasteRequest(title, string(content), pastebin.ExpirationNever, visibility, ftype),
 		)
 		if err != nil {
 			logger.Errorf("failed to upload [file=%s] to pastebin [error=%s]", title, err.Error())
@@ -150,8 +168,8 @@ func PasteBinUpload(paths []string) {
 
 		file.Close()
 		logger.Infof("create paste [file=%s] [key=%s]", title, key)
-		minecraftCli.WriteString("pastebin get " + key + " " + title + ".lua && ")
+		minecraftCli.WriteString("pastebin get " + key + " " + title + ".lua\n")
 	}
 
-	fmt.Println(minecraftCli.String()[:minecraftCli.Len()-len(" && ")])
+	fmt.Println(minecraftCli.String())
 }
