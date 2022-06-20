@@ -16,6 +16,7 @@ import (
 	"github.com/zerodoctor/zdcli/tui/comp"
 	"github.com/zerodoctor/zdcli/util"
 	zdgoutil "github.com/zerodoctor/zdgo-util"
+	"github.com/zerodoctor/zdvault"
 )
 
 func StartLua(cmd string, cfg *config.Config) {
@@ -85,6 +86,15 @@ func main() {
 	cfg := &config.Config{}
 	if err := cfg.Load(); err != nil {
 		logger.Errorf("failed to save/load config [error=%s]", err.Error())
+		return
+	}
+
+	if cfg.VaultTokens == nil {
+		cfg.VaultTokens = make(map[string]string)
+	}
+
+	for k, t := range cfg.VaultTokens {
+		zdvault.SetToken(k, t)
 	}
 
 	app := cli.NewApp()
@@ -95,6 +105,7 @@ func main() {
 		cmd.ListLuaCmd(cfg),
 		cmd.AlertCmd(),
 		cmd.PasteCmd(),
+		cmd.VaultCmd(cfg),
 		SetupCmd(cfg),
 		UICmd(cfg),
 	}

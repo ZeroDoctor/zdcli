@@ -11,6 +11,16 @@ import (
 	"github.com/zerodoctor/zdcli/logger"
 )
 
+func PasteCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "paste",
+		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
+		Subcommands: []*cli.Command{
+			UploadSubCmd(),
+		},
+	}
+}
+
 func UploadSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "upload",
@@ -63,16 +73,6 @@ func UploadSubCmd() *cli.Command {
 			PasteBinUpload(paths, visibility)
 
 			return nil
-		},
-	}
-}
-
-func PasteCmd() *cli.Command {
-	return &cli.Command{
-		Name:  "paste",
-		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
-		Subcommands: []*cli.Command{
-			UploadSubCmd(),
 		},
 	}
 }

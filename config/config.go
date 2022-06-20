@@ -13,6 +13,8 @@ type Config struct {
 	RootScriptDir  string
 	ServerEndPoint string
 	ShellCmd       string
+	VaultEndpoint  string
+	VaultTokens    map[string]string
 }
 
 func (c *Config) Save() error {

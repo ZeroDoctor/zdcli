@@ -9,6 +9,21 @@ import (
 	"github.com/zerodoctor/zdcli/alert"
 )
 
+func AlertCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "alert",
+		Usage: "notifies user when an event happens",
+		Subcommands: []*cli.Command{
+			EndpointSubCmd(),
+		},
+
+		Action: func(ctx *cli.Context) error {
+			cli.ShowAppHelp(ctx)
+			return errors.New("must provide additional subcommand(s)")
+		},
+	}
+}
+
 func TimerSubCmd() *cli.Command {
 	return &cli.Command{
 		// TODO: implement timer code
@@ -56,21 +71,6 @@ func EndpointSubCmd() *cli.Command {
 			a.Wait()
 
 			return nil
-		},
-	}
-}
-
-func AlertCmd() *cli.Command {
-	return &cli.Command{
-		Name:  "alert",
-		Usage: "notifies user when an event happens",
-		Subcommands: []*cli.Command{
-			EndpointSubCmd(),
-		},
-
-		Action: func(ctx *cli.Context) error {
-			cli.ShowAppHelp(ctx)
-			return errors.New("must provide additional subcommand(s)")
 		},
 	}
 }
