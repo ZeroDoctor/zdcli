@@ -1,4 +1,13 @@
 local util = require('lib.util')
+local file = require('lib.file')
+
+local function find_script(script)
+	print(script)
+	local str = string.gsub(script, '%.', '/')
+	print(str)
+
+	return file.exists('./scripts/'..str)
+end
 
 local function main()
 	if #arg < 1 then
@@ -18,6 +27,11 @@ local function main()
 	if env_flag == '-t' then
 		env_type = util:trim_all(arg[3])
 		command_start = 4
+	end
+
+	if not find_script(app_name) then
+		util.perror('failed to find script named: '..app_name)
+		return
 	end
 
 	local app = require('scripts.'..app_name)
@@ -40,8 +54,8 @@ local function main()
 			return
 		end
 
-    print('step: '..command..'('..env_type..')'..'...')
-    app[command](app, env_type)
+		print('step: '..command..'('..env_type..')'..'...')
+		app[command](app, env_type)
 	end
 
 end
