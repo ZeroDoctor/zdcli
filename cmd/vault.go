@@ -3,15 +3,14 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"syscall"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/ui"
+	"github.com/zerodoctor/zdcli/util"
 	"github.com/zerodoctor/zdvault"
-	"golang.org/x/term"
 )
 
 const MAIN_TOKEN string = "main_token"
@@ -64,11 +63,12 @@ func VaultCmd(cfg *config.Config) *cli.Command {
 		Aliases: []string{"v"},
 		Usage:   "commands that communicates with a vault server",
 		Subcommands: []*cli.Command{
-			VaultSetSubCmd(cfg),
+			VaultSetEndpointSubCmd(cfg),
 			VaultLoginSubCmd(cfg),
 			VaultRevokeSelfSubCmd(cfg),
 			VaultNewSubCmd(cfg),
 			VaultListSubCmd(cfg),
+			VaultGetSubCmd(cfg),
 		},
 		Action: func(ctx *cli.Context) error {
 			cli.ShowAppHelp(ctx)
@@ -77,7 +77,7 @@ func VaultCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultSetSubCmd(cfg *config.Config) *cli.Command {
+func VaultSetEndpointSubCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "set",
 		Usage: "set various options needed for vault operations",
@@ -109,31 +109,37 @@ func VaultLoginSubCmd(cfg *config.Config) *cli.Command {
 				return err
 			}
 
-			if _, ok := cfg.VaultTokens[MAIN_TOKEN]; ok {
-				if _, err := zdvault.RevokeSelfToken(MAIN_TOKEN); err != nil {
-					logger.Errorf("failed to revoke current token [error=%s]", err.Error())
-				}
-			}
+			user := ui.NewTextInput()
+			user.Input.Prompt = "Enter username: "
+			user.Input.Placeholder = "username"
+			user.Input.Focus()
 
-			fmt.Print("enter username:")
-			var username string
-			if _, err := fmt.Scanln(&username); err != nil {
-				logger.Errorf("failed to read user input [error=%s]", err.Error())
+			pass := ui.NewTextInput(ui.WithTIPassword())
+			pass.Input.Prompt = "Enter password: "
+			pass.Input.Placeholder = "********"
+
+			form := ui.NewTextInputForm(user, pass)
+			if err := tea.NewProgram(form).Start(); err != nil {
+				logger.Errorf("failed to start tea ui [error=%s]", err.Error())
+				return nil
+			}
+			if form.WasCancel {
 				return nil
 			}
 
-			fmt.Print("enter password:")
-			bpass, err := term.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				logger.Errorf("failed to read password [error=%s]", err.Error())
+			if _, ok := cfg.VaultTokens[MAIN_TOKEN]; ok {
+				if _, err := zdvault.RevokeSelfToken(MAIN_TOKEN); err != nil {
+					logger.Warnf("failed to revoke current token [error=%s]", err.Error())
+					cfg.VaultTokens["failed-revoke-"+util.RandString(8)] = cfg.VaultTokens[MAIN_TOKEN]
+				}
+
+				delete(cfg.VaultTokens, MAIN_TOKEN)
 			}
-			password := string(bpass)
-			fmt.Println()
 
 			cred := zdvault.Cred{
 				AppRole:  false,
-				Username: username,
-				Password: password,
+				Username: user.Input.Value(),
+				Password: pass.Input.Value(),
 				Key:      MAIN_TOKEN,
 			}
 
@@ -159,6 +165,10 @@ func VaultRevokeSelfSubCmd(cfg *config.Config) *cli.Command {
 		Aliases: []string{"rs"},
 		Usage:   "used to remove current session token",
 		Action: func(ctx *cli.Context) error {
+			if _, ok := cfg.VaultTokens[MAIN_TOKEN]; !ok {
+				return nil
+			}
+
 			if err := validate(VEndpoint|VToken, cfg); err != nil {
 				return err
 			}
@@ -211,6 +221,65 @@ func VaultNewKeySubCmd(cfg *config.Config) error {
 	return nil
 }
 
+func VaultGetSubCmd(cfg *config.Config) *cli.Command {
+	return &cli.Command{
+		Name:    "get",
+		Aliases: []string{"g"},
+		Usage:   "get secrets from vault",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "key",
+				Aliases: []string{"k"},
+				Usage:   "fetch secret from key/value engine",
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			if err := validate(VEndpoint|VToken, cfg); err != nil {
+				return err
+			}
+
+			if ctx.Bool("key") {
+				return VaultGetKeySubCmd(cfg)
+			}
+
+			cli.ShowAppHelp(ctx)
+			return errors.New("must provide additional flag(s)")
+		},
+	}
+}
+
+func VaultGetKeySubCmd(cfg *config.Config) error {
+	path := ui.NewTextInput()
+	path.Input.Prompt = "Enter path: "
+	path.Input.Placeholder = "/secret/github"
+	path.Focus()
+
+	if err := tea.NewProgram(path).Start(); err != nil {
+		logger.Errorf("failed to start tea ui [error=%s]", err.Error())
+		return nil
+	}
+
+	if path.WasCancel {
+		return nil
+	}
+
+	if path.Input.Err != nil {
+		logger.Errorf("failed to get input path [error=%s]", path.Input.Err.Error())
+		return nil
+	}
+
+	var data []byte
+	var err error
+	if data, err = zdvault.GetSecret(MAIN_TOKEN, path.Input.Value()); err != nil {
+		logger.Errorf("failed to get secret [path=%s] [error=%s]", path.Input.Value(), err.Error())
+		return nil
+	}
+
+	fmt.Println(string(data))
+
+	return nil
+}
+
 func VaultListSubCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:    "list",
@@ -239,25 +308,35 @@ func VaultListSubCmd(cfg *config.Config) *cli.Command {
 }
 
 func VaultListKeySubCmd(cfg *config.Config) error {
+	root := ui.NewTextInput()
+	root.Input.Prompt = "Enter root: "
+	root.Input.Placeholder = "/kv"
+	root.Input.Focus()
 
-	// TODO: fix text input to accept multiple tea.models
-	text := ui.NewTextInput()
-	text.Input.Prompt = "Enter path: "
-	text.Input.Placeholder = "kv/secret"
+	path := ui.NewTextInput()
+	path.Input.Prompt = "Enter path: "
+	path.Input.Placeholder = "secret/github"
 
-	p := tea.NewProgram(text)
-
-	if err := p.Start(); err != nil {
+	form := ui.NewTextInputForm(root, path)
+	if err := tea.NewProgram(form).Start(); err != nil {
 		logger.Errorf("failed to start tea ui [error=%s]", err.Error())
 		return nil
 	}
-
-	if text.Input.Err != nil {
-		logger.Errorf("failed to get input [error=%s]", text.Input.Err.Error())
+	if form.WasCancel {
 		return nil
 	}
 
-	data, err := zdvault.ListSecret(MAIN_TOKEN, text.Input.Value())
+	if root.Input.Err != nil {
+		logger.Errorf("failed to get input root [error=%s]", root.Input.Err.Error())
+		return nil
+	}
+
+	if path.Input.Err != nil {
+		logger.Errorf("failed to get input path [error=%s]", path.Input.Err.Error())
+		return nil
+	}
+
+	data, err := zdvault.ListSecret(MAIN_TOKEN, root.Input.Value(), path.Input.Value())
 	if err != nil {
 		logger.Errorf("failed to list secret folders [error=%s]", err.Error())
 	}

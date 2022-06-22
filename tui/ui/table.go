@@ -2,6 +2,7 @@ package ui
 
 import (
 	//table "github.com/calyptia/go-bubble-table"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/evertras/bubble-table/table"
 )
@@ -69,9 +70,9 @@ func NewTable(header []string, data [][]interface{}, w, h int) (Table, error) {
 	return t, nil
 }
 
-func (t Table) Init() {}
+func (t Table) Init() tea.Cmd { return nil }
 
-func (t Table) Update(msg string) {}
+func (t Table) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return nil, nil }
 
 func (t Table) View() string {
 	return style.Render(t.table.View())

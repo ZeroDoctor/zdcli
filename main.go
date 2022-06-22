@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -135,5 +136,5 @@ func main() {
 		logger.Fatalf("failed to run cli [error=%s]", err.Error())
 	}
 
-	logger.Print("Good Bye.")
+	fmt.Println("Good Bye.")
 }

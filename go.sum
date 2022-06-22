@@ -75,6 +75,8 @@ github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 h1:kMlmsLSbjkikxQJ1IPw
 github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70/go.mod h1:fQuZ0gauxyBcmsdE3ZT4NasjaRdxmbCS0jRHsrWu3Ho=
 github.com/muesli/cancelreader v0.2.0 h1:SOpr+CfyVNce341kKqvbhhzQhBPyJRXQaCtn03Pae1Q=
 github.com/muesli/cancelreader v0.2.0/go.mod h1:3XuTXfFS2VjM+HTLZY9Ak0l6eUKfijIfMUZ4EgX0QYo=
+github.com/muesli/cancelreader v0.2.2 h1:3I4Kt4BQjOR54NavqnDogx/MIoWBFa0StPA8ELUXHmA=
+github.com/muesli/cancelreader v0.2.2/go.mod h1:3XuTXfFS2VjM+HTLZY9Ak0l6eUKfijIfMUZ4EgX0QYo=
 github.com/muesli/reflow v0.2.1-0.20210115123740-9e1d0d53df68/go.mod h1:Xk+z4oIWdQqJzsxyjgl3P22oYZnHdZ8FFTHAQQt5BMQ=
 github.com/muesli/reflow v0.3.0 h1:IFsN6K9NfGtjeggFP+68I4chLZV2yIKsXJFNZ+eWh6s=
 github.com/muesli/reflow v0.3.0/go.mod h1:pbwTDkVPibjO2kyvBQRBxTWEEGDGq0FlB1BIKtnHY/8=
@@ -138,6 +140,12 @@ github.com/zerodoctor/zdvault v0.0.0-20220620212511-2b893880145e h1:NeUPy0FF/UHT
 github.com/zerodoctor/zdvault v0.0.0-20220620212511-2b893880145e/go.mod h1:ojsstyNtD2A3P1D4oLmjvtGbiU/Z9H5K7ygSRU9v0Hk=
 github.com/zerodoctor/zdvault v0.0.0-20220620213744-b1dffd74c2b2 h1:IMxO7gT6KOMeZU7MbVWetwpMo0PGqH+DCAkCG6yZSgc=
 github.com/zerodoctor/zdvault v0.0.0-20220620213744-b1dffd74c2b2/go.mod h1:ojsstyNtD2A3P1D4oLmjvtGbiU/Z9H5K7ygSRU9v0Hk=
+github.com/zerodoctor/zdvault v0.0.0-20220622174032-12c575770a7c h1:KTqU4v2KokkfdZ2WBrGy05bMpfXVbkCkVbGhufoB014=
+github.com/zerodoctor/zdvault v0.0.0-20220622174032-12c575770a7c/go.mod h1:ojsstyNtD2A3P1D4oLmjvtGbiU/Z9H5K7ygSRU9v0Hk=
+github.com/zerodoctor/zdvault v0.0.0-20220622193854-ee901d57e7a1 h1:9M803rAQN52mwR94lEQ6SxDHd7PiyyFEJGXMEX+Syd8=
+github.com/zerodoctor/zdvault v0.0.0-20220622193854-ee901d57e7a1/go.mod h1:ojsstyNtD2A3P1D4oLmjvtGbiU/Z9H5K7ygSRU9v0Hk=
+github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42 h1:RiM9LJmX83rCTUXVe0E+Ba53XrGdVpSOxIPi8SYRh5w=
+github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42/go.mod h1:ojsstyNtD2A3P1D4oLmjvtGbiU/Z9H5K7ygSRU9v0Hk=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20201012173705-84dcc777aaee/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
 golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
@@ -164,6 +172,8 @@ golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 h1:z8Hj/bl9cOV2grsOpEaQFUaly
 golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c h1:aFV+BgZ4svzjfabn8ERpuB4JI4N6/rdy1iusx77G3oU=
 golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664 h1:wEZYwx+kK+KlZ0hpvP2Ls1Xr4+RWnlzGFwPP0aiDjIU=
+golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201210144234-2321bbc49cbf/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210422114643-f5beecf764ed/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
