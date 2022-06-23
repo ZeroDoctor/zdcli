@@ -218,6 +218,13 @@ func VaultNewSubCmd(cfg *config.Config) *cli.Command {
 }
 
 func VaultNewKeySubCmd(cfg *config.Config) error {
+	path := ui.NewTextInput()
+	path.Input.Prompt = "Enter path: "
+	path.Input.Placeholder = "/secret/github"
+	path.Focus()
+
+	// TODO: create view editor in tui
+
 	return nil
 }
 
