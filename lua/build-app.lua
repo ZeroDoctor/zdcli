@@ -2,11 +2,9 @@ local util = require('lib.util')
 local file = require('lib.file')
 
 local function find_script(script)
-	print(script)
 	local str = string.gsub(script, '%.', '/')
-	print(str)
 
-	return file.exists('./scripts/'..str)
+	return file.exists('./scripts/'..str..'.lua')
 end
 
 local function main()
