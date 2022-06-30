@@ -14,15 +14,8 @@ import (
 type Trouble struct {
 	title   string
 	message string
+	once    bool
 	options []beeep.Option
-}
-
-func NewTrouble(title, message string, options ...beeep.Option) *Trouble {
-	return &Trouble{
-		title:   title,
-		message: message,
-		options: options,
-	}
 }
 
 type Alert struct {
@@ -58,19 +51,24 @@ func (a *Alert) Listener() {
 			logger.Info("stopping alert...")
 			return
 		case <-a.tick.C:
-			trouble := a.action()
-			if trouble == nil {
-				continue
-			}
+		}
 
-			trouble.options = append(trouble.options, beeep.AppOption(trouble.title))
-			trouble.options = append(trouble.options, beeep.MessageOption(trouble.message))
-			if trouble != nil {
-				logger.Warnf("send notification [title=%s] [message=%s]", trouble.title, trouble.message)
-				if err := beeep.Notify(trouble.options...); err != nil {
-					logger.Errorf("failed to send notification", err.Error())
-				}
+		trouble := a.action()
+		if trouble == nil {
+			continue
+		}
+
+		trouble.options = append(trouble.options, beeep.AppOption(trouble.title))
+		trouble.options = append(trouble.options, beeep.MessageOption(trouble.message))
+		if trouble != nil {
+			logger.Warnf("send notification [title=%s] [message=%s]", trouble.title, trouble.message)
+			if err := beeep.Notify(trouble.options...); err != nil {
+				logger.Errorf("failed to send notification", err.Error())
 			}
+		}
+
+		if trouble.once {
+			break
 		}
 	}
 }
@@ -96,12 +94,23 @@ func WatchEndpoint(params WatchEndpointParams) *Alert {
 
 	return NewAlert(params.Ctx, params.CheckDur, func() *Trouble {
 		rsp, err := http.Get(params.HealthRoute)
+
 		if err != nil {
-			return NewTrouble(title, fmt.Sprintf("[Message=%s] [Error=%s]", params.Message, err.Error()), params.Options...)
+			return &Trouble{
+				title:   title,
+				message: fmt.Sprintf("[Message=%s] [Status=%s]", params.Message, "nil"),
+				options: params.Options,
+				once:    params.Once,
+			}
 		}
 
 		if rsp != nil && (rsp.StatusCode < 200 || rsp.StatusCode > 299) {
-			return NewTrouble(title, fmt.Sprintf("[Message=%s] [Status=%s]", params.Message, rsp.Status), params.Options...)
+			return &Trouble{
+				title:   title,
+				message: fmt.Sprintf("[Message=%s] [Status=%s]", params.Message, rsp.Status),
+				options: params.Options,
+				once:    params.Once,
+			}
 		}
 
 		return nil

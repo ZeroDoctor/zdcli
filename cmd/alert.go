@@ -54,6 +54,7 @@ func (a *AlertCmd) EndpointSubCmd() *cli.Command {
 				Name:    "check-duration",
 				Aliases: []string{"c"},
 				Usage:   "period (in seconds) alert checks endpoint",
+				Value:   5,
 			},
 			&cli.BoolFlag{
 				Name:    "once",
@@ -66,17 +67,18 @@ func (a *AlertCmd) EndpointSubCmd() *cli.Command {
 			c, cancel := context.WithCancel(ctx.Context)
 			defer cancel()
 
-			checkDur := 5 * time.Second
-			if sec := ctx.Int("check-duration"); sec > 0 {
-				checkDur = time.Duration(sec) * time.Second
+			sec := ctx.Int("check-duration")
+			checkDur := time.Duration(sec) * time.Second
+
+			params := alert.WatchEndpointParams{
+				Ctx:         c,
+				HealthRoute: ctx.String("route"),
+				Message:     ctx.String("message"),
+				CheckDur:    checkDur,
+				Once:        ctx.Bool("once"),
 			}
 
-			a := alert.WatchEndpoint(
-				c,
-				ctx.String("route"),
-				ctx.String("message"),
-				checkDur,
-			)
+			a := alert.WatchEndpoint(params)
 			a.Wait()
 
 			return nil

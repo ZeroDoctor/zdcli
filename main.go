@@ -100,13 +100,18 @@ func main() {
 
 	app := cli.NewApp()
 	app.Commands = []*cli.Command{
+		// main lua commands
 		cmd.NewLuaCmd(cfg),
 		cmd.RemoveLuaCmd(cfg),
 		cmd.EditLuaCmd(cfg),
 		cmd.ListLuaCmd(cfg),
-		cmd.AlertCmd(),
-		cmd.PasteCmd(),
+
+		// one or more sub commands
+		cmd.NewAlertCmd(),
+		cmd.NewPasteCmd(),
 		cmd.NewVaultCmd(cfg),
+
+		// meta stuff
 		SetupCmd(cfg),
 		UICmd(cfg),
 	}
