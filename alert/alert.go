@@ -78,21 +78,30 @@ func (a *Alert) Listener() {
 func (a *Alert) Done() { a.tick.Stop() }
 func (a *Alert) Wait() { a.wg.Wait() }
 
-func WatchEndpoint(ctx context.Context, healthRoute string, message string, checkDur time.Duration, options ...beeep.Option) *Alert {
+type WatchEndpointParams struct {
+	Ctx         context.Context
+	HealthRoute string
+	Message     string
+	CheckDur    time.Duration
+	Options     []beeep.Option
+	Once        bool
+}
+
+func WatchEndpoint(params WatchEndpointParams) *Alert {
 	defer func() {
-		logger.Infof("alert on endpoint created for [route=%s]", healthRoute)
+		logger.Infof("alert on endpoint created for [route=%s]", params.HealthRoute)
 	}()
 
-	title := fmt.Sprintf("Err With [Endpoint=%s]", healthRoute)
+	title := fmt.Sprintf("Err With [Endpoint=%s]", params.HealthRoute)
 
-	return NewAlert(ctx, checkDur, func() *Trouble {
-		rsp, err := http.Get(healthRoute)
+	return NewAlert(params.Ctx, params.CheckDur, func() *Trouble {
+		rsp, err := http.Get(params.HealthRoute)
 		if err != nil {
-			return NewTrouble(title, fmt.Sprintf("[Message=%s] [Error=%s]", message, err.Error()), options...)
+			return NewTrouble(title, fmt.Sprintf("[Message=%s] [Error=%s]", params.Message, err.Error()), params.Options...)
 		}
 
 		if rsp != nil && (rsp.StatusCode < 200 || rsp.StatusCode > 299) {
-			return NewTrouble(title, fmt.Sprintf("[Message=%s] [Status=%s]", message, rsp.Status), options...)
+			return NewTrouble(title, fmt.Sprintf("[Message=%s] [Status=%s]", params.Message, rsp.Status), params.Options...)
 		}
 
 		return nil
