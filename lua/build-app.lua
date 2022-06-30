@@ -28,18 +28,13 @@ local function main()
 	end
 
 	if not find_script(app_name) then
-		util.perror('failed to find script named: '..app_name)
+		util.perror('failed to find script named ['..app_name..']')
 		return
 	end
 
 	local app = require('scripts.'..app_name)
-	if app == nil then
-		util.perror('failed to find app name: '..app_name)
-		return
-	end
-
 	if command_start > #arg then
-		util.perror('command not found for app: '..app_name)
+		util.perror('must call a function in [script='..app_name..']')
 		return
 	end
 
@@ -48,7 +43,7 @@ local function main()
 		local command = util:trim_all(arg[i])
 
 		if app[command] == nil then
-			util.perror('failed to find command: '..command)
+			util.perror('failed to find [function='..command..']')
 			return
 		end
 
