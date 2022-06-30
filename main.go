@@ -132,14 +132,17 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go zdgoutil.OnExit(func(s os.Signal, i ...interface{}) {
+	go func() {
+		err := app.RunContext(ctx, os.Args)
+		if err != nil {
+			logger.Fatalf("failed to run cli [error=%s]", err.Error())
+		}
+	}()
+
+	// TODO: add context to on exit
+	zdgoutil.OnExit(func(s os.Signal, i ...interface{}) {
 		cancel()
 	})
-
-	err := app.RunContext(ctx, os.Args)
-	if err != nil {
-		logger.Fatalf("failed to run cli [error=%s]", err.Error())
-	}
 
 	fmt.Println("Good Bye.")
 }

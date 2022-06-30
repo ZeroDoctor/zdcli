@@ -16,7 +16,7 @@ type LuaState struct {
 	stdin  chan string
 	state  *comp.Stack
 	cancel func()
-	cfg *config.Config
+	cfg    *config.Config
 }
 
 func NewLuaState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *config.Config) *LuaState {
@@ -24,7 +24,7 @@ func NewLuaState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *conf
 		vm:    vm,
 		stdin: make(chan string, 5),
 		state: state,
-		cfg: cfg,
+		cfg:   cfg,
 	}
 
 	go lua.Start(cmd)
@@ -38,8 +38,8 @@ func (ls *LuaState) Start(cmd string) error {
 
 	info := command.Info{
 		Command: ls.cfg.ShellCmd, // TODO: allow user to set lua endpoint
-		Args: []string{ls.cfg.LuaCmd + " build-app.lua " + cmd},
-		Dir:     ls.cfg.RootScriptDir,   // TODO: allow user to set lua direcoty
+		Args:    []string{ls.cfg.LuaCmd + " build-app.lua " + cmd},
+		Dir:     ls.cfg.RootScriptDir, // TODO: allow user to set lua direcoty
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {
@@ -54,7 +54,6 @@ func (ls *LuaState) Start(cmd string) error {
 			time.Sleep(100 * time.Millisecond)
 
 			select {
-			case <-ctx.Done():
 			case in := <-ls.stdin:
 				ls.vm.SendView("screen", NewData("msg", in+"\n"))
 				return in, nil

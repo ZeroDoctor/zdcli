@@ -5,27 +5,23 @@ go 1.18
 require (
 	github.com/TwiN/go-pastebin v1.0.2
 	github.com/awesome-gocui/gocui v1.1.0
-	github.com/charmbracelet/bubbles v0.11.0
-	github.com/charmbracelet/bubbletea v0.21.0
+	github.com/charmbracelet/bubbles v0.12.0
+	github.com/charmbracelet/bubbletea v0.22.0
 	github.com/charmbracelet/lipgloss v0.5.0
-	github.com/evertras/bubble-table v0.13.7
-	github.com/gen2brain/beeep v0.0.0-20220518085355-d7852edf42fc
+	github.com/evertras/bubble-table v0.14.2
 	github.com/joho/godotenv v1.4.0
 	github.com/pelletier/go-toml/v2 v2.0.2
-	github.com/urfave/cli/v2 v2.10.2
+	github.com/urfave/cli/v2 v2.10.3
 	github.com/zerodoctor/beeep v0.0.0-20220601134518-919e763802ab
 	github.com/zerodoctor/go-logging v0.0.0-20220526170309-80ad3351e22d
 	github.com/zerodoctor/zdgo-util v0.0.0-20220528015449-627ce57e8ee0
 	github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42
-	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467
 )
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/erikgeiser/promptkit v0.6.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.5.1 // indirect
 	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
@@ -43,7 +39,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
-	golang.org/x/sys v0.0.0-20220622161953-175b2fd9d664 // indirect
+	golang.org/x/sys v0.0.0-20220627191245-f75cf1eec38b // indirect
+	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/text v0.3.7 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

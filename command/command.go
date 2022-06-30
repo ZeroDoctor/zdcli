@@ -85,7 +85,7 @@ func Exec(info *Info) error {
 	errChan := make(chan error, 4)
 
 	if info.InFunc != nil {
-		r, w, err := os.Pipe()
+		r, w := io.Pipe()
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func Exec(info *Info) error {
 						return
 					}
 
-					_, err = io.WriteString(w, in+"\r\n")
+					_, err = io.WriteString(w, in+"\n") // needs \r\n for windows
 					if err != nil {
 						errChan <- err
 						return

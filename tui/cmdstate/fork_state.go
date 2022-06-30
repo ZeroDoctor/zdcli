@@ -16,7 +16,7 @@ type ForkState struct {
 	stdin  chan string
 	state  *comp.Stack
 	cancel func()
-	cfg *config.Config
+	cfg    *config.Config
 }
 
 func NewForkState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *config.Config) *ForkState {
@@ -24,7 +24,7 @@ func NewForkState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *con
 		vm:    vm,
 		stdin: make(chan string, 5),
 		state: state,
-		cfg: cfg,
+		cfg:   cfg,
 	}
 
 	go fork.Start(cmd)
@@ -32,13 +32,13 @@ func NewForkState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *con
 }
 
 func (fs *ForkState) Start(cmd string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	fs.cancel = cancel
 
 	info := command.Info{
 		Command: fs.cfg.ShellCmd,
-		Args: []string{cmd},
+		Args:    []string{cmd},
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {
@@ -53,7 +53,6 @@ func (fs *ForkState) Start(cmd string) error {
 			time.Sleep(100 * time.Millisecond)
 
 			select {
-			case <-ctx.Done():
 			case in := <-fs.stdin:
 				fs.vm.SendView("screen", NewData("msg", in+"\n"))
 				return in, nil

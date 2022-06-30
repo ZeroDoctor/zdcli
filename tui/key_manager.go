@@ -17,6 +17,10 @@ func NewKeyManager(g *gocui.Gui, vm *ViewManager) *KeyManager {
 		log.Fatal(err)
 	}
 
+	if err := km.SetKey("", gocui.KeyCtrlC, gocui.ModNone, nil); err != nil {
+		log.Fatal(err)
+	}
+
 	if err := km.SetKey("", gocui.KeyTab, gocui.ModNone, vm.NextView); err != nil {
 		log.Fatal(err)
 	}
