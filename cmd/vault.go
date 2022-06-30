@@ -53,9 +53,17 @@ func validate(flag VFlag, cfg *config.Config) error {
 	return err
 }
 
-func VaultCmd(cfg *config.Config) *cli.Command {
+type VaultCmd struct {
+	cfg *config.Config
+}
+
+func NewVaultCmd(cfg *config.Config) *cli.Command {
 	if cfg.VaultEndpoint != "" {
 		zdvault.SetEndpoint(cfg.VaultEndpoint)
+	}
+
+	vault := &VaultCmd{
+		cfg: cfg,
 	}
 
 	return &cli.Command{
@@ -63,12 +71,12 @@ func VaultCmd(cfg *config.Config) *cli.Command {
 		Aliases: []string{"v"},
 		Usage:   "commands that communicates with a vault server",
 		Subcommands: []*cli.Command{
-			VaultSetEndpointSubCmd(cfg),
-			VaultLoginSubCmd(cfg),
-			VaultRevokeSelfSubCmd(cfg),
-			VaultNewSubCmd(cfg),
-			VaultListSubCmd(cfg),
-			VaultGetSubCmd(cfg),
+			vault.SetEndpointSubCmd(),
+			vault.LoginSubCmd(),
+			vault.RevokeSelfSubCmd(),
+			vault.NewSubCmd(),
+			vault.ListSubCmd(),
+			vault.GetSubCmd(),
 		},
 		Action: func(ctx *cli.Context) error {
 			cli.ShowAppHelp(ctx)
@@ -77,7 +85,7 @@ func VaultCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultSetEndpointSubCmd(cfg *config.Config) *cli.Command {
+func (v *VaultCmd) SetEndpointSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "set",
 		Usage: "set various options needed for vault operations",
@@ -89,8 +97,8 @@ func VaultSetEndpointSubCmd(cfg *config.Config) *cli.Command {
 		},
 		Action: func(ctx *cli.Context) error {
 			if ctx.String("endpoint") != "" {
-				cfg.VaultEndpoint = ctx.String("endpoint")
-				if err := cfg.Save(); err != nil {
+				v.cfg.VaultEndpoint = ctx.String("endpoint")
+				if err := v.cfg.Save(); err != nil {
 					logger.Errorf("failed to save endpoint [error=%s]", err.Error())
 				}
 			}
@@ -100,12 +108,12 @@ func VaultSetEndpointSubCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultLoginSubCmd(cfg *config.Config) *cli.Command {
+func (v *VaultCmd) LoginSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "login",
 		Usage: "used to login to vault server",
 		Action: func(ctx *cli.Context) error {
-			if err := validate(VEndpoint, cfg); err != nil {
+			if err := validate(VEndpoint, v.cfg); err != nil {
 				return err
 			}
 
@@ -127,13 +135,13 @@ func VaultLoginSubCmd(cfg *config.Config) *cli.Command {
 				return nil
 			}
 
-			if _, ok := cfg.VaultTokens[MAIN_TOKEN]; ok {
+			if _, ok := v.cfg.VaultTokens[MAIN_TOKEN]; ok {
 				if _, err := zdvault.RevokeSelfToken(MAIN_TOKEN); err != nil {
 					logger.Warnf("failed to revoke current token [error=%s]", err.Error())
-					cfg.VaultTokens["failed-revoke-"+util.RandString(8)] = cfg.VaultTokens[MAIN_TOKEN]
+					v.cfg.VaultTokens["failed-revoke-"+util.RandString(8)] = v.cfg.VaultTokens[MAIN_TOKEN]
 				}
 
-				delete(cfg.VaultTokens, MAIN_TOKEN)
+				delete(v.cfg.VaultTokens, MAIN_TOKEN)
 			}
 
 			cred := zdvault.Cred{
@@ -148,8 +156,8 @@ func VaultLoginSubCmd(cfg *config.Config) *cli.Command {
 				return nil
 			}
 
-			cfg.VaultTokens[cred.Key] = zdvault.GetToken(cred.Key)
-			if err := cfg.Save(); err != nil {
+			v.cfg.VaultTokens[cred.Key] = zdvault.GetToken(cred.Key)
+			if err := v.cfg.Save(); err != nil {
 				logger.Errorf("failed to save vault token and key [error=%s]", err.Error())
 				return nil
 			}
@@ -159,17 +167,17 @@ func VaultLoginSubCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultRevokeSelfSubCmd(cfg *config.Config) *cli.Command {
+func (v *VaultCmd) RevokeSelfSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "revoke-self",
 		Aliases: []string{"rs"},
 		Usage:   "used to remove current session token",
 		Action: func(ctx *cli.Context) error {
-			if _, ok := cfg.VaultTokens[MAIN_TOKEN]; !ok {
+			if _, ok := v.cfg.VaultTokens[MAIN_TOKEN]; !ok {
 				return nil
 			}
 
-			if err := validate(VEndpoint|VToken, cfg); err != nil {
+			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
 
@@ -178,9 +186,9 @@ func VaultRevokeSelfSubCmd(cfg *config.Config) *cli.Command {
 				return nil
 			}
 
-			delete(cfg.VaultTokens, MAIN_TOKEN)
+			delete(v.cfg.VaultTokens, MAIN_TOKEN)
 
-			if err := cfg.Save(); err != nil {
+			if err := v.cfg.Save(); err != nil {
 				logger.Errorf("failed to deleted vault token [error=%s]", err.Error())
 				return nil
 			}
@@ -190,7 +198,7 @@ func VaultRevokeSelfSubCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultNewSubCmd(cfg *config.Config) *cli.Command {
+func (v *VaultCmd) NewSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "new",
 		Aliases: []string{"n"},
@@ -203,12 +211,12 @@ func VaultNewSubCmd(cfg *config.Config) *cli.Command {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			if err := validate(VEndpoint|VToken, cfg); err != nil {
+			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
 
 			if ctx.Bool("key") {
-				return VaultNewKeySubCmd(cfg)
+				return v.NewKeySubCmd()
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -217,7 +225,7 @@ func VaultNewSubCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultNewKeySubCmd(cfg *config.Config) error {
+func (v *VaultCmd) NewKeySubCmd() error {
 	path := ui.NewTextInput()
 	path.Input.Prompt = "Enter path: "
 	path.Input.Placeholder = "/secret/github"
@@ -228,7 +236,7 @@ func VaultNewKeySubCmd(cfg *config.Config) error {
 	return nil
 }
 
-func VaultGetSubCmd(cfg *config.Config) *cli.Command {
+func (v *VaultCmd) GetSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "get",
 		Aliases: []string{"g"},
@@ -241,12 +249,12 @@ func VaultGetSubCmd(cfg *config.Config) *cli.Command {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			if err := validate(VEndpoint|VToken, cfg); err != nil {
+			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
 
 			if ctx.Bool("key") {
-				return VaultGetKeySubCmd(cfg)
+				return v.GetKeySubCmd()
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -255,7 +263,7 @@ func VaultGetSubCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultGetKeySubCmd(cfg *config.Config) error {
+func (v *VaultCmd) GetKeySubCmd() error {
 	path := ui.NewTextInput()
 	path.Input.Prompt = "Enter path: "
 	path.Input.Placeholder = "/secret/github"
@@ -287,7 +295,7 @@ func VaultGetKeySubCmd(cfg *config.Config) error {
 	return nil
 }
 
-func VaultListSubCmd(cfg *config.Config) *cli.Command {
+func (v *VaultCmd) ListSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "list",
 		Aliases: []string{"ls"},
@@ -300,12 +308,12 @@ func VaultListSubCmd(cfg *config.Config) *cli.Command {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			if err := validate(VEndpoint|VToken, cfg); err != nil {
+			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
 
 			if ctx.Bool("key") {
-				return VaultListKeySubCmd(cfg)
+				return v.ListKeySubCmd()
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -314,7 +322,7 @@ func VaultListSubCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func VaultListKeySubCmd(cfg *config.Config) error {
+func (v *VaultCmd) ListKeySubCmd() error {
 	root := ui.NewTextInput()
 	root.Input.Prompt = "Enter root: "
 	root.Input.Placeholder = "/kv"

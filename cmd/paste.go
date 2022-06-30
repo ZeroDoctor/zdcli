@@ -11,17 +11,21 @@ import (
 	"github.com/zerodoctor/zdcli/logger"
 )
 
-func PasteCmd() *cli.Command {
+type PasteCmd struct{}
+
+func NewPasteCmd() *cli.Command {
+	p := &PasteCmd{}
+
 	return &cli.Command{
 		Name:  "paste",
 		Usage: "common commands to interact with pastebin.com. May need to login via this cli before use.",
 		Subcommands: []*cli.Command{
-			UploadSubCmd(),
+			p.UploadSubCmd(),
 		},
 	}
 }
 
-func UploadSubCmd() *cli.Command {
+func (p *PasteCmd) UploadSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "upload",
 		Usage: "upload files in pastebin.com while keep the same pastebin key",
@@ -70,14 +74,14 @@ func UploadSubCmd() *cli.Command {
 				visibility = pastebin.VisibilityPublic
 			}
 
-			PasteBinUpload(paths, visibility)
+			p.BinUpload(paths, visibility)
 
 			return nil
 		},
 	}
 }
 
-func PasteBinUpload(paths []string, visibility pastebin.Visibility) {
+func (p *PasteCmd) BinUpload(paths []string, visibility pastebin.Visibility) {
 	fileMap := make(map[string]*os.File)
 	for _, path := range paths {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)

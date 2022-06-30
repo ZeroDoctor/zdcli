@@ -106,7 +106,7 @@ func main() {
 		cmd.ListLuaCmd(cfg),
 		cmd.AlertCmd(),
 		cmd.PasteCmd(),
-		cmd.VaultCmd(cfg),
+		cmd.NewVaultCmd(cfg),
 		SetupCmd(cfg),
 		UICmd(cfg),
 	}

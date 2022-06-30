@@ -9,12 +9,16 @@ import (
 	"github.com/zerodoctor/zdcli/alert"
 )
 
-func AlertCmd() *cli.Command {
+type AlertCmd struct{}
+
+func NewAlertCmd() *cli.Command {
+	alert := &AlertCmd{}
+
 	return &cli.Command{
 		Name:  "alert",
 		Usage: "notifies user when an event happens",
 		Subcommands: []*cli.Command{
-			EndpointSubCmd(),
+			alert.EndpointSubCmd(),
 		},
 
 		Action: func(ctx *cli.Context) error {
@@ -24,13 +28,13 @@ func AlertCmd() *cli.Command {
 	}
 }
 
-func TimerSubCmd() *cli.Command {
+func (a *AlertCmd) TimerSubCmd() *cli.Command {
 	return &cli.Command{
 		// TODO: implement timer code
 	}
 }
 
-func EndpointSubCmd() *cli.Command {
+func (a *AlertCmd) EndpointSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "endpoint",
 		Aliases: []string{"e"},
@@ -50,6 +54,11 @@ func EndpointSubCmd() *cli.Command {
 				Name:    "check-duration",
 				Aliases: []string{"c"},
 				Usage:   "period (in seconds) alert checks endpoint",
+			},
+			&cli.BoolFlag{
+				Name:    "once",
+				Aliases: []string{"o"},
+				Usage:   "only alert once then exit",
 			},
 		},
 
