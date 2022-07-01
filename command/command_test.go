@@ -1,11 +1,8 @@
 package command
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
-	"os"
 	"testing"
 	"time"
 )
@@ -40,7 +37,8 @@ func TestStdInCommand(t *testing.T) {
 	defer cancel()
 
 	info := Info{
-		Command: "../test/test.exe",
+		Command: "lua ../lua/build-app.lua test get_name",
+		Dir:     "../lua",
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {
@@ -51,19 +49,14 @@ func TestStdInCommand(t *testing.T) {
 			fmt.Print(string(msg))
 			return len(msg), nil
 		},
-		InFunc: func(w io.WriteCloser) (int, error) {
+		InFunc: func(ctx context.Context) (string, error) {
+			time.Sleep(500 * time.Millisecond)
+
 			var line string
-			scanner := bufio.NewScanner(os.Stdin)
 
-			if scanner.Scan() {
-				line = scanner.Text()
-			}
+			line = "test"
 
-			if scanner.Err() != nil {
-				fmt.Println(scanner.Err())
-			}
-
-			return w.Write([]byte(line))
+			return line, nil
 		},
 	}
 

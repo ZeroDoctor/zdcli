@@ -62,7 +62,7 @@ func Exec(info *Info) error {
 	}
 
 	command, args := info.parseCommand()
-	cmd := exec.CommandContext(info.Ctx, command, args...)
+	cmd := exec.CommandContext(context.Background(), command, args...)
 	cmd.Dir = info.Dir
 	// cmd.SysProcAttr = &syscall.SysProcAttr{}
 
@@ -108,7 +108,7 @@ func Exec(info *Info) error {
 					return
 				default:
 					in, err := info.InFunc(info.Ctx)
-					if err == ErrStdInNone {
+					if err == ErrStdInNone || len(in) <= 0 {
 						continue
 					}
 
@@ -117,7 +117,7 @@ func Exec(info *Info) error {
 						return
 					}
 
-					_, err = io.WriteString(w, in+"\n") // needs \r\n for windows
+					_, err = io.WriteString(w, in) // needs \r\n for windows
 					if err != nil {
 						errChan <- err
 						return
