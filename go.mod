@@ -14,7 +14,7 @@ require (
 	github.com/urfave/cli/v2 v2.10.3
 	github.com/zerodoctor/beeep v0.0.0-20220601134518-919e763802ab
 	github.com/zerodoctor/go-logging v0.0.0-20220526170309-80ad3351e22d
-	github.com/zerodoctor/zdgo-util v0.0.0-20220528015449-627ce57e8ee0
+	github.com/zerodoctor/zdgo-util v0.0.0-20220701145940-b6050340fdd2
 	github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42
 )
 

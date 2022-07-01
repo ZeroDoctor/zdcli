@@ -137,10 +137,10 @@ func main() {
 		if err != nil {
 			logger.Fatalf("failed to run cli [error=%s]", err.Error())
 		}
+		cancel()
 	}()
 
-	// TODO: add context to on exit
-	zdgoutil.OnExit(func(s os.Signal, i ...interface{}) {
+	zdgoutil.OnExitWithContext(ctx, func(s os.Signal, i ...interface{}) {
 		cancel()
 	})
 

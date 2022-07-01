@@ -87,6 +87,8 @@ github.com/zerodoctor/go-logging v0.0.0-20220526170309-80ad3351e22d h1:zstPPmctM
 github.com/zerodoctor/go-logging v0.0.0-20220526170309-80ad3351e22d/go.mod h1:EhKe1s1RzUW2W1ZDxUfmDdB/i9x4HN9VKWWih0gY++Y=
 github.com/zerodoctor/zdgo-util v0.0.0-20220528015449-627ce57e8ee0 h1:TvHdFHpXAlj9DdZJu4j9sN8nfEFTDqQjmPneUUhiNMA=
 github.com/zerodoctor/zdgo-util v0.0.0-20220528015449-627ce57e8ee0/go.mod h1:NvJFQaA6itAvITPNt4QMYdb7KL6FAZvmf0G7MPDCPAc=
+github.com/zerodoctor/zdgo-util v0.0.0-20220701145940-b6050340fdd2 h1:2xVqVFkKjZfRFbJXHyjys7ZWnVSK62c64K1GT0RIn7A=
+github.com/zerodoctor/zdgo-util v0.0.0-20220701145940-b6050340fdd2/go.mod h1:NvJFQaA6itAvITPNt4QMYdb7KL6FAZvmf0G7MPDCPAc=
 github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42 h1:RiM9LJmX83rCTUXVe0E+Ba53XrGdVpSOxIPi8SYRh5w=
 github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42/go.mod h1:ojsstyNtD2A3P1D4oLmjvtGbiU/Z9H5K7ygSRU9v0Hk=
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
