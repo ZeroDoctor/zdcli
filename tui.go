@@ -63,6 +63,10 @@ func StartTui(cfg *config.Config) comp.ExitMessage {
 		log.Fatal(err.Error())
 	}
 
+	if err = vm.SetCurrentView(g, "command"); err != nil {
+		log.Fatal(err)
+	}
+
 	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Fatal(err)
 	}

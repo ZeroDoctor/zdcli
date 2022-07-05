@@ -147,6 +147,23 @@ func (vm *ViewManager) RemoveView(g *gocui.Gui, name string) error {
 	return nil
 }
 
+func (vm *ViewManager) SetCurrentView(g *gocui.Gui, name string) error {
+	var view inter.IView
+
+	for i, v := range vm.views {
+		if v.Name() == name {
+			view = v
+			vm.currentView = i
+		}
+	}
+
+	if _, err := vm.SetCurrentViewOnTop(g, view.Name()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // # for keybindings
 
 func (vm *ViewManager) NextView(g *gocui.Gui, v *gocui.View) error {
