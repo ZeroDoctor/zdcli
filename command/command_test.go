@@ -2,12 +2,15 @@ package command
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"testing"
 	"time"
 )
 
-func TestPingCommand(t *testing.T) {
+var TF_Ping = flag.Bool("ping", false, "enable ping testing")
+
+func TestCurlCommand(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -32,8 +35,12 @@ func TestPingCommand(t *testing.T) {
 	}
 }
 
-func TestStdInCommand(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+func TestPingCommand(t *testing.T) {
+	if TF_Ping == nil || !*TF_Ping {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	info := Info{
@@ -53,11 +60,7 @@ func TestStdInCommand(t *testing.T) {
 		InFunc: func(ctx context.Context) (string, error) {
 			time.Sleep(500 * time.Millisecond)
 
-			var line string
-
-			line = "test"
-
-			return line, nil
+			return "", ErrStdInNone
 		},
 	}
 
