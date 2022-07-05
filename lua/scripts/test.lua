@@ -19,5 +19,22 @@ function test:get_name(env_type)
   end
 end
 
+function test:get_name_bash(env_type)
+  print('enter name: ')
+  local name = io.read('l')
+  print('whoa there '..name)
+
+  print('is it the best of both worlds? (y/n)')
+  local ans = io.read('l')
+
+  if ans == 'y'then
+    print('whoop! whoop!')
+  elseif ans == 'n' then
+    print('oh on!')
+  else
+    print('why...')
+  end
+end
+
 return test
 

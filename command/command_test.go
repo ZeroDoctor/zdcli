@@ -33,12 +33,13 @@ func TestPingCommand(t *testing.T) {
 }
 
 func TestStdInCommand(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	info := Info{
-		Command: "lua ../lua/build-app.lua test get_name",
-		Dir:     "../lua",
+		// Command: "lua ../lua/build-app.lua test get_name",
+		// Dir:     "../lua",
+		Command: "ping google.com",
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {
