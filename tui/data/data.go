@@ -1,4 +1,4 @@
-package comp
+package data
 
 type exit int8
 

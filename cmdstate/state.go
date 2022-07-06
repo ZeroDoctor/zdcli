@@ -7,8 +7,7 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/config"
-	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/data"
 	"github.com/zerodoctor/zdcli/tui/ui"
 )
 
@@ -17,18 +16,18 @@ var (
 	ErrUnknownCommand    error = errors.New("unknown command")
 )
 
-func NewData(t, m string) comp.Data {
-	return comp.Data{Type: t, Msg: m}
+func NewData(t, m string) data.Data {
+	return data.Data{Type: t, Msg: m}
 }
 
 type State struct {
-	vm inter.IViewManager
+	vm  data.IViewManager
 	cfg *config.Config
 
-	state *comp.Stack
+	state *data.Stack
 }
 
-func NewState(vm inter.IViewManager, state *comp.Stack, cfg *config.Config) *State {
+func NewState(vm data.IViewManager, state *data.Stack, cfg *config.Config) *State {
 	return &State{vm: vm, state: state, cfg: cfg}
 }
 
@@ -41,8 +40,8 @@ func (s *State) Exec(cmd string) error {
 		if len(split) > 2 && (split[1] == "--tty" || split[1] == "-t") {
 			cmd = strings.Join(split[2:], " ")
 
-			s.vm.SetExitMsg(comp.ExitMessage{
-				Code: comp.EXIT_CMD,
+			s.vm.SetExitMsg(data.ExitMessage{
+				Code: data.EXIT_CMD,
 				Msg:  cmd,
 			})
 
@@ -60,8 +59,8 @@ func (s *State) Exec(cmd string) error {
 		if len(split) > 2 && (split[1] == "--tty" || split[1] == "-t") {
 			cmd = strings.Join(split[2:], " ")
 
-			s.vm.SetExitMsg(comp.ExitMessage{
-				Code: comp.EXIT_LUA,
+			s.vm.SetExitMsg(data.ExitMessage{
+				Code: data.EXIT_LUA,
 				Msg:  cmd,
 			})
 
@@ -76,8 +75,8 @@ func (s *State) Exec(cmd string) error {
 		return nil
 
 	case "edit":
-		s.vm.SetExitMsg(comp.ExitMessage{
-			Code: comp.EXIT_EDT,
+		s.vm.SetExitMsg(data.ExitMessage{
+			Code: data.EXIT_EDT,
 			Msg:  cmd,
 		})
 

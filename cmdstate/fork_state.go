@@ -7,19 +7,18 @@ import (
 
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
-	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/data"
 )
 
 type ForkState struct {
-	vm     inter.IViewManager
+	vm     data.IViewManager
 	stdin  chan string
-	state  *comp.Stack
+	state  *data.Stack
 	cancel func()
 	cfg    *config.Config
 }
 
-func NewForkState(vm inter.IViewManager, state *comp.Stack, cmd string, cfg *config.Config) *ForkState {
+func NewForkState(vm data.IViewManager, state *data.Stack, cmd string, cfg *config.Config) *ForkState {
 	fork := &ForkState{
 		vm:    vm,
 		stdin: make(chan string, 5),

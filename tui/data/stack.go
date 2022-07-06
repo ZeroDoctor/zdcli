@@ -1,4 +1,4 @@
-package comp
+package data
 
 import (
 	"fmt"

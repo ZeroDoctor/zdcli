@@ -5,37 +5,36 @@ import (
 	"time"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/data"
 )
 
-func NewData(t, m string) comp.Data {
-	return comp.Data{Type: t, Msg: m}
+func NewData(t, m string) data.Data {
+	return data.Data{Type: t, Msg: m}
 }
 
 type ViewManager struct {
 	currentView int
-	views       []inter.IView
+	views       []data.IView
 	wg          sync.WaitGroup
 	g           *gocui.Gui
 
 	shutdown chan bool
-	ExitMsg  comp.ExitMessage
+	ExitMsg  data.ExitMessage
 }
 
-func NewViewManager(g *gocui.Gui, views []inter.IView, currentView int) *ViewManager {
+func NewViewManager(g *gocui.Gui, views []data.IView, currentView int) *ViewManager {
 	vm := &ViewManager{
 		views:       views,
 		currentView: currentView,
 		shutdown:    make(chan bool),
 		g:           g,
 
-		ExitMsg: comp.ExitMessage{Code: comp.EXIT_SUC}, // TODO: redo exit handling
+		ExitMsg: data.ExitMessage{Code: data.EXIT_SUC}, // TODO: redo exit handling
 	}
 
 	for _, view := range views {
 		vm.wg.Add(1)
-		go func(view inter.IView, wg *sync.WaitGroup) {
+		go func(view data.IView, wg *sync.WaitGroup) {
 			view.PrintView()
 			wg.Done()
 		}(view, &vm.wg)
@@ -70,7 +69,7 @@ func (vm *ViewManager) SetCurrentViewOnTop(g *gocui.Gui, name string) (*gocui.Vi
 	return g.SetViewOnTop(name)
 }
 
-func (vm ViewManager) GetView(viewname string) (inter.IView, error) {
+func (vm ViewManager) GetView(viewname string) (data.IView, error) {
 	for _, view := range vm.views {
 		if view.Name() == viewname {
 			return view, nil
@@ -104,7 +103,7 @@ func (vm ViewManager) SendView(viewname string, data interface{}) error {
 	return gocui.ErrUnknownView
 }
 
-func (vm *ViewManager) AddView(g *gocui.Gui, view inter.IView) error {
+func (vm *ViewManager) AddView(g *gocui.Gui, view data.IView) error {
 	vm.wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		view.PrintView()
@@ -127,7 +126,7 @@ func (vm *ViewManager) AddView(g *gocui.Gui, view inter.IView) error {
 // TODO: remove view
 
 func (vm *ViewManager) RemoveView(g *gocui.Gui, name string) error {
-	var view inter.IView
+	var view data.IView
 	var index int
 
 	for i, v := range vm.views {
@@ -148,7 +147,7 @@ func (vm *ViewManager) RemoveView(g *gocui.Gui, name string) error {
 }
 
 func (vm *ViewManager) SetCurrentView(g *gocui.Gui, name string) error {
-	var view inter.IView
+	var view data.IView
 
 	for i, v := range vm.views {
 		if v.Name() == name {
@@ -193,5 +192,5 @@ func (vm *ViewManager) Quit(g *gocui.Gui, v *gocui.View) error {
 
 func (vm *ViewManager) G() *gocui.Gui { return vm.g }
 
-func (vm *ViewManager) GetExitMsg() comp.ExitMessage   { return vm.ExitMsg }
-func (vm *ViewManager) SetExitMsg(em comp.ExitMessage) { vm.ExitMsg = em }
+func (vm *ViewManager) GetExitMsg() data.ExitMessage   { return vm.ExitMsg }
+func (vm *ViewManager) SetExitMsg(em data.ExitMessage) { vm.ExitMsg = em }

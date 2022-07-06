@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/awesome-gocui/gocui"
+	"github.com/zerodoctor/zdcli/cmdstate"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/tui"
-	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/data"
 	"github.com/zerodoctor/zdcli/tui/view"
 )
 
@@ -35,7 +35,7 @@ func clock(vm *tui.ViewManager, wg *sync.WaitGroup) {
 	}
 }
 
-func StartTui(cfg *config.Config) comp.ExitMessage {
+func StartTui(cfg *config.Config) data.ExitMessage {
 	g, err := gocui.NewGui(gocui.OutputNormal, false)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -46,8 +46,9 @@ func StartTui(cfg *config.Config) comp.ExitMessage {
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorCyan
 
-	vm := tui.NewViewManager(g, []inter.IView{view.NewHeader(g), view.NewScreen(g)}, 1)
-	cm := tui.NewCommandManager(vm, cfg)
+	stack := data.NewStack()
+	vm := tui.NewViewManager(g, []data.IView{view.NewHeader(g), view.NewScreen(g)}, 1)
+	cm := tui.NewCommandManager(vm, cmdstate.NewState(vm, &stack, cfg))
 
 	g.SetManagerFunc(vm.Layout)
 	km := tui.NewKeyManager(g, vm)

@@ -5,13 +5,12 @@ package cmdstate
 
 import (
 	"github.com/zerodoctor/zdcli/alert"
-	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/data"
 )
 
 type AlertState struct {
-	vm    inter.IViewManager
-	state *comp.Stack
+	vm    data.IViewManager
+	state *data.Stack
 
 	alerts []*alert.Alert
 }

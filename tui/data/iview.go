@@ -1,4 +1,4 @@
-package inter
+package data
 
 import "github.com/awesome-gocui/gocui"
 

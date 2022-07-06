@@ -6,7 +6,7 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/tui"
-	"github.com/zerodoctor/zdcli/tui/comp"
+	"github.com/zerodoctor/zdcli/tui/data"
 )
 
 type Command struct {
@@ -29,7 +29,7 @@ func NewCommand(g *gocui.Gui, cm *tui.CommandManager) *Command {
 
 func (c Command) Name() string               { return "command" }
 func (c *Command) Channel() chan interface{} { return c.msgChan }
-func (c *Command) Send(msg comp.Data)        { c.msgChan <- msg }
+func (c *Command) Send(msg data.Data)        { c.msgChan <- msg }
 func (c Command) Width() int                 { return c.w }
 func (c Command) Height() int                { return c.h }
 
@@ -54,7 +54,7 @@ func (c *Command) Layout(g *gocui.Gui) error {
 func (c *Command) PrintView() {
 	for msg := range c.msgChan {
 		var str string
-		m := msg.(comp.Data)
+		m := msg.(data.Data)
 
 		switch m.Type {
 		}

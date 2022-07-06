@@ -1,8 +1,7 @@
-package inter
+package data
 
 import (
 	"github.com/awesome-gocui/gocui"
-	"github.com/zerodoctor/zdcli/tui/comp"
 )
 
 type IViewManager interface {
@@ -14,5 +13,5 @@ type IViewManager interface {
 	SetCurrentViewOnTop(*gocui.Gui, string) (*gocui.View, error)
 	Quit(*gocui.Gui, *gocui.View) error
 	G() *gocui.Gui
-	SetExitMsg(comp.ExitMessage)
+	SetExitMsg(ExitMessage)
 }

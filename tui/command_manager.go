@@ -3,24 +3,21 @@ package tui
 import (
 	"fmt"
 
-	"github.com/zerodoctor/zdcli/config"
-	"github.com/zerodoctor/zdcli/tui/cmdstate"
-	"github.com/zerodoctor/zdcli/tui/comp"
-	"github.com/zerodoctor/zdcli/tui/inter"
+	"github.com/zerodoctor/zdcli/tui/data"
 )
 
 type CommandManager struct {
 	vm    *ViewManager
-	state comp.Stack
+	state data.Stack
 }
 
-func NewCommandManager(vm *ViewManager, cfg *config.Config) *CommandManager {
+func NewCommandManager(vm *ViewManager, stateManager data.ICmdState) *CommandManager {
 	cm := &CommandManager{
 		vm:    vm,
-		state: comp.NewStack(),
+		state: data.NewStack(),
 	}
 
-	cm.state.Push(cmdstate.NewState(vm, &cm.state, cfg))
+	cm.state.Push(stateManager)
 
 	return cm
 }
@@ -31,7 +28,7 @@ func (cm *CommandManager) Cmd(cmd string) {
 		return
 	}
 
-	err := cm.state.Peek().(inter.ICommandState).Exec(cmd)
+	err := cm.state.Peek().(data.ICmdState).Exec(cmd)
 	if err != nil {
 		cm.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] [error=%s | %s]\n", err.Error(), cmd)))
 	}
@@ -43,7 +40,7 @@ func (cm *CommandManager) Kill() {
 		return
 	}
 
-	err := cm.state.Peek().(inter.ICommandState).Stop()
+	err := cm.state.Peek().(data.ICmdState).Stop()
 	if err != nil {
 		cm.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] [error=%s requesting kill]\n", err.Error())))
 	}

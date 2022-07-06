@@ -14,7 +14,7 @@ import (
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
-	"github.com/zerodoctor/zdcli/tui/comp"
+	"github.com/zerodoctor/zdcli/tui/data"
 	"github.com/zerodoctor/zdcli/util"
 	zdgoutil "github.com/zerodoctor/zdgo-util"
 	"github.com/zerodoctor/zdvault"
@@ -42,17 +42,17 @@ func RunUI(cfg *config.Config) {
 	for running {
 		exit := StartTui(cfg)
 		switch exit.Code {
-		case comp.EXIT_EDT:
+		case data.EXIT_EDT:
 			cmd.EditLua(exit.Msg, cfg)
 			time.Sleep(100 * time.Millisecond)
 			continue
 
-		case comp.EXIT_LUA:
+		case data.EXIT_LUA:
 			StartLua(exit.Msg, cfg)
 			time.Sleep(100 * time.Millisecond)
 			continue
 
-		case comp.EXIT_CMD:
+		case data.EXIT_CMD:
 
 		}
 

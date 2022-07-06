@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/awesome-gocui/gocui"
-	"github.com/zerodoctor/zdcli/tui/comp"
+	"github.com/zerodoctor/zdcli/tui/data"
 )
 
 type Header struct {
@@ -28,7 +28,7 @@ func NewHeader(g *gocui.Gui) *Header {
 
 func (h Header) Name() string               { return "header" }
 func (h *Header) Channel() chan interface{} { return h.msgChan }
-func (h *Header) Send(msg comp.Data)        { h.msgChan <- msg }
+func (h *Header) Send(msg data.Data)        { h.msgChan <- msg }
 func (h Header) Width() int                 { return h.w }
 func (h Header) Height() int                { return h.h }
 
@@ -51,7 +51,7 @@ func (h *Header) Layout(g *gocui.Gui) error {
 func (h *Header) PrintView() {
 	for msg := range h.msgChan {
 		var str string
-		m := msg.(comp.Data)
+		m := msg.(data.Data)
 
 		switch m.Type {
 		case "clock":
