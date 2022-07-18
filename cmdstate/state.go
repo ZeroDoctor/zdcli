@@ -127,3 +127,5 @@ func (s *State) Exec(cmd string) error {
 }
 
 func (s *State) Stop() error { return ErrCommandNotRunning }
+
+func (s *State) Stack() *data.Stack { return s.state }

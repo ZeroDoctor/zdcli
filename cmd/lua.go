@@ -114,8 +114,8 @@ func EditLua(cmd string, cfg *config.Config) {
 	}
 
 	info := command.Info{
-		Command: cfg.EditorCmd + " " + strings.Join(cmdArr, " "),
-		Dir:     cfg.RootScriptDir + "/scripts/",
+		Command: cfg.EditorCmd + " ./scripts/" + strings.Join(cmdArr, " "),
+		Dir:     cfg.RootScriptDir,
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
