@@ -156,10 +156,10 @@ func Exec(info *Info) error {
 	var errs []error
 	if err = cmd.Wait(); err != nil {
 		if info.Ctx.Err() != nil {
-			errs = append(errs, fmt.Errorf("context [error=%w]", info.Ctx.Err()))
+			errs = append(errs, fmt.Errorf("context [error=%w] [code=%s]", info.Ctx.Err(), err.Error()))
+		} else {
+			errs = append(errs, fmt.Errorf("failed at wait [error=%w]", err))
 		}
-
-		errs = append(errs, fmt.Errorf("failed at wait [error=%w]", err))
 	}
 
 	close(done)

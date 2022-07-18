@@ -63,7 +63,7 @@ func (ls *LuaState) Start(cmd string) error {
 		},
 	}
 
-	ls.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] starting script %s\n", cmd)))
+	ls.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] starting script [cmd=%s]\n", cmd)))
 
 	err := command.Exec(&info)
 	if err != nil {
@@ -71,7 +71,7 @@ func (ls *LuaState) Start(cmd string) error {
 	}
 	close(ls.stdin)
 
-	ls.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] closing script %s\n\n", cmd)))
+	ls.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] closing script [cmd=%s]\n\n", cmd)))
 	ls.vm.SendView("header", NewData("msg", "Done - "+cmd))
 
 	ls.state.Pop()
@@ -91,3 +91,5 @@ func (ls *LuaState) Stop() error {
 
 	return ErrCommandNotRunning
 }
+
+func (ls *LuaState) SetStack(state *data.Stack) {}

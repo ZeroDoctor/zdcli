@@ -8,14 +8,16 @@ import (
 
 type CommandManager struct {
 	vm           *ViewManager
-	stateManager *data.Stack
+	stateManager data.Stack
 }
 
 func NewCommandManager(vm *ViewManager, state data.ICmdState) *CommandManager {
 	cm := &CommandManager{
 		vm:           vm,
-		stateManager: state.Stack(),
+		stateManager: data.NewStack(),
 	}
+	state.SetStack(&cm.stateManager)
+	cm.stateManager.Push(state)
 
 	return cm
 }

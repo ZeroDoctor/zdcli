@@ -62,7 +62,7 @@ func (fs *ForkState) Start(cmd string) error {
 		},
 	}
 
-	fs.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] starting fork %s\n", cmd)))
+	fs.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] starting fork [cmd=%s]\n", cmd)))
 
 	err := command.Exec(&info)
 	if err != nil {
@@ -70,7 +70,7 @@ func (fs *ForkState) Start(cmd string) error {
 	}
 	close(fs.stdin)
 
-	fs.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] closing fork %s\n", cmd)))
+	fs.vm.SendView("screen", NewData("msg", fmt.Sprintf("[zd] closing fork [cmd=%s]\n", cmd)))
 	fs.vm.SendView("header", NewData("msg", "Done - "+cmd))
 
 	fs.state.Pop()
@@ -90,3 +90,5 @@ func (fs *ForkState) Stop() error {
 
 	return ErrCommandNotRunning
 }
+
+func (fs *ForkState) SetStack(state *data.Stack) {}

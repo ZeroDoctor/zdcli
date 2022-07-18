@@ -46,9 +46,8 @@ func StartTui(cfg *config.Config) data.ExitMessage {
 	g.Highlight = true
 	g.SelFgColor = gocui.ColorCyan
 
-	stack := data.NewStack()
 	vm := tui.NewViewManager(g, []data.IView{view.NewHeader(g), view.NewScreen(g)}, 1)
-	cm := tui.NewCommandManager(vm, cmdstate.NewState(vm, &stack, cfg))
+	cm := tui.NewCommandManager(vm, cmdstate.NewState(vm, cfg))
 
 	g.SetManagerFunc(vm.Layout)
 	km := tui.NewKeyManager(g, vm)

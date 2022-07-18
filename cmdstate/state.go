@@ -27,8 +27,8 @@ type State struct {
 	state *data.Stack
 }
 
-func NewState(vm data.IViewManager, state *data.Stack, cfg *config.Config) *State {
-	return &State{vm: vm, state: state, cfg: cfg}
+func NewState(vm data.IViewManager, cfg *config.Config) *State {
+	return &State{vm: vm, cfg: cfg}
 }
 
 func (s *State) Exec(cmd string) error {
@@ -128,4 +128,4 @@ func (s *State) Exec(cmd string) error {
 
 func (s *State) Stop() error { return ErrCommandNotRunning }
 
-func (s *State) Stack() *data.Stack { return s.state }
+func (s *State) SetStack(state *data.Stack) { s.state = state }
