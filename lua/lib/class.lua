@@ -72,7 +72,7 @@ function Class:extend(obj)
 	end
 
 	setmetatable(obj, mt)
-  
+
 	return obj
 end
 

@@ -3,15 +3,15 @@ local module = {}
 local is_windows = false
 local success = true
 
-os_check, err = io.popen('uname -o 2>/dev/null', 'r')
-if os_check:read() == nil then
+local os_check, _ = io.popen('uname -o 2>/dev/null', 'r')
+if os_check ~= nil and os_check:read() == nil then
 	is_windows = true
 end
 
 if is_windows then
-    print('os: windows')
+	print('os: windows')
 else
-    print('os: unix')
+	print('os: unix')
 end
 
 function module:is_windows()
@@ -39,9 +39,9 @@ function module:check_exec(...)
 end
 
 function module:capture_exec(cmd)
-  local output = ''
+	local output = ''
 
-  local h = io.popen(cmd, 'r')
+	local h = io.popen(cmd, 'r')
 	if h == nil then
 		module.perror('failed to capture exec')
 		return output
@@ -50,7 +50,7 @@ function module:capture_exec(cmd)
 	output = h:read('*a')
 	h:close()
 
-  return output
+	return output
 end
 
 function module:file_exists(name)
@@ -64,13 +64,13 @@ function module:file_exists(name)
 end
 
 function module:slice_str(str, first, last)
-  local sliced = ''
+	local sliced = ''
 
-  for i = first or 1, last or str:len(), 1 do
-    sliced = sliced..str:sub(i,i)
-  end
+	for i = first or 1, last or str:len(), 1 do
+		sliced = sliced..str:sub(i,i)
+	end
 
-  return sliced
+	return sliced
 end
 
 function module.perror(str)

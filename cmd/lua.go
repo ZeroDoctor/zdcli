@@ -33,10 +33,11 @@ func NewLuaCmd(cfg *config.Config) *cli.Command {
 func CreateLua(name string, cfg *config.Config) {
 	temp := `
 local app = require('lib.app')
+local util = require('lib.util')
 
 local script = app:extend()
 
-function script:hello_world(env_type)
+function script:hello_world()
 	print('hello world!')
 end
 

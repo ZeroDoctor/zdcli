@@ -37,11 +37,11 @@ func (a *AlertCmd) TimerSubCmd() *cli.Command {
 		Aliases: []string{"t"},
 		Usage:   "create an timer",
 		Flags: []cli.Flag{
-			&cli.IntFlag{
+			&cli.StringFlag{
 				Name:    "duration",
 				Aliases: []string{"d"},
-				Usage:   "period (in seconds) alert checks endpoint",
-				Value:   5,
+				Usage:   "period (in seconds or m=minute, s=second, h=hour) alert checks endpoint",
+				Value:   "5",
 			},
 			&cli.StringFlag{
 				Name:     "message",
@@ -55,9 +55,13 @@ func (a *AlertCmd) TimerSubCmd() *cli.Command {
 			c, cancel := context.WithCancel(ctx.Context)
 			defer cancel()
 
-			sec := ctx.Int("duration")
-			dur := time.Duration(sec) * time.Second
+			dur, err := time.ParseDuration(ctx.String("duration"))
+			if err != nil {
+				logger.Errorf("failed to parse duration [error=%s]", err.Error())
+				return nil
+			}
 
+			logger.Infof("created timer [duration=%s]...", dur)
 			a.TimerNotify(c, dur, ctx.String("message"))
 
 			return nil

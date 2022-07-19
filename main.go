@@ -22,9 +22,9 @@ import (
 
 func StartLua(cmd string, cfg *config.Config) {
 	info := command.Info{
-		Command: cfg.ShellCmd, // TODO: allow user to set lua endpoint
+		Command: cfg.ShellCmd,
 		Args:    []string{cfg.LuaCmd + " build-app.lua " + cmd},
-		Dir:     cfg.RootScriptDir, // TODO: allow user to set lua direcoty
+		Dir:     cfg.RootScriptDir,
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
