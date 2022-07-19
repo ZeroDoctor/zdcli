@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -22,7 +23,7 @@ func NewLuaCmd(cfg *config.Config) *cli.Command {
 		Usage:   "create a new lua script",
 		Action: func(ctx *cli.Context) error {
 			for _, arg := range ctx.Args().Slice() {
-				CreateLua(arg, cfg)
+				NewLua(arg, cfg)
 			}
 
 			return nil
@@ -30,7 +31,7 @@ func NewLuaCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func CreateLua(name string, cfg *config.Config) {
+func NewLua(name string, cfg *config.Config) {
 	temp := `
 local app = require('lib.app')
 local util = require('lib.util')
@@ -44,11 +45,19 @@ end
 return script
 `
 
+	name = strings.ReplaceAll(name, ".", "/")
 	if i := strings.LastIndex(name, ".lua"); i == -1 {
 		name += ".lua"
 	}
 
-	err := ioutil.WriteFile(cfg.RootScriptDir+"/scripts/"+name, []byte(temp), 0644)
+	path := cfg.RootScriptDir + "/scripts/" + name
+
+	index := strings.LastIndex(path, "/")
+	if !util.FolderExists(path[:index]) {
+		os.MkdirAll(path[:index], 0644)
+	}
+
+	err := ioutil.WriteFile(path, []byte(temp), 0644)
 	if err != nil {
 		logger.Errorf("failed to write lua script template [error=%s]", err.Error())
 		return
@@ -78,6 +87,7 @@ func RemoveLua(name string, cfg *config.Config) {
 		return
 	}
 
+	name = strings.ReplaceAll(name, ".", "/")
 	if i := strings.LastIndex(name, ".lua"); i == -1 {
 		name += ".lua"
 	}
@@ -104,9 +114,7 @@ func EditLua(cmd string, cfg *config.Config) {
 	split := strings.Split(cmd, " ")
 	for _, str := range split {
 		if len(str) >= 4 && str[len(str)-4:] != ".lua" {
-			cmdArr = append(cmdArr, str+".lua")
-			continue
-		} else if len(str) < 4 {
+			str = strings.ReplaceAll(str, ".", "/")
 			cmdArr = append(cmdArr, str+".lua")
 			continue
 		}
@@ -141,6 +149,23 @@ func ListLuaCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
+type File struct {
+	path string
+	rel  string
+	fs.FileInfo
+}
+
+func NewFiles(path string, rel string, files ...fs.FileInfo) []File {
+	var fs []File
+
+	for i := range files {
+		fs = append(fs, File{path: path, rel: rel, FileInfo: files[i]})
+
+	}
+
+	return fs
+}
+
 func ListLua(cfg *config.Config) {
 	path := cfg.RootScriptDir + "/scripts"
 	files, err := ioutil.ReadDir(path)
@@ -149,10 +174,35 @@ func ListLua(cfg *config.Config) {
 		return
 	}
 
-	var data [][]interface{}
+	var data [][]interface{} // data needed to preset as a tui table
 
-	for _, file := range files {
-		data = append(data, []interface{}{file.Mode(), file.Name(), file.Size(), file.ModTime()})
+	// recursively loop through all directories
+	folder := util.NewStack(NewFiles(path, "", files...)...)
+	for folder.Len() > 0 {
+		file := *folder.Pop()
+
+		if file.IsDir() {
+			p := path + "/" + file.Name()
+			if files, err = ioutil.ReadDir(p); err != nil {
+				logger.Errorf("failed to read [dir=%s] [error=%s]", path, err.Error())
+				continue
+			}
+
+			r := file.Name()
+			if file.rel != "" {
+				r = file.rel + "." + file.Name()
+			}
+
+			folder.Push(NewFiles(p, r, files...)...)
+			continue
+		}
+
+		fileName := file.Name()
+		if file.rel != "" {
+			fileName = file.rel + "." + file.Name()
+		}
+
+		data = append(data, []interface{}{file.Mode(), fileName, file.Size(), file.ModTime()})
 	}
 
 	table, err := ui.NewTable([]string{"Mode", "Name", "Size", "Modify Time"}, data, 0, 0)

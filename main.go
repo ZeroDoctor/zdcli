@@ -59,6 +59,7 @@ func RunUI(cfg *config.Config) {
 		running = false
 	}
 }
+
 func SetupCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "setup",

@@ -6,4 +6,5 @@ zd
 *.toml
 *.db
 *.env
+bin/*
 
