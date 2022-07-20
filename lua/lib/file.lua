@@ -75,9 +75,27 @@ local function find_word(file, find, replace)
 	end
 end
 
+local function get_parent_dir(path)
+	if path:sub(#path, #path) == '/' or path:sub(#path, #path) == '\\' then
+		path = slice_str(path, 1, #path-1)
+	end
+
+	local function last_slash()
+		for i = #path or 1, 1, -1 do
+			if path:sub(i, i) == '/' or path:sub(i, i) == '\\' then
+				return i
+			end
+		end
+		return -1
+	end
+
+	return slice_str(path, 1, last_slash()-1)
+end
+
 return {
 	slice_str = slice_str,
 	find_word = find_word,
 	exists = exists,
+	get_parent_dir = get_parent_dir,
 }
 
