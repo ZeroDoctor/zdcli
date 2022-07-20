@@ -4,6 +4,20 @@ local file = require('lib.file')
 
 local script = app:extend()
 
+local function ca_crt(name)
+	local path = '../crt'
+
+	os.execute('mkdir '..path)
+
+	print('creating '..name..' ca...')
+	util:check_exec(
+	'openssl genrsa -aes256 -out '..name..'-ca.key 4096',
+	'openssl req -x509 -new -nodes -key '..name..'-ca.key '..
+	'-sha256 -days 1826 -out '..name..'-ca.crt -subj '..
+	'"/CN=zd'..name..' ca/C=US/ST=Texas/L=Longview/O=ZeroDoc Solutions"'
+	)
+end
+
 function script:seaweedfs()
 	-- TODO: add version option
 	local version = "3.16"
@@ -29,6 +43,8 @@ function script:seaweedfs()
 	'tar -xvf '..path..' -C '..file.get_parent_dir(path),
 	'rm ../bin/swfs.tar.gz'
 	)
+
+	ca_crt('swfs')
 end
 
 return script
