@@ -11,5 +11,6 @@ func Init() *Config {
 		EditorCmd:     "nvim",
 		LuaCmd:        "lua",
 		RootScriptDir: util.EXEC_PATH + "/lua",
+		VaultEndpoint: "https://vault.zerodoc.dev",
 	}
 }

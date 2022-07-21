@@ -8,13 +8,15 @@ import (
 )
 
 type Config struct {
-	LuaCmd         string
-	EditorCmd      string
-	RootScriptDir  string
-	ServerEndPoint string
-	ShellCmd       string
-	VaultEndpoint  string
-	VaultTokens    map[string]string
+	LuaCmd             string
+	EditorCmd          string
+	RootScriptDir      string
+	ServerEndPoint     string
+	ShellCmd           string
+	VaultEndpoint      string
+	VaultTokens        map[string]string
+	SWFSMasterEndpoint string
+	SWFSFilerEndpoint  string
 }
 
 func (c *Config) Save() error {

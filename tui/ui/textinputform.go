@@ -26,6 +26,28 @@ func (t *TextInputForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.Type {
+		case tea.KeyTab:
+			if t.focusIndex == len(t.Inputs) {
+				break
+			}
+
+			placeHolder := t.Inputs[t.focusIndex].Input.Placeholder
+			t.Inputs[t.focusIndex].Input.SetValue(placeHolder)
+
+			t.focusIndex++
+			if t.focusIndex > len(t.Inputs) {
+				t.focusIndex = len(t.Inputs)
+			}
+
+			cmds := make([]tea.Cmd, len(t.Inputs))
+			for i := range t.Inputs {
+				if i == t.focusIndex {
+					cmds[i] = t.Inputs[i].Focus()
+					continue
+				}
+
+				t.Inputs[i].Blur()
+			}
 		case tea.KeyCtrlC, tea.KeyEsc:
 			t.WasCancel = true
 			return t, tea.Quit
@@ -33,7 +55,7 @@ func (t *TextInputForm) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.Type {
 			case tea.KeyEnter:
 				t.focusIndex++
-				if t.focusIndex == len(t.Inputs) {
+				if t.focusIndex >= len(t.Inputs) {
 					return t, tea.Quit
 				}
 			case tea.KeyUp:

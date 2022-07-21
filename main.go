@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/cmd"
@@ -15,6 +16,7 @@ import (
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/data"
+	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
 	zdgoutil "github.com/zerodoctor/zdgo-util"
 	"github.com/zerodoctor/zdvault"
@@ -64,6 +66,52 @@ func SetupCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "setup",
 		Usage: "setup lua, editor, and dir configs",
+		Action: func(ctx *cli.Context) error {
+			luaCmd := ui.NewTextInput()
+			luaCmd.Input.Prompt = "Enter lua command: "
+			luaCmd.Input.Placeholder = cfg.LuaCmd
+			luaCmd.Input.Focus()
+
+			editorCmd := ui.NewTextInput()
+			editorCmd.Input.Prompt = "Enter editor command: "
+			editorCmd.Input.Placeholder = cfg.EditorCmd
+
+			shellCmd := ui.NewTextInput()
+			shellCmd.Input.Prompt = "Enter shell command: "
+			shellCmd.Input.Placeholder = cfg.ShellCmd
+
+			serverEndpoint := ui.NewTextInput()
+			serverEndpoint.Input.Prompt = "Enter server endpoint command: "
+			serverEndpoint.Input.Placeholder = cfg.ServerEndPoint
+
+			vaultEndpoint := ui.NewTextInput()
+			vaultEndpoint.Input.Prompt = "Enter vault endpoint command: "
+			vaultEndpoint.Input.Placeholder = cfg.VaultEndpoint
+
+			form := ui.NewTextInputForm(
+				luaCmd, editorCmd, shellCmd, serverEndpoint, vaultEndpoint,
+			)
+
+			if err := tea.NewProgram(form).Start(); err != nil {
+				logger.Errorf("failed to start tea ui [error=%s]", err.Error())
+				return nil
+			}
+			if form.WasCancel {
+				return nil
+			}
+
+			cfg.LuaCmd = luaCmd.Input.Value()
+			cfg.EditorCmd = editorCmd.Input.Value()
+			cfg.ShellCmd = shellCmd.Input.Value()
+			cfg.ServerEndPoint = serverEndpoint.Input.Value()
+			cfg.VaultEndpoint = vaultEndpoint.Input.Value()
+
+			if err := cfg.Save(); err != nil {
+				logger.Errorf("failed to save config [error=%s]", err.Error())
+			}
+
+			return nil
+		},
 	}
 }
 
