@@ -76,10 +76,12 @@ func (s *SeaweedFS) UploadFilesCmd(cfg *config.Config) *cli.Command {
 				Name:     "sources",
 				Aliases:  []string{"src"},
 				Required: true,
+				Usage:    "a list of files to upload",
 			},
 			&cli.StringFlag{
 				Name:    "destination",
 				Aliases: []string{"dst"},
+				Usage:   "what collection to put the source files",
 			},
 		},
 		Action: func(ctx *cli.Context) error {

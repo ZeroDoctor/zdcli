@@ -11,7 +11,7 @@ type CommandManager struct {
 	stateManager data.Stack
 }
 
-func NewCommandManager(vm *ViewManager, state data.ICmdState) *CommandManager {
+func NewCommandManager(vm *ViewManager, state data.ICmdStateManager) *CommandManager {
 	cm := &CommandManager{
 		vm:           vm,
 		stateManager: data.NewStack(),

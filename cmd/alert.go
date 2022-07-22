@@ -37,11 +37,11 @@ func (a *AlertCmd) TimerSubCmd() *cli.Command {
 		Aliases: []string{"t"},
 		Usage:   "create an timer",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
+			&cli.DurationFlag{
 				Name:    "duration",
 				Aliases: []string{"d"},
 				Usage:   "period (in seconds or m=minute, s=second, h=hour) alert checks endpoint",
-				Value:   "5",
+				Value:   5 * time.Second,
 			},
 			&cli.StringFlag{
 				Name:     "message",
@@ -49,16 +49,33 @@ func (a *AlertCmd) TimerSubCmd() *cli.Command {
 				Usage:    "a message to display when route/endpoint fails",
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:    "time",
+				Aliases: []string{"t"},
+				Usage:   "timestamp of when to notify",
+			},
 		},
 		// TODO: implement timer code
 		Action: func(ctx *cli.Context) error {
 			c, cancel := context.WithCancel(ctx.Context)
 			defer cancel()
 
-			dur, err := time.ParseDuration(ctx.String("duration"))
-			if err != nil {
-				logger.Errorf("failed to parse duration [error=%s]", err.Error())
-				return nil
+			var dur time.Duration
+			if ctx.Duration("duration") != 0 {
+				dur = ctx.Duration("duration")
+			}
+
+			if ctx.String("time") != "" {
+				now := time.Now()
+				zone, _ := now.Zone()
+
+				t, err := time.Parse("01/02/2006 15:04 MST", ctx.String("time")+" "+zone)
+				if err != nil {
+					logger.Errorf("failed to parse [time=%s] [error=%s]", ctx.String("time"), err.Error())
+					return nil
+				}
+
+				dur = t.Sub(now)
 			}
 
 			logger.Infof("created timer [duration=%s]...", dur)

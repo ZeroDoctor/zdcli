@@ -90,5 +90,3 @@ func (fs *ForkState) Stop() error {
 
 	return ErrCommandNotRunning
 }
-
-func (fs *ForkState) SetStack(state *data.Stack) {}

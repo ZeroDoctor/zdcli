@@ -91,5 +91,3 @@ func (ls *LuaState) Stop() error {
 
 	return ErrCommandNotRunning
 }
-
-func (ls *LuaState) SetStack(state *data.Stack) {}
