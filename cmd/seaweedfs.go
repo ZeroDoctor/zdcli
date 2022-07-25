@@ -14,11 +14,15 @@ import (
 type SeaweedFS struct{}
 
 func NewSeaweedFS(cfg *config.Config) *cli.Command {
+	s := &SeaweedFS{}
+
 	return &cli.Command{
 		Name:        "weed",
 		Aliases:     []string{"fs"},
 		Description: "store folder and files to seaweed file system",
-		Subcommands: []*cli.Command{},
+		Subcommands: []*cli.Command{
+			s.UploadFilesCmd(cfg),
+		},
 		Action: func(ctx *cli.Context) error {
 			cli.ShowAppHelp(ctx)
 			return fmt.Errorf("additional sub command required")
