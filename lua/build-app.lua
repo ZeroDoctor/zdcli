@@ -11,6 +11,8 @@ end
 
 local function set_flags(parser)
 	-- parser:flag("-v --verbose"):count("*")
+	parser:option("-a --arch", "set architecture")
+	parser:option("-v --version", "set version")
 end
 
 local function main()
@@ -27,15 +29,14 @@ local function main()
 	end
 	local app = require('scripts.'..app_name)
 
-	local command_start = 2
-	if command_start > #arg then
+	if #args.funcs < 1 then
 		util.perror('must call a function in [script='..app_name..']')
 		return
 	end
 
 	print('args: '..ptr_tbl(args, 2, false))
-	for i=command_start, #arg do
-		local command = util:trim_all(arg[i])
+	for i=1, #args.funcs do
+		local command = util:trim_all(args.funcs[i])
 
 		if app[command] == nil then
 			util.perror('failed to find [function='..command..']')

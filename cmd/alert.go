@@ -52,7 +52,7 @@ func (a *AlertCmd) TimerSubCmd() *cli.Command {
 			&cli.StringFlag{
 				Name:    "time",
 				Aliases: []string{"t"},
-				Usage:   "timestamp of when to notify",
+				Usage:   "timestamp of when to notify [format=01/02/2006 15:04]",
 			},
 		},
 		// TODO: implement timer code
