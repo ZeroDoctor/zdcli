@@ -38,34 +38,6 @@ func (s *SeaweedFS) ConnectFS(cfg *config.Config) (*goseaweedfs.Seaweed, error) 
 	return sw, error
 }
 
-func (s *SeaweedFS) UploadFiles(sw *goseaweedfs.Seaweed, files []string, dest string) error {
-	if len(files) <= 0 {
-		return fmt.Errorf("source file(s) not found")
-	}
-
-	if len(files) == 1 {
-		cm, fp, err := sw.UploadFile(files[0], dest, "")
-		if err != nil {
-			return err
-		}
-
-		logger.Infof("saved [file=%+v] [meta=%+v]", fp, cm)
-
-		return nil
-	}
-
-	results, err := sw.BatchUploadFiles(files, dest, "")
-	if err != nil {
-		return err
-	}
-
-	for i := range results {
-		logger.Infof("saved [file=%+v]", results[i])
-	}
-
-	return nil
-}
-
 func (s *SeaweedFS) UploadFilesCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:        "upload",
@@ -99,4 +71,32 @@ func (s *SeaweedFS) UploadFilesCmd(cfg *config.Config) *cli.Command {
 			return nil
 		},
 	}
+}
+
+func (s *SeaweedFS) UploadFiles(sw *goseaweedfs.Seaweed, files []string, dest string) error {
+	if len(files) <= 0 {
+		return fmt.Errorf("source file(s) not found")
+	}
+
+	if len(files) == 1 {
+		cm, fp, err := sw.UploadFile(files[0], dest, "")
+		if err != nil {
+			return err
+		}
+
+		logger.Infof("saved [file=%+v] [meta=%+v]", fp, cm)
+
+		return nil
+	}
+
+	results, err := sw.BatchUploadFiles(files, dest, "")
+	if err != nil {
+		return err
+	}
+
+	for i := range results {
+		logger.Infof("saved [file=%+v]", results[i])
+	}
+
+	return nil
 }

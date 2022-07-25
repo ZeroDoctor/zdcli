@@ -159,6 +159,7 @@ func main() {
 		cmd.NewAlertCmd(),
 		cmd.NewPasteCmd(),
 		cmd.NewVaultCmd(cfg),
+		cmd.NewSeaweedFS(cfg),
 
 		// meta stuff
 		SetupCmd(cfg),

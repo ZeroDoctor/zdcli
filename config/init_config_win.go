@@ -7,10 +7,11 @@ import "github.com/zerodoctor/zdcli/util"
 
 func Init() *Config {
 	return &Config{
-		ShellCmd:      "cmd /c",
-		EditorCmd:     "nvim",
-		LuaCmd:        "lua",
-		RootScriptDir: util.EXEC_PATH + "/lua",
-		VaultEndpoint: "https://vault.zerodoc.dev",
+		ShellCmd:       "cmd /c",
+		EditorCmd:      "nvim",
+		LuaCmd:         "lua",
+		RootScriptDir:  util.EXEC_PATH + "/lua",
+		ServerEndPoint: "https://api.zerodoc.dev",
+		VaultEndpoint:  "https://vault.zerodoc.dev",
 	}
 }
