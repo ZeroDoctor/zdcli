@@ -23,9 +23,10 @@ import (
 )
 
 func StartLua(cmd string, cfg *config.Config) {
+	flags := fmt.Sprintf("--os_i %s --arch_i %s ", cfg.OS, cfg.Arch)
 	info := command.Info{
 		Command: cfg.ShellCmd,
-		Args:    []string{cfg.LuaCmd + " build-app.lua " + cmd},
+		Args:    []string{cfg.LuaCmd + " build-app.lua " + flags + cmd},
 		Dir:     cfg.RootScriptDir,
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,

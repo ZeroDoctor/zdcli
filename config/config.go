@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/shirou/gopsutil/v3/host"
 	"github.com/zerodoctor/zdcli/util"
 )
 
@@ -17,6 +18,9 @@ type Config struct {
 	VaultTokens        map[string]string
 	SWFSMasterEndpoint string
 	SWFSFilerEndpoint  string
+
+	OS   string
+	Arch string
 }
 
 func (c *Config) Save() error {
@@ -33,6 +37,13 @@ func (c *Config) Load() error {
 	if err != nil {
 		c = Init()
 		return c.Save()
+	}
+
+	info, _ := host.Info()
+	c.OS = info.OS
+	c.Arch = info.KernelArch
+	if c.Arch == "x86_64" {
+		c.Arch = "amd64"
 	}
 
 	return toml.Unmarshal(data, c)

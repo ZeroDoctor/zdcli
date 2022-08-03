@@ -11,8 +11,11 @@ end
 
 local function set_flags(parser)
 	-- parser:flag("-v --verbose"):count("*")
-	parser:option("-a --arch", "set architecture")
-	parser:option("-v --version", "set version")
+	parser:option("--os_i", "set operating system internally")
+	parser:option("--arch_i", "set architecture internally")
+	parser:option("--os", "set operating system (if blank os_i will be used)")
+	parser:option("--arch", "set architecture (if blank arch_i wiill be used)")
+	parser:option("--version", "set version")
 end
 
 local function main()
@@ -32,6 +35,14 @@ local function main()
 	if #args.funcs < 1 then
 		util.perror('must call a function in [script='..app_name..']')
 		return
+	end
+
+	if args.arch == nil or args.arch == "" then
+		args.arch = args.arch_i
+	end
+
+	if args.os == nil or args.os == "" then
+		args.os = args.os_i
 	end
 
 	print('args: '..ptr_tbl(args, 2, false))

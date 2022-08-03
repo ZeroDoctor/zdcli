@@ -21,12 +21,6 @@ end
 function script:seaweedfs(arg)
 	-- TODO: add version option
 	local version = "3.16"
-	-- TODO: add arch option
-	local arch = "amd64"
-
-	if arg.arch ~= nil then
-		arch = arg.arch
-	end
 
 	if arg.version ~= nil then
 		version = arg.version
@@ -34,7 +28,7 @@ function script:seaweedfs(arg)
 
 	if util:is_windows() then
 		local path = '../bin/swfs.zip'
-		local link = 'https://github.com/chrislusf/seaweedfs/releases/download/'..version..'/windows_'..arch..'.zip'
+		local link = 'https://github.com/chrislusf/seaweedfs/releases/download/'..version..'/windows_'..arg.arch..'.zip'
 
 		util:check_exec(
 		'curl -o "../bin/swfs.zip" -L '..link,
@@ -47,7 +41,7 @@ function script:seaweedfs(arg)
 	end
 
 	local path = '../bin/swfs.tar.gz'
-	local link = 'https://github.com/chrislusf/seaweedfs/releases/download/'..version..'/linux_'..arch..'.tar.gz'
+	local link = 'https://github.com/chrislusf/seaweedfs/releases/download/'..version..'/linux_'..arg.arch..'.tar.gz'
 
 	util:check_exec(
 	'curl -o "../bin/swfs.tar.gz" -L '..link,
@@ -64,12 +58,6 @@ function script:consul(arg)
 	end
 	-- TODO: add version option
 	local version = "1.12.3"
-	-- TODO: add arch option
-	local arch = "amd64"
-
-	if arg.arch ~= nil then
-		arch = arg.arch
-	end
 
 	if arg.version ~= nil then
 		version = arg.version
@@ -77,7 +65,7 @@ function script:consul(arg)
 
 
 	local path = '../bin/consul.zip'
-	local link = "https://releases.hashicorp.com/consul/"..version.."/consul_"..version.."_linux_"..arch..".zip"
+	local link = "https://releases.hashicorp.com/consul/"..version.."/consul_"..version.."_linux_"..arg.arch..".zip"
 
 	util:check_exec(
 	'curl -o "../bin/consul.zip" -L '..link,
@@ -92,12 +80,6 @@ function script:nomad(arg)
 	end
 	-- TODO: add version option
 	local version = "1.3.2"
-	-- TODO: add arch option
-	local arch = "amd64"
-
-	if arg.arch ~= nil then
-		arch = arg.arch
-	end
 
 	if arg.version ~= nil then
 		version = arg.version
@@ -105,7 +87,7 @@ function script:nomad(arg)
 
 
 	local path = '../bin/nomad.zip'
-	local link = "https://releases.hashicorp.com/nomad/"..version.."/nomad"..version.."_linux_"..arch..".zip"
+	local link = "https://releases.hashicorp.com/nomad/"..version.."/nomad"..version.."_linux_"..arg.arch..".zip"
 
 	util:check_exec(
 	'curl -o "../bin/nomad.zip" -L '..link,
