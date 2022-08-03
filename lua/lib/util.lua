@@ -1,26 +1,10 @@
 local module = {}
 
-local is_windows = false
-local success = true
-
-local os_check, _ = io.popen('uname -o 2>/dev/null', 'r')
-if os_check ~= nil and os_check:read() == nil then
-	is_windows = true
-end
-
-if is_windows then
-	print('os: windows')
-else
-	print('os: unix')
-end
-
-function module:is_windows()
-	return is_windows
-end
-
 function module:trim_all(s)
 	return s:match('^%s*(.-)%s*$')
 end
+
+local success = true
 
 function module:check_exec(...)
 	local args = {...}
@@ -51,16 +35,6 @@ function module:capture_exec(cmd)
 	h:close()
 
 	return output
-end
-
-function module:file_exists(name)
-	local f = io.open(name,'r')
-	if f == nil then
-		return false
-	end
-
-	io.close(f)
-	return true
 end
 
 function module:slice_str(str, first, last)
