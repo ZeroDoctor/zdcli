@@ -26,7 +26,7 @@ function script:seaweedfs(arg)
 		version = arg.version
 	end
 
-	if util:is_windows() then
+	if arg.os == "windows" then
 		local path = '../bin/swfs.zip'
 		local link = 'https://github.com/chrislusf/seaweedfs/releases/download/'..version..'/windows_'..arg.arch..'.zip'
 
@@ -53,7 +53,7 @@ function script:seaweedfs(arg)
 end
 
 function script:consul(arg)
-	if util:is_windows() then
+	if arg.os == "windows" then
 		print('use WSL')
 	end
 	-- TODO: add version option
@@ -75,7 +75,7 @@ function script:consul(arg)
 end
 
 function script:nomad(arg)
-	if util:is_windows() then
+	if arg.os == "windows" then
 		print('use WSL')
 	end
 	-- TODO: add version option
