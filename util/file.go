@@ -2,9 +2,14 @@ package util
 
 import (
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	zdgoutil "github.com/zerodoctor/zdgo-util"
+	"gitlab.com/smallwoods/image-processor/util"
 )
 
 var EXEC_PATH string
@@ -45,22 +50,71 @@ func GetFile(filename string) (os.FileInfo, error) {
 	return os.Stat(filename)
 }
 
-// FolderExists checks if a folder exists
-func FolderExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if err != nil || os.IsNotExist(err) {
-		return false
-	}
-
-	return info.IsDir()
+type File struct {
+	Path string
+	fs.FileInfo
 }
 
-// FileExists checks if a file exists
-func FileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if err != nil || os.IsNotExist(err) {
-		return false
+func NewFileArray(root string, files ...fs.FileInfo) []File {
+	var f []File
+
+	for _, file := range files {
+		f = append(f, File{
+			Path:     root,
+			FileInfo: file,
+		})
 	}
 
-	return !info.IsDir()
+	return f
+}
+
+func GetAllFiles(file string) ([]File, error) {
+	var result []File
+	if !zdgoutil.FolderExists(file) {
+		var f File
+		var err error
+
+		f.FileInfo, err = GetFile(file)
+		if err != nil {
+			return result, err
+		}
+
+		index := strings.LastIndex(file, "/")
+		if index < 0 {
+			index = strings.LastIndex(file, "\\")
+		}
+		f.Path = file[:index]
+
+		result = append(result, f)
+
+		return result, nil
+	}
+
+	dir, err := ioutil.ReadDir(file)
+	if err != nil {
+		return result, err
+	}
+
+	stack := util.NewStack[File](NewFileArray(file, dir...)...)
+	for stack.Len() > 0 {
+		f := *stack.Pop()
+		if f.IsDir() {
+			root := f.Path + "/" + f.Name()
+			dir, err = ioutil.ReadDir(root)
+			if err != nil {
+				return result, err
+			}
+
+			stack.Push(NewFileArray(root, dir...)...)
+			continue
+		}
+
+		result = append(result, f)
+	}
+
+	return result, nil
+}
+
+func GetParentName(file string) {
+
 }
