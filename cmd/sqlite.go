@@ -29,7 +29,23 @@ func NewSqlitecmd(cfg *config.Config) *cli.Command {
 func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "env",
-		Usage: "save/load/read a env file using sqlite",
+		Usage: "save/read/list a env file using sqlite",
+		Flags: []cli.Flag{
+			&cli.StringSliceFlag{
+				Name:  "save",
+				Usage: "save env file[s] and store into sqlite db [name=unix_timestamp.env.db]",
+			},
+
+			&cli.StringFlag{
+				Name:  "read",
+				Usage: "output content from env file[s]",
+			},
+
+			&cli.StringFlag{
+				Name:  "list",
+				Usage: "outputs a list of env files",
+			},
+		},
 		Action: func(ctx *cli.Context) error {
 			return nil
 		},
