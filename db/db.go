@@ -52,6 +52,8 @@ func NewHandler() (*Handler, error) {
 	h.DB = db
 	logger.Info("connected to lite.db")
 
+	h.CreateTables()
+
 	return h, nil
 }
 
@@ -76,24 +78,40 @@ func (h *Handler) SaveEnvFile(file string, project string) error {
 
 	return h.Transact(false, func(tx *sqlx.Tx) error {
 		for _, f := range all {
-			fmt.Printf("saving [file=%s]...", f.Path+"/"+f.Name())
+			fmt.Printf("saving [file=%s]...\n", f.Path+"/"+f.Name())
 			data, err := ioutil.ReadFile(f.Path + "/" + f.Name())
 			if err != nil {
 				return err
 			}
 
-			h.Exec(ENV_INSERT, project, f.Name(), string(data), time.Now().Unix())
+			_, err = h.Exec(ENV_INSERT, project, f.Name(), string(data), time.Now().Unix())
+			return err
 		}
 
 		return nil
 	})
 }
 
+type Time struct {
+	time.Time
+}
+
+func (t *Time) Scan(value interface{}) error {
+	v, ok := value.(int64)
+	if !ok {
+		return fmt.Errorf("Time value [type=%T] not a int64", value)
+	}
+
+	*t = Time{Time: time.Unix(v, 0)}
+
+	return nil
+}
+
 type Env struct {
-	ProjectName string    `db:"project_name" json:"project_name"`
-	FileName    string    `db:"file_name" json:"file_name"`
-	FileContent string    `db:"file_content" json:"file_content"`
-	CreatedAt   time.Time `db:"created_at" json:"created_at"`
+	ProjectName string `db:"project_name" json:"project_name"`
+	FileName    string `db:"file_name" json:"file_name"`
+	FileContent string `db:"file_content" json:"file_content"`
+	CreatedAt   *Time  `db:"created_at" json:"created_at"`
 }
 
 func (h *Handler) ReadEnvFile(project string, file string) ([]Env, error) {
@@ -110,7 +128,7 @@ func (h *Handler) ReadEnvProjectFiles(project string) ([]Env, error) {
 
 func (h *Handler) ReadAllEnv() ([]Env, error) {
 	var result []Env
-	err := h.Select(&result, ENV_QUERY_FILE)
+	err := h.Select(&result, ENV_QUERY_ALL)
 	return result, err
 }
 

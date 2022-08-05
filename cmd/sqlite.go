@@ -14,7 +14,7 @@ import (
 
 type SqliteCmd struct{}
 
-func NewSqlitecmd(cfg *config.Config) *cli.Command {
+func NewSqliteCmd(cfg *config.Config) *cli.Command {
 	sql := &SqliteCmd{}
 
 	return &cli.Command{
@@ -134,9 +134,9 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 			}
 
 			for i := range envs {
-				fmt.Printf("[project=%s] [file=%s] [created_at=%s]\n",
+				fmt.Printf("[project=%s] [file=%s] [created_at=%+v]\n",
 					envs[i].ProjectName, envs[i].FileName,
-					envs[i].CreatedAt.Format(time.RFC3339),
+					envs[i].CreatedAt,
 				)
 			}
 

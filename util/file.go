@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	zdgoutil "github.com/zerodoctor/zdgo-util"
-	"gitlab.com/smallwoods/image-processor/util"
 )
 
 var EXEC_PATH string
@@ -83,7 +82,11 @@ func GetAllFiles(file string) ([]File, error) {
 		if index < 0 {
 			index = strings.LastIndex(file, "\\")
 		}
-		f.Path = file[:index]
+
+		f.Path = "."
+		if index > 0 {
+			f.Path = file[:index]
+		}
 
 		result = append(result, f)
 
@@ -95,7 +98,7 @@ func GetAllFiles(file string) ([]File, error) {
 		return result, err
 	}
 
-	stack := util.NewStack[File](NewFileArray(file, dir...)...)
+	stack := NewStack(NewFileArray(file, dir...)...)
 	for stack.Len() > 0 {
 		f := *stack.Pop()
 		if f.IsDir() {

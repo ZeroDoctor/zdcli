@@ -14,6 +14,7 @@ import (
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
+	zdgoutil "github.com/zerodoctor/zdgo-util"
 )
 
 func NewLuaCmd(cfg *config.Config) *cli.Command {
@@ -53,7 +54,7 @@ return script
 	path := cfg.RootScriptDir + "/scripts/" + name
 
 	index := strings.LastIndex(path, "/")
-	if !util.FolderExists(path[:index]) {
+	if !zdgoutil.FolderExists(path[:index]) {
 		os.MkdirAll(path[:index], 0644)
 	}
 
@@ -81,7 +82,7 @@ func RemoveLuaCmd(cfg *config.Config) *cli.Command {
 }
 func RemoveLua(name string, cfg *config.Config) {
 
-	if util.FolderExists(cfg.RootScriptDir + "/scripts/" + name) {
+	if zdgoutil.FolderExists(cfg.RootScriptDir + "/scripts/" + name) {
 		os.RemoveAll(cfg.RootScriptDir + "/scripts/" + name)
 
 		return

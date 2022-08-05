@@ -161,6 +161,7 @@ func main() {
 		cmd.NewPasteCmd(),
 		cmd.NewVaultCmd(cfg),
 		cmd.NewSeaweedFS(cfg),
+		cmd.NewSqliteCmd(cfg),
 
 		// meta stuff
 		SetupCmd(cfg),
