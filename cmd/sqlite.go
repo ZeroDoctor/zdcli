@@ -2,10 +2,14 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"time"
 
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/db"
+	"github.com/zerodoctor/zdcli/logger"
 )
 
 type SqliteCmd struct{}
@@ -38,24 +42,14 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 			// 	Usage:   "includes sub folders",
 			// },
 
-			&cli.StringFlag{
-				Name:  "file_path",
-				Usage: "name of env file",
-			},
+			// &cli.StringFlag{
+			// 	Name:  "file_path",
+			// 	Usage: "name of env file",
+			// },
 
 			&cli.StringFlag{
 				Name:  "project_name",
 				Usage: "name of project env file belongs to",
-			},
-
-			&cli.StringSliceFlag{
-				Name:  "save",
-				Usage: "save env file[s] and store into sqlite db [name=unix_timestamp.env.db]",
-			},
-
-			&cli.StringFlag{
-				Name:  "read",
-				Usage: "output content from env file[s]",
 			},
 
 			&cli.BoolFlag{
@@ -63,9 +57,19 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 				Usage: "outputs a list of env files",
 			},
 
-			&cli.BoolFlag{
+			&cli.StringSliceFlag{
+				Name:  "save",
+				Usage: "save env file[s] and store into sqlite db [name=unix_timestamp.env.db]",
+			},
+
+			&cli.StringSliceFlag{
+				Name:  "read",
+				Usage: "output content from env file[s]",
+			},
+
+			&cli.StringSliceFlag{
 				Name:  "write",
-				Usage: "writes a env file from db",
+				Usage: "writes a env file[s] from db",
 			},
 		},
 		Action: func(ctx *cli.Context) error {
@@ -83,6 +87,57 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 				if err != nil {
 					return err
 				}
+			}
+
+			if len(files) > 0 {
+				logger.Info("finished saving env files")
+			}
+
+			var envs []db.Env
+			reads := ctx.StringSlice("read")
+			for i := range reads {
+				envs, err = dbh.ReadEnvFile(project, reads[i])
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("[project=%s] [file=%s] [created_at=%s]\n[content=%s]\n\n",
+					envs[i].ProjectName, envs[i].FileName,
+					envs[i].CreatedAt.Format(time.RFC3339),
+					string(envs[i].FileContent),
+				)
+			}
+
+			writes := ctx.StringSlice("write")
+			for i := range writes {
+				envs, err = dbh.ReadEnvFile(project, writes[i])
+				if err != nil {
+					return err
+				}
+
+				if err = ioutil.WriteFile(envs[i].FileName, []byte(envs[i].FileContent), 0644); err != nil {
+					return err
+				}
+			}
+
+			if !ctx.Bool("list") {
+				return nil
+			}
+
+			if project != "" {
+				envs, err = dbh.ReadEnvProjectFiles(project)
+			} else {
+				envs, err = dbh.ReadAllEnv()
+			}
+			if err != nil {
+				return err
+			}
+
+			for i := range envs {
+				fmt.Printf("[project=%s] [file=%s] [created_at=%s]\n",
+					envs[i].ProjectName, envs[i].FileName,
+					envs[i].CreatedAt.Format(time.RFC3339),
+				)
 			}
 
 			return nil

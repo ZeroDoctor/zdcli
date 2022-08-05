@@ -33,8 +33,9 @@ INSERT INTO envs (
 	file_content = excluded.file_content, 
 	created_at   = excluded.created_at;`
 
-	ENV_QUERY_FILE string = `SELECT * FROM envs WHERE project_name = $1 AND file_name = $2;`
-	ENV_QUERY_ALL  string = `SELECT * FROM envs;`
+	ENV_QUERY_FILE    string = `SELECT * FROM envs WHERE project_name = $1 AND file_name = $2;`
+	ENV_QUERY_PROJECT string = `SELECT * FROM envs WHERE project_name = $1;`
+	ENV_QUERY_ALL     string = `SELECT * FROM envs;`
 )
 
 type Handler struct {
@@ -98,6 +99,12 @@ type Env struct {
 func (h *Handler) ReadEnvFile(project string, file string) ([]Env, error) {
 	var result []Env
 	err := h.Select(&result, ENV_QUERY_FILE, project, file)
+	return result, err
+}
+
+func (h *Handler) ReadEnvProjectFiles(project string) ([]Env, error) {
+	var result []Env
+	err := h.Select(&result, ENV_QUERY_PROJECT, project)
 	return result, err
 }
 
