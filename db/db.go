@@ -36,6 +36,9 @@ INSERT INTO envs (
 	ENV_QUERY_FILE    string = `SELECT * FROM envs WHERE project_name = $1 AND file_name = $2;`
 	ENV_QUERY_PROJECT string = `SELECT * FROM envs WHERE project_name = $1;`
 	ENV_QUERY_ALL     string = `SELECT * FROM envs;`
+
+	ENV_DELETE_FILE    string = `DELETE FROM envs WHERE project_name = $1 AND file_name = $2;`
+	ENV_DELETE_PROJECT string = `DELETE FROM envs WHERE project_name = $1;`
 )
 
 type Handler struct {
@@ -85,7 +88,9 @@ func (h *Handler) SaveEnvFile(file string, project string) error {
 			}
 
 			_, err = h.Exec(ENV_INSERT, project, f.Name(), string(data), time.Now().Unix())
-			return err
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -130,6 +135,16 @@ func (h *Handler) ReadAllEnv() ([]Env, error) {
 	var result []Env
 	err := h.Select(&result, ENV_QUERY_ALL)
 	return result, err
+}
+
+func (h *Handler) DeleteEnvFile(project string, file string) error {
+	_, err := h.Exec(ENV_DELETE_FILE, project, file)
+	return err
+}
+
+func (h *Handler) DeleteEnvProject(project string) error {
+	_, err := h.Exec(ENV_DELETE_PROJECT, project)
+	return err
 }
 
 func (h *Handler) Transact(retry bool, fn func(*sqlx.Tx) error) error {

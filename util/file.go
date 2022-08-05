@@ -112,6 +112,7 @@ func GetAllFiles(file string) ([]File, error) {
 			continue
 		}
 
+		fmt.Printf("[found=%s]\n", f.Name())
 		result = append(result, f)
 	}
 

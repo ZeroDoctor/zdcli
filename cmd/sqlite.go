@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -42,11 +43,6 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 			// 	Usage:   "includes sub folders",
 			// },
 
-			// &cli.StringFlag{
-			// 	Name:  "file_path",
-			// 	Usage: "name of env file",
-			// },
-
 			&cli.StringFlag{
 				Name:  "project_name",
 				Usage: "name of project env file belongs to",
@@ -71,6 +67,11 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 				Name:  "write",
 				Usage: "writes a env file[s] from db",
 			},
+
+			&cli.StringFlag{
+				Name:  "delete",
+				Usage: "delete env content from db",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 
@@ -81,15 +82,15 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 
 			project := ctx.String("project_name")
 
-			files := ctx.StringSlice("save")
-			for i := range files {
-				err := dbh.SaveEnvFile(files[i], project)
+			saves := ctx.StringSlice("save")
+			for i := range saves {
+				err := dbh.SaveEnvFile(saves[i], project)
 				if err != nil {
 					return err
 				}
 			}
 
-			if len(files) > 0 {
+			if len(saves) > 0 {
 				logger.Info("finished saving env files")
 			}
 
@@ -101,11 +102,13 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 					return err
 				}
 
-				fmt.Printf("[project=%s] [file=%s] [created_at=%s]\n[content=%s]\n\n",
-					envs[i].ProjectName, envs[i].FileName,
-					envs[i].CreatedAt.Format(time.RFC3339),
-					string(envs[i].FileContent),
-				)
+				for j := range envs {
+					fmt.Printf("[project=%s] [file=%s] [created_at=%s]\n[content=\n%s]\n",
+						envs[j].ProjectName, envs[j].FileName,
+						envs[j].CreatedAt.Format(time.RFC3339),
+						string(envs[j].FileContent),
+					)
+				}
 			}
 
 			writes := ctx.StringSlice("write")
@@ -115,7 +118,20 @@ func (s *SqliteCmd) EnvSubCmd(cfg *config.Config) *cli.Command {
 					return err
 				}
 
-				if err = ioutil.WriteFile(envs[i].FileName, []byte(envs[i].FileContent), 0644); err != nil {
+				for j := range envs {
+					if err = ioutil.WriteFile(envs[j].FileName, []byte(envs[j].FileContent), 0644); err != nil {
+						return err
+					}
+				}
+			}
+
+			del := ctx.String("delete")
+			if strings.TrimSpace(del) == "." {
+				if err := dbh.DeleteEnvProject(project); err != nil {
+					return err
+				}
+			} else if del != "" {
+				if err := dbh.DeleteEnvFile(project, del); err != nil {
 					return err
 				}
 			}
