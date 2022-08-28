@@ -7,8 +7,8 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/config"
-	"github.com/zerodoctor/zdcli/tui/data"
-	"github.com/zerodoctor/zdcli/tui/ui"
+	"github.com/zerodoctor/zdtui/data"
+	"github.com/zerodoctor/zdtui/ui"
 )
 
 var (

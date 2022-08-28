@@ -12,9 +12,9 @@ import (
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
-	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
 	zdgoutil "github.com/zerodoctor/zdgo-util"
+	"github.com/zerodoctor/zdtui/ui"
 )
 
 func NewLuaCmd(cfg *config.Config) *cli.Command {

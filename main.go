@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -16,10 +15,10 @@ import (
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
-	"github.com/zerodoctor/zdcli/tui/data"
-	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
 	zdgoutil "github.com/zerodoctor/zdgo-util"
+	"github.com/zerodoctor/zdtui/data"
+	"github.com/zerodoctor/zdtui/ui"
 	"github.com/zerodoctor/zdvault"
 )
 
@@ -154,31 +153,6 @@ func main() {
 		logger.Fatalf("failed to create bubbletea log file [error=%s]", err.Error())
 	}
 	defer f.Close()
-
-	var p *tea.Program
-
-	tea.Println("created new progress bar...")
-	progress := ui.NewProgress(func() (*tea.Program, error) {
-		tea.Println("start of work")
-
-		time.Sleep(200 * time.Millisecond)
-		p.Send(ui.DefTick(0.1))
-		time.Sleep(250 * time.Millisecond)
-		p.Send(ui.DefTick(0.3))
-		time.Sleep(500 * time.Millisecond)
-		p.Send(ui.DefTick(0.1))
-		time.Sleep(230 * time.Millisecond)
-		p.Send(ui.DefTick(0.2))
-
-		tea.Println("end of work")
-
-		return p, errors.New("error error error")
-	})
-
-	p = tea.NewProgram(progress)
-	if err := p.Start(); err != nil {
-		logger.Errorf("failed to start tea ui [error=%s]", err.Error())
-	}
 
 	app := cli.NewApp()
 	app.Commands = []*cli.Command{

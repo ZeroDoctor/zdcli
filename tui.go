@@ -9,9 +9,9 @@ import (
 	"github.com/awesome-gocui/gocui"
 	"github.com/zerodoctor/zdcli/cmdstate"
 	"github.com/zerodoctor/zdcli/config"
-	"github.com/zerodoctor/zdcli/tui"
-	"github.com/zerodoctor/zdcli/tui/data"
-	"github.com/zerodoctor/zdcli/tui/view"
+	tui "github.com/zerodoctor/zdtui"
+	"github.com/zerodoctor/zdtui/data"
+	"github.com/zerodoctor/zdtui/view"
 )
 
 func update(g *gocui.Gui, vm *tui.ViewManager, wg *sync.WaitGroup) {

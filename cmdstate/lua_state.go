@@ -7,7 +7,7 @@ import (
 
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
-	"github.com/zerodoctor/zdcli/tui/data"
+	"github.com/zerodoctor/zdtui/data"
 )
 
 type LuaState struct {

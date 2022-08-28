@@ -8,8 +8,8 @@ import (
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
-	"github.com/zerodoctor/zdcli/tui/ui"
 	"github.com/zerodoctor/zdcli/util"
+	"github.com/zerodoctor/zdtui/ui"
 	"github.com/zerodoctor/zdvault"
 )
 

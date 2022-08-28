@@ -5,10 +5,7 @@ go 1.18
 require (
 	github.com/TwiN/go-pastebin v1.0.2
 	github.com/awesome-gocui/gocui v1.1.0
-	github.com/charmbracelet/bubbles v0.13.0
-	github.com/charmbracelet/bubbletea v0.22.0
-	github.com/charmbracelet/lipgloss v0.5.0
-	github.com/evertras/bubble-table v0.14.5
+	github.com/charmbracelet/bubbletea v0.22.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.4.0
 	github.com/linxGnu/goseaweedfs v0.1.6
@@ -19,14 +16,18 @@ require (
 	github.com/zerodoctor/beeep v0.0.0-20220601134518-919e763802ab
 	github.com/zerodoctor/go-logging v0.0.0-20220526170309-80ad3351e22d
 	github.com/zerodoctor/zdgo-util v0.0.0-20220701145940-b6050340fdd2
+	github.com/zerodoctor/zdtui v0.0.0-20220828020615-7d1da15f2efe
 	github.com/zerodoctor/zdvault v0.0.0-20220622202204-22f917774a42
 )
 
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
+	github.com/charmbracelet/bubbles v0.13.0 // indirect
 	github.com/charmbracelet/harmonica v0.2.0 // indirect
+	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/evertras/bubble-table v0.14.5 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.5.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
@@ -34,7 +35,8 @@ require (
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20220517141722-cf486979b281 // indirect
-	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/muesli/ansi v0.0.0-20211031195517-c9f0611b6c70 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
@@ -50,7 +52,7 @@ require (
 	github.com/tklauser/numcpus v0.5.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	golang.org/x/sys v0.0.0-20220804182731-e052cef7d300 // indirect
+	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab // indirect
 	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035 // indirect
 	golang.org/x/text v0.3.7 // indirect
 )
