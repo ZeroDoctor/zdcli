@@ -2,7 +2,7 @@ local app = require('lib.app')
 
 local test = app:extend()
 
-function test:func_win(env_type)
+function test:func_win()
   io.write('enter name: ')
   local name = io.read()
   print('whoa there '..name)
@@ -19,7 +19,7 @@ function test:func_win(env_type)
   end
 end
 
-function test:func_unix(env_type)
+function test:func_unix()
   print('enter name: ')
   local name = io.read('l')
   print('whoa there '..name)

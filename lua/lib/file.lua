@@ -19,6 +19,24 @@ local function slice_str(str, first, last)
 	return sliced
 end
 
+local function split_str(str, split_on)
+	if split_on == nil then
+		split_on = '%s'
+	end
+
+	local result = {}
+	for s in string.gmatch(str, '([^'..split_on..']+)') do
+		table.insert(result, s)
+	end
+
+	return result
+end
+
+local function is_dir(path)
+	if type(path) ~= "string" then return false end
+	return os.execute("cd "..path)
+end
+
 local function exists(file)
 	local f = io.open(file, "rb")
 	if f then f:close() end
@@ -38,8 +56,7 @@ local function lines_from(file)
 	return lines
 end
 
-local function find_replace_word(file, find, replace)
-	local lines = lines_from(file)
+local function find_replace_word(lines, find, replace)
 	local result = {}
 
 	for k, v in pairs(lines) do
@@ -58,8 +75,9 @@ local function find_replace_word(file, find, replace)
 	return result
 end
 
-local function find_word(file, find, replace)
-	local lines = find_replace_word(file, find, replace)
+local function find_replace_output(file, find, replace)
+	local lines = lines_from(file)
+	lines = find_replace_word(lines, find, replace)
 
 	local str = ""
 	for _,line in ipairs(lines) do
@@ -94,8 +112,13 @@ end
 
 return {
 	slice_str = slice_str,
-	find_word = find_word,
+	slice_tbl = slice_tbl,
+	split_str = split_str,
+	lines_from = lines_from,
+	find_replace_word = find_replace_word,
+	find_replace_output = find_replace_output,
 	exists = exists,
-	get_parent_dir = get_parent_dir,
+	is_dir = is_dir,
+	get_parent_dir = get_parent_dir
 }
 

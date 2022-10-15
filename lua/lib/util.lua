@@ -4,8 +4,6 @@ function module:trim_all(s)
 	return s:match('^%s*(.-)%s*$')
 end
 
-local success = true
-
 function module:check_exec(...)
 	local args = {...}
 	local command = ''
@@ -16,7 +14,7 @@ function module:check_exec(...)
 	print('')
 	command = command:sub(3, command:len())
 	local code = os.execute(command)
-	if code ~= success then
+	if not code then
 		module.perror('command failed exit code: '..tostring(code))
 		os.exit(code)
 	end
