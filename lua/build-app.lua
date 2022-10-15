@@ -11,6 +11,7 @@ end
 
 local function set_flags(parser)
 	-- parser:flag("-v --verbose"):count("*")
+	parser:option("--pwd", "get the current working directory (read-only)")
 	parser:option("--os_i", "set operating system internally")
 	parser:option("--arch_i", "set architecture internally")
 	parser:option("--os", "set operating system (if blank os_i will be used)")

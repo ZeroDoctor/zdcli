@@ -23,7 +23,13 @@ import (
 )
 
 func StartLua(cmd string, cfg *config.Config) {
-	flags := fmt.Sprintf("--os_i %s --arch_i %s ", cfg.OS, cfg.Arch)
+	pwd, err := os.Getwd()
+	if err != nil {
+		logger.Errorf("failed to get current working directory [error=%s]", err.Error())
+		return
+	}
+
+	flags := fmt.Sprintf("--os_i %s --arch_i %s --pwd %s ", cfg.OS, cfg.Arch, pwd)
 	info := command.Info{
 		Command: cfg.ShellCmd,
 		Args:    []string{cfg.LuaCmd + " build-app.lua " + flags + cmd},
@@ -34,7 +40,7 @@ func StartLua(cmd string, cfg *config.Config) {
 		Stdin:   os.Stdin,
 	}
 
-	err := command.Exec(&info)
+	err = command.Exec(&info)
 	if err != nil {
 		logger.Errorf("failed command [error=%s]", err.Error())
 	}
