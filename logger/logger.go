@@ -23,7 +23,7 @@ var (
 )
 
 // Init setup default logging for terminal backend
-func Init() {
+func Init(level logging.Level) {
 	if log != nil {
 		return
 	}
@@ -37,6 +37,8 @@ func Init() {
 		`%{color}%{level:.4s}: %{time:2006-01-02 15:04:05} %{shortfile} ▶%{color:reset} %{message}`,
 	)
 	backendFormatter := logging.NewBackendFormatter(backend, TERM_FORMAT)
+	backendLevel := logging.AddModuleLevel(backendFormatter)
+	backendLevel.SetLevel(level, "")
 	backendMap["terminal"] = backendFormatter
 
 	reloadBackend()
