@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli/v2"
+	"github.com/zerodoctor/go-logging"
 	"github.com/zerodoctor/zdcli/cmd"
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
@@ -39,6 +40,8 @@ func StartLua(cmd string, cfg *config.Config) {
 		Stderr:  os.Stderr,
 		Stdin:   os.Stdin,
 	}
+
+	logger.Debugf("[cmd=%s %s]", info.Command, info.Args)
 
 	err = command.Exec(&info)
 	if err != nil {
@@ -113,6 +116,8 @@ func SetupCmd(cfg *config.Config) *cli.Command {
 			cfg.ServerEndPoint = serverEndpoint.Input.Value()
 			cfg.VaultEndpoint = vaultEndpoint.Input.Value()
 
+			logger.Infof("saving...\n%s", cfg)
+
 			if err := cfg.Save(); err != nil {
 				logger.Errorf("failed to save config [error=%s]", err.Error())
 			}
@@ -133,18 +138,42 @@ func UICmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func main() {
-	logger.Init()
-
-	if err := godotenv.Load(util.EXEC_PATH + "/.env"); err != nil {
-		logger.Info("env file not found [error=%s]", err.Error())
+func SetupLogLevel() logging.Level {
+	switch os.Getenv("ZDCLI_LOG_LEVEL") {
+	case "0", "DEBUG":
+		return logging.DEBUG
+	case "1", "INFO":
+		return logging.INFO
+	case "2", "NOTICE":
+		return logging.NOTICE
+	case "3", "WARNING":
+		return logging.WARNING
+	case "4", "ERROR":
+		return logging.ERROR
+	case "5", "CRITICAL":
+		return logging.CRITICAL
 	}
+
+	return logging.DEBUG
+}
+
+func main() {
+	debugLevel := logging.INFO
+	if err := godotenv.Load(util.EXEC_PATH + "/.env"); err != nil {
+		fmt.Printf("[ERROR] env file not found [error=%s]\n", err.Error())
+		debugLevel = logging.DEBUG
+	} else {
+		debugLevel = SetupLogLevel()
+	}
+	logger.Init(debugLevel)
 
 	cfg := &config.Config{}
 	if err := cfg.Load(); err != nil {
 		logger.Errorf("failed to save/load config [error=%s]", err.Error())
 		return
 	}
+
+	logger.Debugf("loading config...\n%s", cfg)
 
 	if cfg.VaultTokens == nil {
 		cfg.VaultTokens = make(map[string]string)
