@@ -2,6 +2,7 @@ local util = require('lib.util')
 local file = require('lib.file')
 local ptr_tbl = require('lib.table_dump')
 local argparse = require('lib.arg')
+local table_dump = require('lib.table_dump')
 
 local function find_script(script)
 	local str = string.gsub(script, '%.', '/')
@@ -49,6 +50,12 @@ local function main()
 	print('args: '..ptr_tbl(args, 2, false))
 	for i=1, #args.funcs do
 		local command = util:trim_all(args.funcs[i])
+
+		if args.funcs[i] == 'ls' then
+			print('\n-- available methods below:')
+			print(table_dump(app["_"], 2), '\n--\n')
+			return
+		end
 
 		if app[command] == nil then
 			util.perror('failed to find [function='..command..']')
