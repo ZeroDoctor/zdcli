@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/pelletier/go-toml/v2"
@@ -47,4 +48,23 @@ func (c *Config) Load() error {
 	}
 
 	return toml.Unmarshal(data, c)
+}
+
+func (c *Config) String() string {
+	return fmt.Sprintf(`[LuaCmd=%s]
+[EditorCmd=%s]
+[RootScriptDir=%s]
+[ServerEndPoint=%s]
+[ShellCmd=%s]
+[VaultEndpoint=%s]
+[VaultTokens=%s]
+[SWFSMasterEndpoint=%s]
+[SWFSFilerEndpoint=%s]
+[OS=%s]
+[Arch=%s]`,
+		c.LuaCmd, c.EditorCmd, c.RootScriptDir,
+		c.ServerEndPoint, c.ShellCmd, c.VaultEndpoint,
+		c.VaultTokens, c.SWFSMasterEndpoint, c.SWFSFilerEndpoint,
+		c.OS, c.Arch,
+	)
 }
