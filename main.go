@@ -158,14 +158,12 @@ func SetupLogLevel() logging.Level {
 }
 
 func main() {
-	debugLevel := logging.INFO
 	if err := godotenv.Load(util.EXEC_PATH + "/.env"); err != nil {
 		fmt.Printf("[ERROR] env file not found [error=%s]\n", err.Error())
-		debugLevel = logging.DEBUG
-	} else {
-		debugLevel = SetupLogLevel()
 	}
-	logger.Init(debugLevel)
+
+	logLevel := SetupLogLevel()
+	logger.Init(logLevel)
 
 	cfg := &config.Config{}
 	if err := cfg.Load(); err != nil {
@@ -173,7 +171,7 @@ func main() {
 		return
 	}
 
-	logger.Debugf("loading config...\n%s", cfg)
+	logger.Debugf("loading config...(%s)\n%s", util.EXEC_PATH, cfg)
 
 	if cfg.VaultTokens == nil {
 		cfg.VaultTokens = make(map[string]string)

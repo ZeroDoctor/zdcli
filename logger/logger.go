@@ -39,7 +39,7 @@ func Init(level logging.Level) {
 	backendFormatter := logging.NewBackendFormatter(backend, TERM_FORMAT)
 	backendLevel := logging.AddModuleLevel(backendFormatter)
 	backendLevel.SetLevel(level, "")
-	backendMap["terminal"] = backendFormatter
+	backendMap["terminal"] = backendLevel
 
 	reloadBackend()
 }

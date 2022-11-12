@@ -11,7 +11,7 @@ local function find_script(script)
 end
 
 local function set_flags(parser)
-	-- parser:flag("-v --verbose"):count("*")
+	parser:flag("-v --verbose"):count("*")
 	parser:option("--pwd", "get the current working directory (read-only)")
 	parser:option("--os_i", "set operating system internally")
 	parser:option("--arch_i", "set architecture internally")
@@ -47,7 +47,10 @@ local function main()
 		args.os = args.os_i
 	end
 
-	print('args: '..ptr_tbl(args, 2, false))
+	if args.verbose == 1 then
+		print('args: '..ptr_tbl(args, 2, false))
+	end
+
 	for i=1, #args.funcs do
 		local command = util:trim_all(args.funcs[i])
 
