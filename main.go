@@ -181,7 +181,7 @@ func main() {
 		zdvault.SetToken(k, t)
 	}
 
-	f, err := tea.LogToFile("debug.log", "debug")
+	f, err := tea.LogToFile(util.EXEC_PATH+"/debug.log", "debug")
 	if err != nil {
 		logger.Fatalf("failed to create bubbletea log file [error=%s]", err.Error())
 	}
