@@ -23,3 +23,9 @@ COMMANDS:
 GLOBAL OPTIONS:
    --help, -h  show help (default: false)
 ```
+To run a script simply run:
+
+```sh 
+   zd test func_unix
+```
+where "test" is the name of the lua file in './lua/scripts' and "func_unix" is the name of the function inside test.lua
