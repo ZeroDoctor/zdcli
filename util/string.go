@@ -21,3 +21,13 @@ func RandString(n int) string {
 
 	return b.String()
 }
+
+func InArray(source string, strs []string) bool {
+	for _, str := range strs {
+		if source == str {
+			return true
+		}
+	}
+
+	return false
+}

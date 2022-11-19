@@ -177,12 +177,18 @@ func ListLua(cfg *config.Config) {
 
 	var data [][]interface{} // data needed to preset as a tui table
 
+	ignoreDir := []string{".git"}
+
 	// recursively loop through all directories
 	folder := util.NewStack(NewFiles(path, "", files...)...)
 	for folder.Len() > 0 {
 		file := *folder.Pop()
 
 		if file.IsDir() {
+			if util.InArray(file.Name(), ignoreDir) {
+				continue
+			}
+
 			p := path + "/" + file.Name()
 			if files, err = ioutil.ReadDir(p); err != nil {
 				logger.Errorf("failed to read [dir=%s] [error=%s]", path, err.Error())
