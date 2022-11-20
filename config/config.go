@@ -6,6 +6,7 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/shirou/gopsutil/v3/host"
+	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/util"
 )
 
@@ -25,26 +26,36 @@ type Config struct {
 }
 
 func (c *Config) Save() error {
-	data, err := toml.Marshal(c)
-	if err != nil {
-		return err
-	}
-
-	return ioutil.WriteFile(util.EXEC_PATH+"/zdconfig.toml", data, 0644)
-}
-
-func (c *Config) Load() error {
-	data, err := ioutil.ReadFile(util.EXEC_PATH + "/zdconfig.toml")
-	if err != nil {
-		c = Init()
-		return c.Save()
-	}
-
 	info, _ := host.Info()
 	c.OS = info.OS
 	c.Arch = info.KernelArch
 	if c.Arch == "x86_64" {
 		c.Arch = "amd64"
+	}
+
+	data, err := toml.Marshal(c)
+	if err != nil {
+		return err
+	}
+
+	logger.Infof("updating config [file=%s]", util.EXEC_PATH+"/zdconfig.toml")
+	return ioutil.WriteFile(util.EXEC_PATH+"/zdconfig.toml", data, 0644)
+}
+
+func (c *Config) Load() error {
+	info, _ := host.Info()
+	c.OS = info.OS
+	c.Arch = info.KernelArch
+	if c.Arch == "x86_64" {
+		c.Arch = "amd64"
+	}
+
+	data, err := ioutil.ReadFile(util.EXEC_PATH + "/zdconfig.toml")
+	if err != nil {
+		logger.Warnf("[error=%s] creating new config file", err.Error())
+		c = Init()
+		c.RootScriptDir = util.EXEC_PATH + "/lua"
+		return c.Save()
 	}
 
 	return toml.Unmarshal(data, c)

@@ -118,7 +118,3 @@ func GetAllFiles(file string) ([]File, error) {
 
 	return result, nil
 }
-
-func GetParentName(file string) {
-
-}
