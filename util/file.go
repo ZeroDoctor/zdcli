@@ -5,10 +5,9 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
-	zdgoutil "github.com/zerodoctor/zdgo-util"
+	zdutil "github.com/zerodoctor/zdgo-util"
 )
 
 var EXEC_PATH string
@@ -16,33 +15,10 @@ var EXEC_PATH string
 func init() {
 	var err error
 
-	EXEC_PATH, err = GetExecPath()
+	EXEC_PATH, err = zdutil.GetExecPath()
 	if err != nil {
-		panic(err)
+		panic(err) // TODO: avoid panics
 	}
-}
-
-func GetExecPath() (string, error) {
-	path, err := os.Executable()
-	if err != nil {
-		return path, err
-	}
-
-	path, err = filepath.EvalSymlinks(path)
-	if err != nil {
-		return path, err
-	}
-
-	index := strings.LastIndex(path, "/")
-	if index == -1 {
-		index = strings.LastIndex(path, "\\")
-		if index == -1 {
-			return path, fmt.Errorf("exec path is messed up [path=%s]", path)
-		}
-	}
-	path = path[:index]
-
-	return path, err
 }
 
 func GetFile(filename string) (os.FileInfo, error) {
@@ -69,7 +45,7 @@ func NewFileArray(root string, files ...fs.FileInfo) []File {
 
 func GetAllFiles(file string) ([]File, error) {
 	var result []File
-	if !zdgoutil.FolderExists(file) {
+	if !zdutil.FolderExists(file) {
 		var f File
 		var err error
 
@@ -98,7 +74,7 @@ func GetAllFiles(file string) ([]File, error) {
 		return result, err
 	}
 
-	stack := NewStack(NewFileArray(file, dir...)...)
+	stack := zdutil.NewStack(NewFileArray(file, dir...)...)
 	for stack.Len() > 0 {
 		f := *stack.Pop()
 		if f.IsDir() {
