@@ -119,6 +119,10 @@ func EditLua(cmd string, cfg *config.Config) {
 			str = strings.ReplaceAll(str, ".", "/")
 			cmdArr = append(cmdArr, str+".lua")
 			continue
+		} else if len(str) < 4 {
+			str = strings.ReplaceAll(str, ".", "/")
+			cmdArr = append(cmdArr, str+".lua")
+			continue
 		}
 
 		cmdArr = append(cmdArr, str)
