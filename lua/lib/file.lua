@@ -1,3 +1,4 @@
+local str = require('lib.str')
 
 local function slice_tbl(tbl, first, last)
 	local sliced = {}
@@ -9,28 +10,6 @@ local function slice_tbl(tbl, first, last)
 	return sliced
 end
 
-local function slice_str(str, first, last)
-	local sliced = ''
-
-	for i = first or 1, last or #str, 1 do
-		sliced = sliced..str:sub(i,i)
-	end
-
-	return sliced
-end
-
-local function split_str(str, split_on)
-	if split_on == nil then
-		split_on = '%s'
-	end
-
-	local result = {}
-	for s in string.gmatch(str, '([^'..split_on..']+)') do
-		table.insert(result, s)
-	end
-
-	return result
-end
 
 local function is_dir(path)
 	if type(path) ~= "string" then return false end
@@ -56,38 +35,20 @@ local function lines_from(file)
 	return lines
 end
 
-local function find_replace_word(lines, find, replace)
-	local result = {}
-
-	for k, v in pairs(lines) do
-		local start_index, end_index = string.find(v, find)
-		if start_index then
-			print('found ['..k..'] '..v)
-			local a = slice_str(v, 1, start_index-1)
-			local b = slice_str(v, end_index+1, #v)
-			v = a..replace..b
-			print('\treplace '..v)
-		end
-
-		result[k] = v
-	end
-
-	return result
-end
 
 local function find_replace_output(file, find, replace)
 	local lines = lines_from(file)
-	lines = find_replace_word(lines, find, replace)
+	lines = str.find_replace_word(lines, find, replace)
 
-	local str = ""
+	local words = ""
 	for _,line in ipairs(lines) do
-		str = str..line..'\n'
+		words = words..line..'\n'
 	end
 
 	if replace ~= nil then
 		local f = io.open(file, 'w+')
 		if f ~= nil then
-			f:write(str)
+			f:write(words)
 			f:close()
 		end
 	end
@@ -95,7 +56,7 @@ end
 
 local function get_parent_dir(path)
 	if path:sub(#path, #path) == '/' or path:sub(#path, #path) == '\\' then
-		path = slice_str(path, 1, #path-1)
+		path = str.slice(path, 1, #path-1)
 	end
 
 	local function last_slash()
@@ -107,18 +68,15 @@ local function get_parent_dir(path)
 		return -1
 	end
 
-	return slice_str(path, 1, last_slash()-1)
+	return str.slice(path, 1, last_slash()-1)
 end
 
 return {
-	slice_str = slice_str,
-	slice_tbl = slice_tbl,
-	split_str = split_str,
-	lines_from = lines_from,
-	find_replace_word = find_replace_word,
-	find_replace_output = find_replace_output,
 	exists = exists,
 	is_dir = is_dir,
+	slice_tbl = slice_tbl,
+	lines_from = lines_from,
+	find_replace_output = find_replace_output,
 	get_parent_dir = get_parent_dir
 }
 
