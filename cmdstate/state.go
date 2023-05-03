@@ -99,8 +99,9 @@ func (s *State) Exec(cmd string) error {
 		var data [][]interface{}
 
 		for _, file := range files {
+			timeStr := file.ModTime().Format("2006-01-02 15:04:05")
 			data = append(data, []interface{}{
-				file.Mode(), file.Name(), file.Size(), file.ModTime(),
+				file.Mode(), file.Name(), file.Size(), timeStr,
 			})
 		}
 

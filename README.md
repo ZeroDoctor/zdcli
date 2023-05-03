@@ -1,6 +1,10 @@
 # zdcli
 my cli tool
 
+## Depends on:
+
+- lua [windows](https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Win64_bin.zip/download) [linux](https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Linux54_64_bin.tar.gz/download)
+
 ```
 NAME:
    zd - A new cli application

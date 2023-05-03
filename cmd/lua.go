@@ -214,7 +214,8 @@ func ListLua(cfg *config.Config) {
 			fileName = file.rel + "." + file.Name()
 		}
 
-		data = append(data, []interface{}{file.Mode(), fileName, file.Size(), file.ModTime()})
+		timeStr := file.ModTime().Format("2006-01-02 15:04:05")
+		data = append(data, []interface{}{file.Mode(), fileName, file.Size(), timeStr})
 	}
 
 	table, err := ui.NewTable([]string{"Mode", "Name", "Size", "Modify Time"}, data, 0, 0)
