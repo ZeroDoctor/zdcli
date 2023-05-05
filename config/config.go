@@ -13,7 +13,7 @@ import (
 type Config struct {
 	LuaCmd             string
 	EditorCmd          string
-	RootScriptDir      string
+	RootLuaScriptDir   string
 	ServerEndPoint     string
 	ShellCmd           string
 	VaultEndpoint      string
@@ -54,7 +54,7 @@ func (c *Config) Load() error {
 	if err != nil {
 		logger.Warnf("[error=%s] creating new config file", err.Error())
 		c = Init()
-		c.RootScriptDir = util.EXEC_PATH + "/lua"
+		c.RootLuaScriptDir = util.EXEC_PATH + "/lua"
 		return c.Save()
 	}
 
@@ -73,7 +73,7 @@ func (c *Config) String() string {
 [SWFSFilerEndpoint=%s]
 [OS=%s]
 [Arch=%s]`,
-		c.LuaCmd, c.EditorCmd, c.RootScriptDir,
+		c.LuaCmd, c.EditorCmd, c.RootLuaScriptDir,
 		c.ServerEndPoint, c.ShellCmd, c.VaultEndpoint,
 		c.VaultTokens, c.SWFSMasterEndpoint, c.SWFSFilerEndpoint,
 		c.OS, c.Arch,

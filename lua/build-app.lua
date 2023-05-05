@@ -23,7 +23,7 @@ end
 local function main()
 	local parser = argparse("build-app", "initial script to call other script")
 	parser:argument("script", "name of script to run")
-	parser:argument("funcs", "name of script to run"):args("*")
+	parser:argument("funcs", "name of functions to run"):args("*")
 	set_flags(parser)
 	local args = parser:parse()
 

@@ -8,3 +8,4 @@ zd
 *.env
 bin/*
 
+debug.log

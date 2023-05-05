@@ -39,7 +39,7 @@ func (ls *LuaState) Start(cmd string) error {
 	info := command.Info{
 		Command: ls.cfg.ShellCmd, // TODO: allow user to set lua endpoint
 		Args:    []string{ls.cfg.LuaCmd + " build-app.lua " + flags + cmd},
-		Dir:     ls.cfg.RootScriptDir, // TODO: allow user to set lua direcoty
+		Dir:     ls.cfg.RootLuaScriptDir, // TODO: allow user to set lua direcoty
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {

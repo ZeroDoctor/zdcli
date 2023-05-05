@@ -33,7 +33,7 @@ func StartLua(cmd string, cfg *config.Config) {
 	info := command.Info{
 		Command: cfg.ShellCmd,
 		Args:    []string{cfg.LuaCmd + " build-app.lua " + flags + cmd},
-		Dir:     cfg.RootScriptDir,
+		Dir:     cfg.RootLuaScriptDir,
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,

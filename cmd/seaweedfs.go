@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -101,6 +102,22 @@ func (s *SeaweedFS) UploadFiles(sw *goseaweedfs.Seaweed, files []string, dest st
 	for i := range results {
 		logger.Infof("saved [file=%+v]", results[i])
 	}
+
+	return nil
+}
+
+func (s *SeaweedFS) ListFiles(sw *goseaweedfs.Seaweed, folder string) error {
+	if len(sw.Filers()) <= 0 {
+		return errors.New("Failed to find any filers")
+	}
+
+	data, status, err := sw.Filers()[0].Get(folder, nil, nil)
+	if err != nil {
+		return err
+	}
+	logger.Infof("from [folder=%s] [status=%d]", folder, status)
+
+	logger.Info(string(data))
 
 	return nil
 }
