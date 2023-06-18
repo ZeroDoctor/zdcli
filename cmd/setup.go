@@ -125,17 +125,18 @@ func (s *SetupCmd) DownloadLua(ctx context.Context, cfg *config.Config) error {
 		return err
 	}
 
+	cfg.LuaCmd = "lua54"
 	file := "lua.tar.gz"
 	if runtime.GOOS == "windows" {
 		file = "lua.zip"
 	}
 
-	if err := util.ExtractFromHttpResponse(ctx, file, resp.Body); err != nil {
+	if err := util.ExtractFromHttpResponse(ctx, file, util.BIN_PATH, resp.Body); err != nil {
 		logger.Warnf("failed to extract response [error=%s]", err.Error())
 	}
 
 	if _, err := util.FollowDownloadRedirection(cfg.LuaDownloadURL, resp, func(resp *http.Response) error {
-		if err := util.ExtractFromHttpResponse(ctx, file, resp.Body); err != nil {
+		if err := util.ExtractFromHttpResponse(ctx, file, util.BIN_PATH, resp.Body); err != nil {
 			logger.Warnf("failed to extract response [error=%s]", err.Error())
 		}
 

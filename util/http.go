@@ -14,12 +14,12 @@ import (
 	zdutil "github.com/zerodoctor/zdgo-util"
 )
 
-func ExtractFromHttpResponse(ctx context.Context, file string, reader io.ReadCloser) error {
+func ExtractFromHttpResponse(ctx context.Context, file string, targetDir string, reader io.ReadCloser) error {
 	format, input, err := archiver.Identify(file, reader)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[INFO] found lua compress file format [type=%s]\n", format.Name())
+	fmt.Printf("[INFO] found compress file format [type=%s]\n", format.Name())
 
 	if err := saveCompressFile(file, input); err != nil {
 		return err
@@ -32,7 +32,7 @@ func ExtractFromHttpResponse(ctx context.Context, file string, reader io.ReadClo
 		return err
 	}
 
-	return extractAllFromFileSystem(fsys)
+	return extractAllFromFileSystem(fsys, targetDir)
 }
 
 func saveCompressFile(file string, reader io.Reader) error {
@@ -44,7 +44,7 @@ func saveCompressFile(file string, reader io.Reader) error {
 	return os.WriteFile(file, data, 0777)
 }
 
-func extractAllFromFileSystem(fsys fs.FS) error {
+func extractAllFromFileSystem(fsys fs.FS, targetDir string) error {
 	if dir, ok := fsys.(fs.ReadDirFS); ok {
 		stack := zdutil.NewStack(".")
 
@@ -59,9 +59,9 @@ func extractAllFromFileSystem(fsys fs.FS) error {
 				path := path + "/" + entries[i].Name()
 				fmt.Printf("[INFO] extracting [file=%s]...\n", path)
 
-				binPath := BIN_PATH + "/" + path
+				targetPath := targetDir + "/" + path
 				if entries[i].IsDir() {
-					os.MkdirAll(binPath, 0755)
+					os.MkdirAll(targetPath, 0755)
 					stack.Push(path)
 					continue
 				}
@@ -83,7 +83,7 @@ func extractAllFromFileSystem(fsys fs.FS) error {
 					continue
 				}
 
-				if err := os.WriteFile(binPath, data, 0777); err != nil {
+				if err := os.WriteFile(targetPath, data, 0777); err != nil {
 					fmt.Printf("[ERROR] failed to write [file=%s] [error=%s]\n", path, err.Error())
 					continue
 				}
