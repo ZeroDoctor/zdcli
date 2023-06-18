@@ -10,6 +10,7 @@ import (
 	zdutil "github.com/zerodoctor/zdgo-util"
 )
 
+var BIN_PATH string
 var EXEC_PATH string
 
 func init() {
@@ -18,6 +19,11 @@ func init() {
 	EXEC_PATH, err = zdutil.GetExecPath()
 	if err != nil {
 		panic(err) // TODO: avoid panics
+	}
+
+	BIN_PATH = EXEC_PATH + "/bin"
+	if err := os.Mkdir(BIN_PATH, 0755); err != nil {
+		fmt.Printf("[WARN] path [bin=%s] may already exists [error=%s]", BIN_PATH, err.Error())
 	}
 }
 

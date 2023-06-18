@@ -12,6 +12,7 @@ import (
 
 type Config struct {
 	LuaCmd             string
+	LuaDownloadURL     string
 	EditorCmd          string
 	RootLuaScriptDir   string
 	ServerEndPoint     string

@@ -1,13 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"errors"
+	"net/http"
+	"runtime"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/command"
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
+	"github.com/zerodoctor/zdcli/util"
 	"github.com/zerodoctor/zdtui/ui"
 )
 
@@ -62,9 +67,21 @@ func NewSetupCmd(cfg *config.Config) *cli.Command {
 			logger.Infof("checking lua path...\n%s", cfg)
 			if err := setup.CheckingLuaPath(cfg.LuaCmd); err != nil {
 				logger.Errorf("failed to execute lua [error=%s]", err.Error())
-				logger.Infof("would you like to download and install lua? (y/n):")
-				// code for ui options
-				// code for download and install if yes
+				logger.Infof("would you like to download and install lua? (Y/n):")
+
+				downloadLuaInput := ui.NewTextInput()
+				downloadLuaInput.Input.Placeholder = "y"
+				if err := tea.NewProgram(downloadLuaInput).Start(); err != nil {
+					logger.Errorf("failed to start tea ui [error=%s]", err.Error())
+					return nil
+				}
+
+				if strings.ToLower(downloadLuaInput.Input.Value()) == "y" {
+					if err := setup.DownloadLua(ctx.Context, cfg); err != nil {
+						logger.Errorf("failed download and install lua [error=%s]", err.Error())
+						return nil
+					}
+				}
 			}
 
 			logger.Infof("saving...\n%s", cfg)
@@ -89,6 +106,42 @@ func (s *SetupCmd) CheckingLuaPath(lua string) error {
 
 	if info.ErrBuffer != "" {
 		return errors.New(info.ErrBuffer)
+	}
+
+	return nil
+}
+
+func (s *SetupCmd) DownloadLua(ctx context.Context, cfg *config.Config) error {
+	logger.Infof("download lua from [url=%s]", cfg.LuaDownloadURL)
+
+	req, err := http.NewRequest(http.MethodGet, cfg.LuaDownloadURL, nil)
+	if err != nil {
+		return err
+	}
+
+	client := http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	file := "lua.tar.gz"
+	if runtime.GOOS == "windows" {
+		file = "lua.zip"
+	}
+
+	if err := util.ExtractFromHttpResponse(ctx, file, resp.Body); err != nil {
+		logger.Warnf("failed to extract response [error=%s]", err.Error())
+	}
+
+	if _, err := util.FollowDownloadRedirection(cfg.LuaDownloadURL, resp, func(resp *http.Response) error {
+		if err := util.ExtractFromHttpResponse(ctx, file, resp.Body); err != nil {
+			logger.Warnf("failed to extract response [error=%s]", err.Error())
+		}
+
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
