@@ -16,7 +16,7 @@ go install github.com/zerodoctor/zdcli
 ### From Source
 
 ```sh
-git clone https://github.com/zerodoctor/zdcli.git
+git clone https://github.com/zerodoctor/zdcli.git && cd zdcli
 ```
 
 ```sh
