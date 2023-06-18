@@ -67,21 +67,7 @@ func NewSetupCmd(cfg *config.Config) *cli.Command {
 			logger.Infof("checking lua path...\n%s", cfg)
 			if err := setup.CheckingLuaPath(cfg.LuaCmd); err != nil {
 				logger.Errorf("failed to execute lua [error=%s]", err.Error())
-				logger.Infof("would you like to download and install lua? (Y/n):")
-
-				downloadLuaInput := ui.NewTextInput()
-				downloadLuaInput.Input.Placeholder = "y"
-				if err := tea.NewProgram(downloadLuaInput).Start(); err != nil {
-					logger.Errorf("failed to start tea ui [error=%s]", err.Error())
-					return nil
-				}
-
-				if strings.ToLower(downloadLuaInput.Input.Value()) == "y" {
-					if err := setup.DownloadLua(ctx.Context, cfg); err != nil {
-						logger.Errorf("failed download and install lua [error=%s]", err.Error())
-						return nil
-					}
-				}
+				setup.AskToDownloadLua(ctx.Context, cfg)
 			}
 
 			logger.Infof("saving...\n%s", cfg)
@@ -106,6 +92,32 @@ func (s *SetupCmd) CheckingLuaPath(lua string) error {
 
 	if info.ErrBuffer != "" {
 		return errors.New(info.ErrBuffer)
+	}
+
+	return nil
+}
+
+func (s *SetupCmd) AskToDownloadLua(ctx context.Context, cfg *config.Config) error {
+	logger.Infof("would you like to download and install lua? (Y/n):")
+
+	downloadLuaInput := ui.NewTextInput()
+	downloadLuaInput.Input.Placeholder = "y"
+	downloadLuaInput.Focus()
+
+	form := ui.NewTextInputForm(downloadLuaInput)
+	if err := tea.NewProgram(form).Start(); err != nil {
+		logger.Errorf("failed to start tea ui [error=%s]", err.Error())
+		return nil
+	}
+	if form.WasCancel {
+		return nil
+	}
+
+	if strings.ToLower(downloadLuaInput.Input.Value()) == "y" {
+		if err := s.DownloadLua(ctx, cfg); err != nil {
+			logger.Errorf("failed download and install lua [error=%s]", err.Error())
+			return nil
+		}
 	}
 
 	return nil
