@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/shirou/gopsutil/v3/host"
@@ -51,15 +52,40 @@ func (c *Config) Load() error {
 		c.Arch = "amd64"
 	}
 
+	dconf := Init()
 	data, err := ioutil.ReadFile(util.EXEC_PATH + "/zdconfig.toml")
 	if err != nil {
 		logger.Warnf("[error=%s] creating new config file", err.Error())
-		c = Init()
+		c = dconf
 		c.RootLuaScriptDir = util.EXEC_PATH + "/lua"
 		return c.Save()
 	}
 
-	return toml.Unmarshal(data, c)
+	if err := toml.Unmarshal(data, c); err != nil {
+		return err
+	}
+
+	c.SetDefaultValuesIfEmpty(dconf)
+	return err
+}
+
+func (c *Config) SetDefaultValuesIfEmpty(defconf *Config) {
+	dref := reflect.ValueOf(defconf).Elem()
+	sref := reflect.ValueOf(c).Elem()
+loop:
+	for i := 0; i < sref.NumField(); i++ {
+		switch sref.Field(i).Kind() {
+		case reflect.String:
+			if sref.Field(i).String() != "" {
+				continue loop
+			}
+
+			dvalue := dref.FieldByName(sref.Type().Field(i).Name).String()
+			sref.Field(i).SetString(dvalue)
+			logger.Debugf("setting default [value=%s]", dvalue)
+		case reflect.Map:
+		}
+	}
 }
 
 func (c *Config) String() string {
