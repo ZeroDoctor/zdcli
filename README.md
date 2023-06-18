@@ -1,9 +1,29 @@
 # zdcli
 my cli tool
 
-## Depends on:
+## Depends on
 
-- lua [windows](https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Win64_bin.zip/download) [linux](https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Linux54_64_bin.tar.gz/download)
+- lua [[windows download](https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Win64_bin.zip/download) | [linux download](https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Linux54_64_bin.tar.gz/download)]
+
+## Install 
+
+### From Go
+
+```sh
+go install github.com/zerodoctor/zdcli
+```
+
+### From Source
+
+```sh
+git clone https://github.com/zerodoctor/zdcli.git
+```
+
+```sh
+make build install
+```
+
+## Usage
 
 ```
 NAME:
