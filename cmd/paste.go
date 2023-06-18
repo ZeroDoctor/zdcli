@@ -82,6 +82,8 @@ func (p *PasteCmd) UploadSubCmd() *cli.Command {
 }
 
 func (p *PasteCmd) BinUpload(paths []string, visibility pastebin.Visibility) {
+	logger.Infof("uploading [files=%+v]", paths)
+
 	fileMap := make(map[string]*os.File)
 	for _, path := range paths {
 		file, err := os.OpenFile(path, os.O_RDONLY, 0644)
