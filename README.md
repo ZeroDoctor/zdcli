@@ -26,7 +26,7 @@ make build install
 ### From Github
 
 ```sh
-curl -o zd.tar.xz -L https://github.com/ZeroDoctor/zdcli/releases/download/v1.1.0/zd-amd64-unix.tar.xz
+curl -o zd.tar.xz -L https://github.com/ZeroDoctor/zdcli/releases/download/v1.1.0/zd-amd64-unix.tar.xz && tar -xvf zd.tar.xz
 ```
 
 ## Usage
