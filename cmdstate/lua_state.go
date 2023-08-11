@@ -37,9 +37,9 @@ func (ls *LuaState) Start(cmd string) error {
 
 	flags := fmt.Sprintf("--os_i %s --arch_i %s ", ls.cfg.OS, ls.cfg.Arch)
 	info := command.Info{
-		Command: ls.cfg.ShellCmd, // TODO: allow user to set lua endpoint
+		Command: ls.cfg.ShellCmd,
 		Args:    []string{ls.cfg.LuaCmd + " build-app.lua " + flags + cmd},
-		Dir:     ls.cfg.RootLuaScriptDir, // TODO: allow user to set lua direcoty
+		Dir:     ls.cfg.RootLuaScriptDir,
 		Ctx:     ctx,
 
 		ErrFunc: func(msg []byte) (int, error) {

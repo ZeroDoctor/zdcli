@@ -67,6 +67,7 @@ return script
 
 	EditLua(name, cfg)
 }
+
 func RemoveLuaCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:    "remove",
@@ -81,6 +82,7 @@ func RemoveLuaCmd(cfg *config.Config) *cli.Command {
 		},
 	}
 }
+
 func RemoveLua(name string, cfg *config.Config) {
 
 	if zdgoutil.FolderExists(cfg.RootLuaScriptDir + "/scripts/" + name) {

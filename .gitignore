@@ -8,4 +8,5 @@ zd
 *.env
 bin/*
 
+__pycache__
 debug.log

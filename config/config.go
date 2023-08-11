@@ -12,16 +12,19 @@ import (
 )
 
 type Config struct {
-	LuaCmd             string
-	LuaDownloadURL     string
-	EditorCmd          string
-	RootLuaScriptDir   string
-	ServerEndPoint     string
-	ShellCmd           string
-	VaultEndpoint      string
-	VaultTokens        map[string]string
-	SWFSMasterEndpoint string
-	SWFSFilerEndpoint  string
+	LuaCmd              string
+	LuaDownloadURL      string
+	RootLuaScriptDir    string
+	PythonCmd           string
+	RootPythonScriptDir string
+	ScriptExec          string
+	EditorCmd           string
+	ServerEndPoint      string
+	ShellCmd            string
+	VaultEndpoint       string
+	VaultTokens         map[string]string
+	SWFSMasterEndpoint  string
+	SWFSFilerEndpoint   string
 
 	OS   string
 	Arch string
@@ -89,9 +92,12 @@ loop:
 }
 
 func (c *Config) String() string {
-	return fmt.Sprintf(`[LuaCmd=%s]
+	return fmt.Sprintf(`
+[LuaCmd=%s]
+[RootLuaScriptDir=%s]
+[PythonCmd=%s]
+[RootPythonScriptDir=%s]
 [EditorCmd=%s]
-[RootScriptDir=%s]
 [ServerEndPoint=%s]
 [ShellCmd=%s]
 [VaultEndpoint=%s]
@@ -100,7 +106,8 @@ func (c *Config) String() string {
 [SWFSFilerEndpoint=%s]
 [OS=%s]
 [Arch=%s]`,
-		c.LuaCmd, c.EditorCmd, c.RootLuaScriptDir,
+		c.LuaCmd, c.RootLuaScriptDir,
+		c.PythonCmd, c.RootPythonScriptDir, c.EditorCmd,
 		c.ServerEndPoint, c.ShellCmd, c.VaultEndpoint,
 		c.VaultTokens, c.SWFSMasterEndpoint, c.SWFSFilerEndpoint,
 		c.OS, c.Arch,
