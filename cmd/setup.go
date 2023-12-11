@@ -3,7 +3,9 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/zerodoctor/zdcli/config"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/util"
+	zdutil "github.com/zerodoctor/zdgo-util"
 	"github.com/zerodoctor/zdtui/ui"
 )
 
@@ -24,7 +27,30 @@ func NewSetupCmd(cfg *config.Config) *cli.Command {
 	return &cli.Command{
 		Name:  "setup",
 		Usage: "setup lua, editor, and dir configs",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "list",
+				Aliases: []string{"ls"},
+			},
+		},
 		Action: func(ctx *cli.Context) error {
+			if ctx.Bool("list") {
+				configPath := util.EXEC_PATH + "/zdconfig.toml"
+				if !zdutil.FileExists(configPath) {
+					logger.Warnf("failed to find config file [path=%s]", configPath)
+					return nil
+				}
+
+				data, err := os.ReadFile(configPath)
+				if err != nil {
+					logger.Errorf("failed to read config file [path=%s] [error=%s]", configPath, err.Error())
+					return nil
+				}
+				fmt.Println(string(data))
+
+				return nil
+			}
+
 			luaCmd := ui.NewTextInput()
 			luaCmd.Input.Prompt = "Enter lua command: "
 			luaCmd.Input.Placeholder = cfg.LuaCmd
@@ -50,7 +76,7 @@ func NewSetupCmd(cfg *config.Config) *cli.Command {
 				luaCmd, editorCmd, shellCmd, serverEndpoint, vaultEndpoint,
 			)
 
-			if err := tea.NewProgram(form).Start(); err != nil {
+			if _, err := tea.NewProgram(form).Run(); err != nil {
 				logger.Errorf("failed to start tea ui [error=%s]", err.Error())
 				return nil
 			}
@@ -105,7 +131,7 @@ func (s *SetupCmd) AskToDownloadLua(ctx context.Context, cfg *config.Config) err
 	downloadLuaInput.Focus()
 
 	form := ui.NewTextInputForm(downloadLuaInput)
-	if err := tea.NewProgram(form).Start(); err != nil {
+	if _, err := tea.NewProgram(form).Run(); err != nil {
 		logger.Errorf("failed to start tea ui [error=%s]", err.Error())
 		return nil
 	}

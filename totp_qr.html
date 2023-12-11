@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>TOTP QR Code</title>
+
+		<style>
+		body {
+			background-color: "#212124";
+		}
+		
+		img {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		</style>
+	</head>
+	<body>
+		<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADIEAAAAADYoy0BAAAGYElEQVR4nOyd4a4aOQyFYcX7v3JXrTQSZOOxjx2650rf96PShZkkcOQYx/b09evXA4z45/9eAHzy&#43;v3P89m7ObOua9yuFa73R&#43;Ot64/my66L5lvp3pfx&#43;34sxAwEMQNBzHi9/1Hd66M9Ut3jsz09&#43;ru6R1d9mOoDqvN3vk8sxAwEMQNBzHjtXqz&#43;/l6vj&#43;KFbM/Nftdn61rHqa4n&#43;5yZD1J9WTTPO1iIGQhiBoKYsfUhXda9Uo0Dotez&#43;CSLc7J4JvN1arw0AQsxA0HMQBAzjvqQiGgPrsY12XjZPNM8R8Q3sq1YiBkIYgaCmLH1Iaf2xmxPVuME9YxJPWOr5m3UWgHl&#43;8RCzEAQMxDEjA8f0q0nuqjuudO/V7pnVt04pepTOt8nFmIGgpiBIGb88SGn4o5pvZK6d6vjVeOHri/L1lMBCzEDQcxAEDM&#43;&#43;kPU2lk1r1Ht45jWGGfjqOuY1jIr68NCzEAQMxDEjOf7Pva3anC746s&#43;qXtGNe2JzMaP1vvAQvxAEDMQxIw/PuRUf4f6&#43;1uto5rWWVWZ&#43;kDVF71fj4WYgSBmIIgZz8o&#43;V/29v9LtC1HHicad5uy7uf113Ur/PhZiBoKYgSBmbJ&#43;X1e3vju5fX8/o&#43;p5qDbAaL1SffdI9Y3sHCzEDQcxAEDNuz7IiTl136gwsum6lGyecikMq82IhZiCIGQhixtaH/Oei4u9slzOvbj4iG3e9XvVB2bycZRmCIGYgiBkfPuSiu/d2nyXSjWume/jKqTOpyfqwEDMQxAwEMWObU1frkqb95dE41fHX6zK68VKVSS4fCzEDQcxAEDNun3Uy3aszur191XG6cU2lfuqOahy2mx8LMQNBzEAQM6Q&#43;9Wo80P0dfzr&#43;Wa&#43;L5un6oOq61vHuvmcsxAwEMQNBzPh4XlbVN0zjBzVfos6rnk1FPmU6zvp6tv4HFuIHgpiBIGbc9hie6gHsxhfTdSi9fTum8Yzq0zjLMgRBzEAQM7b5kMwndPMhap5j2m8&#43;zWtUfYL6ue7mx0LMQBAzEMQM6ZmLGd/qKbw4lS/JmOaDsvVE8xCHGIIgZiCIGbfPOrno1uhG76&#43;ocYW6nmydai1xJa9RWc/uPizEDAQxA0HM2ObU1b716H2V7u/8bs6923&#43;foeZBqO01BkHMQBAztrW9Gd18iJrjVmuO1XVk64rWk1GNU&#43;gx/AEgiBkIYsb2WScX01zxtK/8VFwQzfetz9VdB3GIIQhiBoKY8bp7s3um1T0jUuOAbk9hRLXPRJ1XOfPDQsxAEDMQxIwPH6LmrNXcsrpHV8eNOLXnT&#43;vVlHVhIWYgiBkIYsZtn/qFWh9VvV7t667mxNX8zkU3z7OuT4V8iDEIYgaCmHGkP&#43;RU3iS77qLqI751FjflLi7CQsxAEDMQxIxtPkQ9&#43;1H39OjvaJ71&#43;mocpFKt15r2z19wlvUDQBAzEMSM2&#43;f2qjW43Vrcak&#43;gOs40t56Ne7qe7YGF&#43;IEgZiCIGdJzey/UPhK1Tz3zYep42eun8yeTMzIsxAwEMQNBzCj1GHZrVqOceka2l6vPHunm2qv98et86/uKb8JCzEAQMxDEDKku60I994/uW19fmea8lb6Mu&#43;vVOEn1XdRlGYMgZiCIGbc9hivTMy61lrebOz99NqeuO1pHZRwsxAwEMQNBzCg96yS8uVmPNK0BPtW3PvVR2XXZ&#43;ndgIWYgiBkIYsa2P0Q9A4o4tadP93h1nurnyD5P9f7367AQMxDEDAQxY3uWFe2B0/6Pv9Vnofq6an4me7&#43;bT3oHCzEDQcxAEDNaZ1lqLr2bQ5/2h0/726vjqeu5WwcWYgaCmIEgZjzVnojtIM2a2VO/56P7M9SzNvW&#43;6v3UZRmDIGYgiBnb/wu3Stb/ke3F6llXt0ewehYWrSsbp7qeyhkdFmIGgpiBIGZ8nGV144hpP/vUh6njdXP92TzT6x5YiB8IYgaCmFHKqV98K9fc9TVVX5FdX63/yuKIru96fx8LMQNBzEAQM6Qewy7ds67quBnq2dc6fjWO6Pqsd7AQMxDEDAQx4ys&#43;pFtbO&#43;0Pqe7t2TrV19X&#43;krtaaSzEDAQxA0HMuP3/Q6qouePqfNPaXrVWWK3Hmn5Pu3ViIWYgiBkIYsaHD&#43;nu2VXfEOUPVJ&#43;TzdN9/aLyXKvd39n4lc&#43;HhZiBIGYgiBlH&#43;kPgHFiIGf8GAAD//23Te8yHzEAmAAAAAElFTkSuQmCC" />
+	</body>
+</html>

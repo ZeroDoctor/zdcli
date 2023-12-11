@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 
 	"github.com/pelletier/go-toml/v2"
@@ -22,6 +22,7 @@ type Config struct {
 	ServerEndPoint      string
 	ShellCmd            string
 	VaultEndpoint       string
+	VaultUser           string
 	VaultTokens         map[string]string
 	SWFSMasterEndpoint  string
 	SWFSFilerEndpoint   string
@@ -44,7 +45,7 @@ func (c *Config) Save() error {
 	}
 
 	logger.Infof("updating config [file=%s]", util.EXEC_PATH+"/zdconfig.toml")
-	return ioutil.WriteFile(util.EXEC_PATH+"/zdconfig.toml", data, 0644)
+	return os.WriteFile(util.EXEC_PATH+"/zdconfig.toml", data, 0644)
 }
 
 func (c *Config) Load() error {
@@ -56,7 +57,7 @@ func (c *Config) Load() error {
 	}
 
 	dconf := Init()
-	data, err := ioutil.ReadFile(util.EXEC_PATH + "/zdconfig.toml")
+	data, err := os.ReadFile(util.EXEC_PATH + "/zdconfig.toml")
 	if err != nil {
 		logger.Warnf("[error=%s] creating new config file", err.Error())
 		c = dconf

@@ -3,7 +3,6 @@ package util
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -34,10 +33,15 @@ type File struct {
 	fs.FileInfo
 }
 
-func NewFileArray(root string, files ...fs.FileInfo) []File {
+func NewFileArray(root string, entry ...fs.DirEntry) []File {
 	var f []File
 
-	for _, file := range files {
+	for _, dir := range entry {
+		file, err := dir.Info()
+		if err != nil {
+			continue
+		}
+
 		f = append(f, File{
 			Path:     root,
 			FileInfo: file,
@@ -73,7 +77,7 @@ func GetAllFiles(file string) ([]File, error) {
 		return result, nil
 	}
 
-	dir, err := ioutil.ReadDir(file)
+	dir, err := os.ReadDir(file)
 	if err != nil {
 		return result, err
 	}
@@ -83,7 +87,7 @@ func GetAllFiles(file string) ([]File, error) {
 		f := *stack.Pop()
 		if f.IsDir() {
 			root := f.Path + "/" + f.Name()
-			dir, err = ioutil.ReadDir(root)
+			dir, err = os.ReadDir(root)
 			if err != nil {
 				return result, err
 			}

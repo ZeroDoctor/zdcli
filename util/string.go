@@ -1,6 +1,8 @@
 package util
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -30,4 +32,13 @@ func InArray(source string, strs []string) bool {
 	}
 
 	return false
+}
+
+func StructString(s interface{}) (string, error) {
+	b, err := json.MarshalIndent(s, "", "\t")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal response [error=%s]", err.Error())
+	}
+
+	return string(b), nil
 }
