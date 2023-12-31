@@ -1,11 +1,14 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"strings"
 
+	"github.com/joho/godotenv"
 	zdutil "github.com/zerodoctor/zdgo-util"
 )
 
@@ -101,4 +104,37 @@ func GetAllFiles(file string) ([]File, error) {
 	}
 
 	return result, nil
+}
+
+func ConvertEnvFile(fileName string) (map[string]interface{}, error) {
+	fileType := path.Ext(fileName)
+
+	switch fileType {
+	case ".env":
+		envs, err := godotenv.Read(fileName)
+		if err != nil {
+			return nil, err
+		}
+
+		result := make(map[string]interface{}, len(envs))
+		for k, v := range envs {
+			result[k] = v
+		}
+
+		return result, err
+	case ".json":
+		data, err := os.ReadFile(fileName)
+		if err != nil {
+			return nil, err
+		}
+
+		result := map[string]interface{}{}
+		if err := json.Unmarshal(data, &result); err != nil {
+			return nil, err
+		}
+
+		return result, nil
+	}
+
+	return nil, fmt.Errorf("Can not convert file [type=%s]", fileType)
 }

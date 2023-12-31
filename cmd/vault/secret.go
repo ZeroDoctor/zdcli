@@ -2,21 +2,109 @@ package vault
 
 import (
 	"fmt"
+	"os"
+	"path"
 
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
+	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdcli/util"
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) NewKey(fileName string) error {
-	path := ui.NewTextInput()
-	path.Input.Prompt = "Enter path: "
-	path.Input.Placeholder = "/secret/data/github"
-	path.Focus()
+func (v *VaultCmd) NewKey() error {
+	tiMount := ui.NewTextInput()
+	tiMount.Input.Prompt = "Enter mount: "
+	tiMount.Input.Placeholder = "key"
+	tiMount.Focus()
 
-	// TODO: create view editor in tui
+	tiPath := ui.NewTextInput()
+	tiPath.Input.Prompt = "Enter path: "
+	tiPath.Input.Placeholder = "github"
+
+	form := ui.NewTextInputForm(tiMount, tiPath)
+	if _, err := tea.NewProgram(form).Run(); err != nil {
+		return fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
+	}
+	if form.WasCancel {
+		return nil
+	}
+
+	if tiMount.Input.Err != nil {
+		return fmt.Errorf("failed to get input [mount_error=%s]",
+			tiMount.Input.Err.Error(),
+		)
+	}
+
+	if tiPath.Input.Err != nil {
+		return fmt.Errorf("failed to get input [path_error=%s]",
+			tiPath.Input.Err.Error(),
+		)
+	}
+
+	dir, err := os.ReadDir(".")
+	if err != nil {
+		return fmt.Errorf("failed to read current directory [error=%s]", err.Error())
+	}
+
+	items := []list.Item{}
+
+	for i := range dir {
+		if dir[i].IsDir() {
+			continue
+		}
+
+		fileName := dir[i].Name()
+		fileType := path.Ext(fileName)
+		if fileType != ".json" && fileType != ".env" {
+			continue
+		}
+
+		items = append(items, ui.NewItem(fileName, "", nil))
+	}
+
+	if len(items) <= 0 {
+		return fmt.Errorf("json or env files not found")
+	}
+
+	li := ui.NewList(items, 0, 0)
+	p := tea.NewProgram(li)
+	if _, err := p.Run(); err != nil {
+		return fmt.Errorf("failed to start program [error=%s]", err.Error())
+	}
+	if li.WasCancel {
+		return nil
+	}
+
+	selectedItem := (li.List.Items()[li.List.Index()]).(*ui.Item)
+	fileName := selectedItem.Title()
+	logger.Infof("uploading [file=%s] to [path=%s]...", fileName, tiPath.Input.Value())
+	data, err := util.ConvertEnvFile(fileName)
+	if err != nil {
+		return fmt.Errorf("failed to read [file=%s] [error=%s]", fileName, err.Error())
+	}
+
+	req := schema.KvV2WriteRequest{Data: data}
+	resp, err := v.client.Secrets.KvV2Write(
+		v.ctx, tiPath.Input.Value(), req,
+		vault.WithMountPath(tiMount.Input.Value()),
+		vault.WithToken(
+			v.cfg.VaultTokens[v.cfg.VaultUser],
+		),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to write [path=%s] [file=%s] [error=%s]",
+			tiPath.Input.Value(), fileName, err.Error(),
+		)
+	}
+
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
 
 	return nil
 }

@@ -60,6 +60,10 @@ func (v *VaultCmd) NewPolicy() error {
 		return fmt.Errorf("failed to start program [error=%s]", err.Error())
 	}
 
+	if li.WasCancel {
+		return nil
+	}
+
 	selectedItem := (li.List.Items()[li.List.Index()]).(*ui.Item)
 	fileName := selectedItem.Title()
 	logger.Infof("uploading [file=%s] to [policy=%s]...", fileName, tiPolicy.Input.Value())

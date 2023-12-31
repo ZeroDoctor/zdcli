@@ -220,6 +220,10 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 				return v.NewUser(ctx.String("user"))
 			}
 
+			if ctx.Bool("key") {
+				return v.NewKey()
+			}
+
 			cli.ShowAppHelp(ctx)
 			return errors.New("must provide additional flag(s)")
 		},
@@ -351,7 +355,13 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "enable",
 		Usage: "enable methods or systems",
-		Flags: []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "secret",
+				Aliases: []string{"s"},
+				Usage:   "enable secret engine",
+			},
+		},
 		Subcommands: []*cli.Command{
 			{
 				Name: "totp",
@@ -382,6 +392,10 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 			}
 
 			v.ctx = ctx.Context
+
+			if ctx.Bool("secret") {
+				return v.EnableMount()
+			}
 
 			cli.ShowAppHelp(ctx)
 			return errors.New("must provide additional subcommand(s)")
