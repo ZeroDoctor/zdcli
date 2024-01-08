@@ -75,6 +75,42 @@ func (v *VaultCmd) EnableMount() error {
 	return nil
 }
 
+func (v *VaultCmd) DisableMount() error {
+	mount := ui.NewTextInput()
+	mount.Input.Prompt = "Enter mount name: "
+	mount.Input.Placeholder = "key"
+	mount.Focus()
+
+	form := ui.NewTextInputForm(mount)
+	if _, err := tea.NewProgram(form).Run(); err != nil {
+		return fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
+	}
+	if form.WasCancel {
+		return nil
+	}
+
+	if mount.Input.Err != nil {
+		return fmt.Errorf("failed to get input [path_error=%s]",
+			mount.Input.Err.Error(),
+		)
+	}
+
+	resp, err := v.client.System.MountsDisableSecretsEngine(
+		v.ctx, mount.Input.Value(), vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to disable secret engine [mount=%s] [error=%s]", mount.Input.Value(), err.Error())
+	}
+
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	return nil
+}
+
 func (v *VaultCmd) ListMounts() error {
 	resp, err := v.client.System.MountsListSecretsEngines(
 		v.ctx, vault.WithToken(v.GetToken()),

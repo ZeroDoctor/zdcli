@@ -56,6 +56,7 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 			vault.GetSubCmd(),
 			vault.ListSubCmd(),
 			vault.EnableSubCmd(),
+			vault.DisableSubCmd(),
 		},
 		Action: func(ctx *cli.Context) error {
 			vault.ctx = ctx.Context
@@ -395,6 +396,34 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 
 			if ctx.Bool("secret") {
 				return v.EnableMount()
+			}
+
+			cli.ShowAppHelp(ctx)
+			return errors.New("must provide additional subcommand(s)")
+		},
+	}
+}
+
+func (v *VaultCmd) DisableSubCmd() *cli.Command {
+	return &cli.Command{
+		Name:  "disable",
+		Usage: "disable methods or systems",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "secret",
+				Aliases: []string{"s"},
+				Usage:   "disable secret engine",
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
+				return err
+			}
+
+			v.ctx = ctx.Context
+
+			if ctx.Bool("secret") {
+				return v.DisableMount()
 			}
 
 			cli.ShowAppHelp(ctx)
