@@ -18,6 +18,38 @@ type AppRole struct {
 	SecretID string `json:"secret_id"`
 }
 
+func (v *VaultCmd) GetApprole(roleName string) error {
+	respRole, err := v.client.Auth.AppRoleReadRole(
+		v.ctx, roleName, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to read [role_name=%s] [error=%s]", roleName, err.Error())
+	}
+
+	fmt.Printf("[role_name=%s] settings:\n", roleName)
+	str, err := util.StructString(respRole)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	respRoleID, err := v.client.Auth.AppRoleReadRoleId(
+		v.ctx, roleName, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to read id [role_name=%s] [error=%s]", roleName, err.Error())
+	}
+
+	fmt.Printf("[role_name=%s] id:\n", roleName)
+	str, err = util.StructString(respRoleID)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	return nil
+}
+
 func (v *VaultCmd) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool) error {
 	req := schema.AppRoleWriteRoleRequest{}
 	if withTokenSettings {
@@ -141,8 +173,8 @@ func (v *VaultCmd) NewSecretID(roleName string, withSecretSettings bool) (string
 		req.NumUses = int32(uses)
 	}
 
-	respSecretID, err := v.client.Auth.AppRoleWriteSecretId(
-		v.ctx, roleName, req, vault.WithToken(v.GetToken()),
+	respSecretID, err := v.tempClient.AppRoleWriteSecretId(
+		v.ctx, roleName, req, v.GetToken(),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate new secret id [error=%s]", err.Error())
@@ -153,9 +185,7 @@ func (v *VaultCmd) NewSecretID(roleName string, withSecretSettings bool) (string
 
 func (v *VaultCmd) ListApprole() error {
 	resp, err := v.client.Auth.AppRoleListRoles(
-		v.ctx, vault.WithToken(
-			v.cfg.VaultTokens[v.cfg.VaultUser],
-		),
+		v.ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to list approles [error=%s]", err.Error())
@@ -170,7 +200,7 @@ func (v *VaultCmd) ListApprole() error {
 	return nil
 }
 
-func (v *VaultCmd) ListApproleSecrets(approle string) error {
+func (v *VaultCmd) ListApproleSecretAccessors(approle string) error {
 	resp, err := v.client.Auth.AppRoleListSecretIds(
 		v.ctx, approle, vault.WithToken(v.GetToken()),
 	)
