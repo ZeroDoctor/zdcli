@@ -7,6 +7,7 @@ zd
 *.db
 *.env
 bin/*
+totp_qr.html
 
 __pycache__
 debug.log
