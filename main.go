@@ -157,7 +157,12 @@ func main() {
 			Name:  "version",
 			Usage: "current version of cli",
 			Action: func(ctx *cli.Context) error {
-				fmt.Println(VERSION)
+				info := &command.Info{Command: "git rev-parse --short HEAD"}
+				if err := command.Exec(info); err != nil {
+					return err
+				}
+
+				fmt.Println(VERSION + "." + info.OutBuffer)
 				return nil
 			},
 		},
