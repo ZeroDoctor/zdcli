@@ -8,6 +8,8 @@ zd
 *.env
 bin/*
 totp_qr.html
+zd-amd64-unix.tar.xz
 
 __pycache__
 debug.log
+
