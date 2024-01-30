@@ -12,11 +12,27 @@ import (
 	"github.com/zerodoctor/zdcli/config"
 )
 
-type VaultCmd struct {
+type Vault struct {
 	cfg        *config.Config
 	client     *vault.Client
 	tempClient *temp.Temp
 	ctx        context.Context
+}
+
+func NewVault(cfg *config.Config) (*Vault, error) {
+	client, err := vault.New(
+		vault.WithAddress(cfg.VaultEndpoint),
+		vault.WithRequestTimeout(30*time.Second),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault client [error=%s]", err.Error())
+	}
+
+	return &Vault{
+		cfg:        cfg,
+		client:     client,
+		tempClient: temp.NewTempClient(cfg.VaultEndpoint),
+	}, nil
 }
 
 func NewVaultCmd(cfg *config.Config) *cli.Command {
@@ -25,20 +41,10 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 		return nil
 	}
 
-	client, err := vault.New(
-		vault.WithAddress(cfg.VaultEndpoint),
-		vault.WithRequestTimeout(30*time.Second),
-	)
+	vault, err := NewVault(cfg)
 	if err != nil {
-		msg := fmt.Sprintf("failed to create vault client [error=%s]", err.Error())
-		cli.Exit(msg, 1)
+		cli.Exit(err.Error(), 1)
 		return nil
-	}
-
-	vault := &VaultCmd{
-		cfg:        cfg,
-		client:     client,
-		tempClient: temp.NewTempClient(cfg.VaultEndpoint),
 	}
 
 	return &cli.Command{
@@ -82,10 +88,10 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func (v *VaultCmd) GetToken() string      { return v.cfg.VaultTokens[v.cfg.VaultUser] }
-func (v *VaultCmd) SetToken(token string) { v.cfg.VaultTokens[v.cfg.VaultUser] = token }
+func (v *Vault) GetToken() string      { return v.cfg.VaultTokens[v.cfg.VaultUser] }
+func (v *Vault) SetToken(token string) { v.cfg.VaultTokens[v.cfg.VaultUser] = token }
 
-func (v *VaultCmd) LoginSubCmd() *cli.Command {
+func (v *Vault) LoginSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "login",
 		Usage: "used to login to vault server",
@@ -100,7 +106,7 @@ func (v *VaultCmd) LoginSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) RevokeSelfSubCmd() *cli.Command {
+func (v *Vault) RevokeSelfSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "revoke-self",
 		Aliases: []string{"rs"},
@@ -120,7 +126,7 @@ func (v *VaultCmd) RevokeSelfSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) NewSubCmd() *cli.Command {
+func (v *Vault) NewSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "new",
 		Usage: "used to create auth methods or secrets",
@@ -239,7 +245,7 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) GetSubCmd() *cli.Command {
+func (v *Vault) GetSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "get",
 		Usage: "get secrets from vault",
@@ -294,7 +300,7 @@ func (v *VaultCmd) GetSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) ListSubCmd() *cli.Command {
+func (v *Vault) ListSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "list",
 		Aliases: []string{"ls"},
@@ -367,7 +373,7 @@ func (v *VaultCmd) ListSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) EnableSubCmd() *cli.Command {
+func (v *Vault) EnableSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "enable",
 		Usage: "enable methods or systems",
@@ -419,7 +425,7 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) DisableSubCmd() *cli.Command {
+func (v *Vault) DisableSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "disable",
 		Usage: "disable methods or systems",
@@ -446,7 +452,7 @@ func (v *VaultCmd) DisableSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) RemoveSubCmd() *cli.Command {
+func (v *Vault) RemoveSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "remove",
 		Usage: "remove methods or secrets",

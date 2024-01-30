@@ -14,7 +14,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) NewUser(userName string) error {
+func (v *Vault) NewUser(userName string) error {
 	form := ui.NewTextInputForm()
 	pass := ui.NewTextInput(ui.WithTIPassword())
 	pass.Input.Prompt = "Enter password: "
@@ -90,7 +90,7 @@ func (v *VaultCmd) NewUser(userName string) error {
 	return nil
 }
 
-func (v *VaultCmd) UpdateUserPolicies(userName string) error {
+func (v *Vault) UpdateUserPolicies(userName string) error {
 	respPolicy, err := v.client.System.PoliciesListAclPolicies(
 		v.ctx, vault.WithToken(v.GetToken()),
 	)
@@ -129,7 +129,7 @@ func (v *VaultCmd) UpdateUserPolicies(userName string) error {
 	return nil
 }
 
-func (v *VaultCmd) GetUser(userName string) error {
+func (v *Vault) GetUser(userName string) error {
 	resp, err := v.client.Auth.UserpassReadUser(
 		v.ctx, userName, vault.WithToken(v.GetToken()),
 	)
@@ -148,7 +148,7 @@ func (v *VaultCmd) GetUser(userName string) error {
 	return nil
 }
 
-func (v *VaultCmd) ListUsers() error {
+func (v *Vault) ListUsers() error {
 	respList, err := v.client.Auth.UserpassListUsers(
 		v.ctx, vault.WithToken(v.GetToken()),
 	)
@@ -172,7 +172,7 @@ type Alias struct {
 	aliasID  string
 }
 
-func (v *VaultCmd) NewAlias(userName string, withMeta bool) (Alias, error) {
+func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 	alias := Alias{userName: userName}
 	metaData := map[string]interface{}{}
 
@@ -272,7 +272,7 @@ func (v *VaultCmd) NewAlias(userName string, withMeta bool) (Alias, error) {
 	return alias, nil
 }
 
-func (v *VaultCmd) EnableTOTP(userName string, withMeta bool) error {
+func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
 	alias, err := v.NewAlias(userName, withMeta)
 	if err != nil {
 		return err

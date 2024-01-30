@@ -20,7 +20,7 @@ type AppRole struct {
 	SecretID string `json:"secret_id"`
 }
 
-func (v *VaultCmd) GetApprole(roleName string) error {
+func (v *Vault) GetApprole(roleName string) error {
 	respRole, err := v.client.Auth.AppRoleReadRole(
 		v.ctx, roleName, vault.WithToken(v.GetToken()),
 	)
@@ -58,7 +58,7 @@ type ApproleRequest struct {
 	Secret  *schema.AppRoleWriteSecretIdRequest `json:"secret,omitempty"`
 }
 
-func (v *VaultCmd) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool, file string) error {
+func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool, file string) error {
 	var approleRequest ApproleRequest
 	writeRequest := schema.AppRoleWriteRoleRequest{}
 	if withTokenSettings && file == "" {
@@ -146,7 +146,7 @@ func (v *VaultCmd) NewApprole(roleName string, withTokenSettings, withSecretSett
 	return nil
 }
 
-func (v *VaultCmd) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
+func (v *Vault) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
 	_, err := v.client.Auth.AppRoleWriteRole(
 		v.ctx, *approleRequest.Name, *approleRequest.Approle, vault.WithToken(v.GetToken()),
 	)
@@ -174,7 +174,7 @@ func (v *VaultCmd) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
 	return appRole, nil
 }
 
-func (v *VaultCmd) NewSecretID(roleName string, withSecretSettings bool) (string, error) {
+func (v *Vault) NewSecretID(roleName string, withSecretSettings bool) (string, error) {
 	req := schema.AppRoleWriteSecretIdRequest{}
 	if withSecretSettings {
 		ttl := ui.NewTextInput()
@@ -206,7 +206,7 @@ func (v *VaultCmd) NewSecretID(roleName string, withSecretSettings bool) (string
 	return v.newSecretID(roleName, req)
 }
 
-func (v *VaultCmd) newSecretID(roleName string, secretRequest schema.AppRoleWriteSecretIdRequest) (string, error) {
+func (v *Vault) newSecretID(roleName string, secretRequest schema.AppRoleWriteSecretIdRequest) (string, error) {
 	respSecretID, err := v.tempClient.AppRoleWriteSecretId(
 		v.ctx, roleName, secretRequest, v.GetToken(),
 	)
@@ -217,7 +217,7 @@ func (v *VaultCmd) newSecretID(roleName string, secretRequest schema.AppRoleWrit
 	return respSecretID.Data.SecretId, nil
 }
 
-func (v *VaultCmd) ListApprole() error {
+func (v *Vault) ListApprole() error {
 	resp, err := v.client.Auth.AppRoleListRoles(
 		v.ctx, vault.WithToken(v.GetToken()),
 	)
@@ -234,7 +234,7 @@ func (v *VaultCmd) ListApprole() error {
 	return nil
 }
 
-func (v *VaultCmd) ListApproleSecretAccessors(approle string) error {
+func (v *Vault) ListApproleSecretAccessors(approle string) error {
 	resp, err := v.client.Auth.AppRoleListSecretIds(
 		v.ctx, approle, vault.WithToken(v.GetToken()),
 	)
@@ -251,7 +251,7 @@ func (v *VaultCmd) ListApproleSecretAccessors(approle string) error {
 	return nil
 }
 
-func (v *VaultCmd) RemoveApprole(approle string) error {
+func (v *Vault) RemoveApprole(approle string) error {
 	resp, err := v.client.Auth.AppRoleDeleteRole(
 		v.ctx, approle, vault.WithToken(v.GetToken()),
 	)

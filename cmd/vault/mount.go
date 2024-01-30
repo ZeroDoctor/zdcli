@@ -10,7 +10,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) EnableMount() error {
+func (v *Vault) EnableMount() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount name: "
 	mount.Input.Placeholder = "key"
@@ -75,7 +75,7 @@ func (v *VaultCmd) EnableMount() error {
 	return nil
 }
 
-func (v *VaultCmd) DisableMount() error {
+func (v *Vault) DisableMount() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount name: "
 	mount.Input.Placeholder = "key"
@@ -111,7 +111,7 @@ func (v *VaultCmd) DisableMount() error {
 	return nil
 }
 
-func (v *VaultCmd) ListMounts() error {
+func (v *Vault) ListMounts() error {
 	resp, err := v.client.System.MountsListSecretsEngines(
 		v.ctx, vault.WithToken(v.GetToken()),
 	)

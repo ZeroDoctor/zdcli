@@ -14,7 +14,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) NewPolicy() error {
+func (v *Vault) NewPolicy() error {
 	tiPolicy := ui.NewTextInput()
 	tiPolicy.Input.Prompt = "Enter policy name: "
 	tiPolicy.Input.Placeholder = "user"
@@ -93,7 +93,7 @@ func (v *VaultCmd) NewPolicy() error {
 	return nil
 }
 
-func (v *VaultCmd) GetPolicy(policyName string) error {
+func (v *Vault) GetPolicy(policyName string) error {
 	if policyName == "" {
 		tiPolicy := ui.NewTextInput()
 		tiPolicy.Input.Prompt = "Enter policy name: "
@@ -134,7 +134,7 @@ func (v *VaultCmd) GetPolicy(policyName string) error {
 	return nil
 }
 
-func (v *VaultCmd) ListPolicies() error {
+func (v *Vault) ListPolicies() error {
 	data, err := v.client.System.PoliciesListAclPolicies(
 		v.ctx, vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],

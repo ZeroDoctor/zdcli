@@ -11,7 +11,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) LoginUser() error {
+func (v *Vault) LoginUser() error {
 	user := ui.NewTextInput()
 	user.Input.Prompt = "Enter username: "
 	user.Input.Placeholder = "username"
@@ -116,7 +116,7 @@ func (v *VaultCmd) LoginUser() error {
 	return nil
 }
 
-func (v *VaultCmd) RevokeSelf() error {
+func (v *Vault) RevokeSelf() error {
 	if _, err := v.client.Auth.TokenRevoke(
 		v.ctx,
 		schema.TokenRevokeRequest{

@@ -14,7 +14,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) NewKey() error {
+func (v *Vault) NewKey() error {
 	tiMount := ui.NewTextInput()
 	tiMount.Input.Prompt = "Enter mount: "
 	tiMount.Input.Placeholder = "key"
@@ -109,7 +109,7 @@ func (v *VaultCmd) NewKey() error {
 	return nil
 }
 
-func (v *VaultCmd) GetKey() error {
+func (v *Vault) GetKey() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount: "
 	mount.Input.Placeholder = "sys/mount"
@@ -153,7 +153,7 @@ func (v *VaultCmd) GetKey() error {
 	return nil
 }
 
-func (v *VaultCmd) ListKey() error {
+func (v *Vault) ListKey() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount: "
 	mount.Input.Placeholder = "keys"
