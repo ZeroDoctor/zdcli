@@ -11,45 +11,36 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 	"github.com/zerodoctor/zdcli/logger"
-	"github.com/zerodoctor/zdcli/util"
 	"github.com/zerodoctor/zdtui/ui"
 )
 
 type AppRole struct {
-	RoleID   string `json:"role_id"`
-	SecretID string `json:"secret_id"`
+	RoleID     string                                            `json:"role_id"`
+	SecretID   string                                            `json:"secret_id"`
+	ReadRole   *vault.Response[schema.AppRoleReadRoleResponse]   `json:"read_role"`
+	ReadRoleId *vault.Response[schema.AppRoleReadRoleIdResponse] `json:"read_role_id"`
 }
 
-func (v *Vault) GetApprole(roleName string) error {
+func (v *Vault) GetApprole(roleName string) (interface{}, error) {
+	var appRole AppRole
+
 	respRole, err := v.client.Auth.AppRoleReadRole(
 		v.ctx, roleName, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to read [role_name=%s] [error=%s]", roleName, err.Error())
+		return nil, fmt.Errorf("failed to read [role_name=%s] [error=%s]", roleName, err.Error())
 	}
-
-	fmt.Printf("[role_name=%s] settings:\n", roleName)
-	str, err := util.StructString(respRole)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
+	appRole.ReadRole = respRole
 
 	respRoleID, err := v.client.Auth.AppRoleReadRoleId(
 		v.ctx, roleName, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to read id [role_name=%s] [error=%s]", roleName, err.Error())
+		return nil, fmt.Errorf("failed to read id [role_name=%s] [error=%s]", roleName, err.Error())
 	}
+	appRole.ReadRoleId = respRoleID
 
-	fmt.Printf("[role_name=%s] id:\n", roleName)
-	str, err = util.StructString(respRoleID)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return &appRole, nil
 }
 
 type ApproleRequest struct {
@@ -58,7 +49,7 @@ type ApproleRequest struct {
 	Secret  *schema.AppRoleWriteSecretIdRequest `json:"secret,omitempty"`
 }
 
-func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool, file string) error {
+func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool, file string) (interface{}, error) {
 	var approleRequest ApproleRequest
 	writeRequest := schema.AppRoleWriteRoleRequest{}
 	if withTokenSettings && file == "" {
@@ -66,7 +57,7 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 			v.ctx, vault.WithToken(v.GetToken()),
 		)
 		if err != nil {
-			return fmt.Errorf("failed to list policies [error=%s]", err.Error())
+			return nil, fmt.Errorf("failed to list policies [error=%s]", err.Error())
 		}
 
 		if len(respPolicy.Data.Keys) > 0 {
@@ -96,17 +87,17 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 
 		form := ui.NewTextInputForm(maxTtl, policies, numUses, tokenType)
 		if _, err := tea.NewProgram(form).Run(); err != nil {
-			return fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
+			return nil, fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
 		}
 		if form.WasCancel {
-			return nil
+			return nil, nil
 		}
 
 		writeRequest.TokenMaxTtl = maxTtl.Input.Value()
 		writeRequest.TokenPolicies = strings.Split(policies.Input.Value(), ",")
 		uses, err := strconv.Atoi(numUses.Input.Value())
 		if err != nil {
-			return fmt.Errorf("failed to parse num of [uses=%s] [error=%s]",
+			return nil, fmt.Errorf("failed to parse num of [uses=%s] [error=%s]",
 				numUses.Input.Value(), err.Error(),
 			)
 		}
@@ -121,11 +112,11 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 	if file != "" {
 		data, err := os.ReadFile(file)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if err := json.Unmarshal(data, &approleRequest); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -133,17 +124,11 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 	if createSecret && file == "" {
 		role.SecretID, err = v.NewSecretID(roleName, withSecretSettings)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	str, err := util.StructString(role)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return role, nil
 }
 
 func (v *Vault) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
@@ -217,53 +202,35 @@ func (v *Vault) newSecretID(roleName string, secretRequest schema.AppRoleWriteSe
 	return respSecretID.Data.SecretId, nil
 }
 
-func (v *Vault) ListApprole() error {
+func (v *Vault) ListApprole() (interface{}, error) {
 	resp, err := v.client.Auth.AppRoleListRoles(
 		v.ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to list approles [error=%s]", err.Error())
+		return nil, fmt.Errorf("failed to list approles [error=%s]", err.Error())
 	}
 
-	str, err := util.StructString(resp)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return resp, nil
 }
 
-func (v *Vault) ListApproleSecretAccessors(approle string) error {
+func (v *Vault) ListApproleSecretAccessors(approle string) (interface{}, error) {
 	resp, err := v.client.Auth.AppRoleListSecretIds(
 		v.ctx, approle, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to list [approle=%s] secrets [error=%s]", approle, err.Error())
+		return nil, fmt.Errorf("failed to list [approle=%s] secrets [error=%s]", approle, err.Error())
 	}
 
-	str, err := util.StructString(resp)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return resp, nil
 }
 
-func (v *Vault) RemoveApprole(approle string) error {
+func (v *Vault) RemoveApprole(approle string) (interface{}, error) {
 	resp, err := v.client.Auth.AppRoleDeleteRole(
 		v.ctx, approle, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to delete [approle=%s] [error=%s]", approle, err.Error())
+		return nil, fmt.Errorf("failed to delete [approle=%s] [error=%s]", approle, err.Error())
 	}
 
-	str, err := util.StructString(resp)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return resp, nil
 }

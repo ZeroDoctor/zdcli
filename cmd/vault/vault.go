@@ -10,6 +10,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/cmd/vault/temp"
 	"github.com/zerodoctor/zdcli/config"
+	"github.com/zerodoctor/zdcli/util"
 )
 
 type Vault struct {
@@ -146,9 +147,20 @@ func (v *Vault) NewSubCmd() *cli.Command {
 				Aliases: []string{"u"},
 				Usage:   "create a new user",
 			},
+			&cli.StringFlag{
+				Name:     "name",
+				Aliases:  []string{"n"},
+				Usage:    "add name",
+				Required: true,
+			},
+			&cli.PathFlag{
+				Name:    "file",
+				Aliases: []string{"f"},
+				Usage:   "use file for settings",
+			},
 		},
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:    "alias",
 				Aliases: []string{"a"},
 				Usage:   "creates a new entity alias",
@@ -174,7 +186,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 					return err
 				},
 			},
-			&cli.Command{
+			{
 				Name:    "approle",
 				Aliases: []string{"ar"},
 				Usage:   "creates a new approle",
@@ -213,11 +225,18 @@ func (v *Vault) NewSubCmd() *cli.Command {
 
 					v.ctx = ctx.Context
 
-					return v.NewApprole(
+					role, err := v.NewApprole(
 						ctx.String("name"), ctx.Bool("token"),
 						ctx.Bool("secret"), ctx.Bool("create"),
 						ctx.Path("file"),
 					)
+					if err != nil {
+						return err
+					}
+
+					str, err := util.StructString(role)
+					fmt.Println(str)
+					return err
 				},
 			},
 		},
@@ -228,7 +247,14 @@ func (v *Vault) NewSubCmd() *cli.Command {
 			v.ctx = ctx.Context
 
 			if ctx.Bool("policy") {
-				return v.NewPolicy()
+				resp, err := v.NewPolicy(ctx.String("name"), ctx.Path("file"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			if ctx.String("user") != "" {
@@ -291,7 +317,14 @@ func (v *Vault) GetSubCmd() *cli.Command {
 			}
 
 			if ctx.String("approle") != "" {
-				return v.GetApprole(ctx.String("approle"))
+				resp, err := v.GetApprole(ctx.String("approle"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -356,7 +389,14 @@ func (v *Vault) ListSubCmd() *cli.Command {
 			}
 
 			if ctx.Bool("approle") {
-				return v.ListApprole()
+				resp, err := v.ListApprole()
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			if ctx.Bool("mount") {
@@ -364,7 +404,14 @@ func (v *Vault) ListSubCmd() *cli.Command {
 			}
 
 			if ctx.String("secret-accessors") != "" {
-				return v.ListApproleSecretAccessors(ctx.String("secret-accessors"))
+				resp, err := v.ListApproleSecretAccessors(ctx.String("secret-accessors"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -470,7 +517,14 @@ func (v *Vault) RemoveSubCmd() *cli.Command {
 			v.ctx = ctx.Context
 
 			if ctx.String("approle") != "" {
-				return v.RemoveApprole(ctx.String("approle"))
+				resp, err := v.RemoveApprole(ctx.String("approle"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			return nil
