@@ -1,7 +1,9 @@
 package vault
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -50,9 +52,16 @@ func (v *VaultCmd) GetApprole(roleName string) error {
 	return nil
 }
 
-func (v *VaultCmd) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool) error {
-	req := schema.AppRoleWriteRoleRequest{}
-	if withTokenSettings {
+type ApproleRequest struct {
+	Name    *string                             `json:"name,omitempty"`
+	Approle *schema.AppRoleWriteRoleRequest     `json:"approle,omitempty"`
+	Secret  *schema.AppRoleWriteSecretIdRequest `json:"secret,omitempty"`
+}
+
+func (v *VaultCmd) NewApprole(roleName string, withTokenSettings, withSecretSettings, createSecret bool, file string) error {
+	var approleRequest ApproleRequest
+	writeRequest := schema.AppRoleWriteRoleRequest{}
+	if withTokenSettings && file == "" {
 		respPolicy, err := v.client.System.PoliciesListAclPolicies(
 			v.ctx, vault.WithToken(v.GetToken()),
 		)
@@ -93,55 +102,76 @@ func (v *VaultCmd) NewApprole(roleName string, withTokenSettings, withSecretSett
 			return nil
 		}
 
-		req.TokenMaxTtl = maxTtl.Input.Value()
-		req.TokenPolicies = strings.Split(policies.Input.Value(), ",")
+		writeRequest.TokenMaxTtl = maxTtl.Input.Value()
+		writeRequest.TokenPolicies = strings.Split(policies.Input.Value(), ",")
 		uses, err := strconv.Atoi(numUses.Input.Value())
 		if err != nil {
 			return fmt.Errorf("failed to parse num of [uses=%s] [error=%s]",
 				numUses.Input.Value(), err.Error(),
 			)
 		}
-		req.TokenNumUses = int32(uses)
-		req.TokenType = tokenType.Input.Value()
+		writeRequest.TokenNumUses = int32(uses)
+		writeRequest.TokenType = tokenType.Input.Value()
+
+		approleRequest = ApproleRequest{
+			Approle: &writeRequest,
+		}
 	}
 
-	respAppRole, err := v.client.Auth.AppRoleWriteRole(
-		v.ctx, roleName, req, vault.WithToken(v.GetToken()),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create new approle [error=%s]", err.Error())
+	if file != "" {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		if err := json.Unmarshal(data, &approleRequest); err != nil {
+			return err
+		}
 	}
 
-	str, err := util.StructString(respAppRole)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	respRoleID, err := v.client.Auth.AppRoleReadRoleId(
-		v.ctx, roleName, vault.WithToken(v.GetToken()),
-	)
-	if err != nil {
-		return fmt.Errorf("failed to read role id [error=%s]", err.Error())
-	}
-	appRole := AppRole{
-		RoleID: respRoleID.Data.RoleId,
-	}
-
-	if createSecret {
-		appRole.SecretID, err = v.NewSecretID(roleName, withSecretSettings)
+	role, err := v.newApprole(approleRequest)
+	if createSecret && file == "" {
+		role.SecretID, err = v.NewSecretID(roleName, withSecretSettings)
 		if err != nil {
 			return err
 		}
 	}
 
-	str, err = util.StructString(appRole)
+	str, err := util.StructString(role)
 	if err != nil {
 		return err
 	}
 	fmt.Println(str)
 
 	return nil
+}
+
+func (v *VaultCmd) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
+	_, err := v.client.Auth.AppRoleWriteRole(
+		v.ctx, *approleRequest.Name, *approleRequest.Approle, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new approle [error=%s]", err.Error())
+	}
+
+	respRoleID, err := v.client.Auth.AppRoleReadRoleId(
+		v.ctx, *approleRequest.Name, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read role id [error=%s]", err.Error())
+	}
+	appRole := &AppRole{
+		RoleID: respRoleID.Data.RoleId,
+	}
+
+	if approleRequest.Secret != nil {
+		appRole.SecretID, err = v.newSecretID(*approleRequest.Name, *approleRequest.Secret)
+		if err != nil {
+			return appRole, err
+		}
+	}
+
+	return appRole, nil
 }
 
 func (v *VaultCmd) NewSecretID(roleName string, withSecretSettings bool) (string, error) {
@@ -173,8 +203,12 @@ func (v *VaultCmd) NewSecretID(roleName string, withSecretSettings bool) (string
 		req.NumUses = int32(uses)
 	}
 
+	return v.newSecretID(roleName, req)
+}
+
+func (v *VaultCmd) newSecretID(roleName string, secretRequest schema.AppRoleWriteSecretIdRequest) (string, error) {
 	respSecretID, err := v.tempClient.AppRoleWriteSecretId(
-		v.ctx, roleName, req, v.GetToken(),
+		v.ctx, roleName, secretRequest, v.GetToken(),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate new secret id [error=%s]", err.Error())

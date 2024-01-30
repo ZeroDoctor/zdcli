@@ -194,6 +194,11 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 						Aliases: []string{"c"},
 						Usage:   "create new sceret",
 					},
+					&cli.PathFlag{
+						Name:    "file",
+						Aliases: []string{"f"},
+						Usage:   "create new sceret with file",
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					if err := validate(VEndpoint|VToken, v.cfg); err != nil {
@@ -205,6 +210,7 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 					return v.NewApprole(
 						ctx.String("name"), ctx.Bool("token"),
 						ctx.Bool("secret"), ctx.Bool("create"),
+						ctx.Path("file"),
 					)
 				},
 			},
