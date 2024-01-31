@@ -17,7 +17,7 @@ type Vault struct {
 	cfg        *config.Config
 	client     *vault.Client
 	tempClient *temp.Temp
-	ctx        context.Context
+	Ctx        context.Context
 }
 
 func NewVault(cfg *config.Config) (*Vault, error) {
@@ -70,7 +70,7 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 			vault.RemoveSubCmd(),
 		},
 		Action: func(ctx *cli.Context) error {
-			vault.ctx = ctx.Context
+			vault.Ctx = ctx.Context
 
 			if ctx.String("switch") != "" {
 				if _, ok := vault.cfg.VaultTokens[ctx.String("switch")]; !ok {
@@ -100,7 +100,7 @@ func (v *Vault) LoginSubCmd() *cli.Command {
 			if err := validate(VEndpoint, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			return v.LoginUser()
 		},
@@ -120,7 +120,7 @@ func (v *Vault) RevokeSelfSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			return v.RevokeSelf()
 		},
@@ -175,7 +175,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 					if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 						return err
 					}
-					v.ctx = ctx.Context
+					v.Ctx = ctx.Context
 
 					userName := ""
 					if ctx.Args().Len() > 0 {
@@ -223,7 +223,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 						return err
 					}
 
-					v.ctx = ctx.Context
+					v.Ctx = ctx.Context
 
 					role, err := v.NewApprole(
 						ctx.String("name"), ctx.Bool("token"),
@@ -244,7 +244,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("policy") {
 				resp, err := v.NewPolicy(ctx.String("name"), ctx.Path("file"))
@@ -301,7 +301,7 @@ func (v *Vault) GetSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("key") {
 				return v.GetKey()
@@ -374,7 +374,7 @@ func (v *Vault) ListSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("key") {
 				return v.ListKey()
@@ -449,7 +449,7 @@ func (v *Vault) EnableSubCmd() *cli.Command {
 						return err
 					}
 
-					v.ctx = ctx.Context
+					v.Ctx = ctx.Context
 
 					return v.EnableTOTP(ctx.String("username"), ctx.Bool("with-meta"))
 				},
@@ -460,7 +460,7 @@ func (v *Vault) EnableSubCmd() *cli.Command {
 				return err
 			}
 
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
 				return v.EnableMount()
@@ -487,7 +487,7 @@ func (v *Vault) DisableSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
 				return v.DisableMount()
@@ -514,7 +514,7 @@ func (v *Vault) RemoveSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.String("approle") != "" {
 				resp, err := v.RemoveApprole(ctx.String("approle"))

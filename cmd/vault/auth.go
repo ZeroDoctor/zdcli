@@ -32,7 +32,7 @@ func (v *Vault) LoginUser() error {
 
 	if _, ok := v.cfg.VaultTokens[userName]; ok {
 		if _, err := v.client.Auth.TokenRevoke(
-			v.ctx,
+			v.Ctx,
 			schema.TokenRevokeRequest{
 				Token: v.cfg.VaultTokens[userName],
 			},
@@ -46,7 +46,7 @@ func (v *Vault) LoginUser() error {
 	}
 
 	resp, err := v.client.Auth.UserpassLogin(
-		v.ctx,
+		v.Ctx,
 		user.Input.Value(),
 		schema.UserpassLoginRequest{
 			Password: pass.Input.Value(),
@@ -102,7 +102,7 @@ func (v *Vault) LoginUser() error {
 			mfaRequirment.MFAConstraints[userName+"-mfa"].Any[mfaSelected].ID: []string{code.Input.Value()},
 		},
 	}
-	respMFAValidate, err := v.client.System.MfaValidate(v.ctx, reqMFAValidate)
+	respMFAValidate, err := v.client.System.MfaValidate(v.Ctx, reqMFAValidate)
 	if err != nil {
 		return fmt.Errorf("failed to validate mfa [error=%s]", err.Error())
 	}
@@ -118,7 +118,7 @@ func (v *Vault) LoginUser() error {
 
 func (v *Vault) RevokeSelf() error {
 	if _, err := v.client.Auth.TokenRevoke(
-		v.ctx,
+		v.Ctx,
 		schema.TokenRevokeRequest{
 			Token: v.GetToken(),
 		},

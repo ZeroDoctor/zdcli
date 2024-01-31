@@ -60,7 +60,7 @@ func (v *Vault) EnableMount() error {
 	}
 
 	resp, err := v.client.System.MountsEnableSecretsEngine(
-		v.ctx, mount.Input.Value(), req, vault.WithToken(v.GetToken()),
+		v.Ctx, mount.Input.Value(), req, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to enable secret engine [path=%s] [error=%s]", mount.Input.Value(), err.Error())
@@ -96,7 +96,7 @@ func (v *Vault) DisableMount() error {
 	}
 
 	resp, err := v.client.System.MountsDisableSecretsEngine(
-		v.ctx, mount.Input.Value(), vault.WithToken(v.GetToken()),
+		v.Ctx, mount.Input.Value(), vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to disable secret engine [mount=%s] [error=%s]", mount.Input.Value(), err.Error())
@@ -113,7 +113,7 @@ func (v *Vault) DisableMount() error {
 
 func (v *Vault) ListMounts() error {
 	resp, err := v.client.System.MountsListSecretsEngines(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return err

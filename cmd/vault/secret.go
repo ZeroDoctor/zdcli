@@ -88,7 +88,7 @@ func (v *Vault) NewKey() error {
 
 	req := schema.KvV2WriteRequest{Data: data}
 	resp, err := v.client.Secrets.KvV2Write(
-		v.ctx, tiPath.Input.Value(), req,
+		v.Ctx, tiPath.Input.Value(), req,
 		vault.WithMountPath(tiMount.Input.Value()),
 		vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],
@@ -137,7 +137,7 @@ func (v *Vault) GetKey() error {
 	var data *vault.Response[schema.KvV2ReadResponse]
 	var err error
 	if data, err = v.client.Secrets.KvV2Read(
-		v.ctx, path.Input.Value(),
+		v.Ctx, path.Input.Value(),
 		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
 		vault.WithMountPath(mount.Input.Value()),
 	); err != nil {
@@ -178,7 +178,7 @@ func (v *Vault) ListKey() error {
 	}
 
 	data, err := v.client.Secrets.KvV2List(
-		v.ctx, path.Input.Value(),
+		v.Ctx, path.Input.Value(),
 		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
 		vault.WithMountPath(mount.Input.Value()),
 	)

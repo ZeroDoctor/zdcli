@@ -51,7 +51,7 @@ func (v *Vault) NewUser(userName string) error {
 	password := pass.Input.Value()
 
 	respPolicy, err := v.client.System.PoliciesListAclPolicies(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to list policies [error=%s]", err.Error())
@@ -75,7 +75,7 @@ func (v *Vault) NewUser(userName string) error {
 	}
 
 	respUserpass, err := v.client.Auth.UserpassWriteUser(
-		v.ctx, userName, reqUserpass, vault.WithToken(v.GetToken()),
+		v.Ctx, userName, reqUserpass, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create [user=%s] [error=%s]", userName, err.Error())
@@ -92,7 +92,7 @@ func (v *Vault) NewUser(userName string) error {
 
 func (v *Vault) UpdateUserPolicies(userName string) error {
 	respPolicy, err := v.client.System.PoliciesListAclPolicies(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to list policies [error=%s]", err.Error())
@@ -114,7 +114,7 @@ func (v *Vault) UpdateUserPolicies(userName string) error {
 		TokenPolicies: policies,
 	}
 	resp, err := v.client.Auth.UserpassUpdatePolicies(
-		v.ctx, userName, req, vault.WithToken(v.GetToken()),
+		v.Ctx, userName, req, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to update [user=%s] policies [error=%s]", userName, err.Error())
@@ -131,7 +131,7 @@ func (v *Vault) UpdateUserPolicies(userName string) error {
 
 func (v *Vault) GetUser(userName string) error {
 	resp, err := v.client.Auth.UserpassReadUser(
-		v.ctx, userName, vault.WithToken(v.GetToken()),
+		v.Ctx, userName, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to read [user=%s] [error=%s]",
@@ -150,7 +150,7 @@ func (v *Vault) GetUser(userName string) error {
 
 func (v *Vault) ListUsers() error {
 	respList, err := v.client.Auth.UserpassListUsers(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to print user list [error=%s]", err.Error())
@@ -177,7 +177,7 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 	metaData := map[string]interface{}{}
 
 	userpassConfig, err := v.client.System.AuthReadConfiguration(
-		v.ctx, "userpass", vault.WithToken(v.GetToken()),
+		v.Ctx, "userpass", vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return Alias{}, fmt.Errorf("failed to read auth config [error=%s]", err.Error())
@@ -225,7 +225,7 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 		Metadata: metaData,
 	}
 	resp, err := v.client.Identity.EntityCreate(
-		v.ctx, req, vault.WithToken(
+		v.Ctx, req, vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],
 		),
 	)
@@ -253,7 +253,7 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 		MountAccessor: alias.accessor,
 	}
 	entityAlias, err := v.client.Identity.EntityCreateAlias(
-		v.ctx, reqAlias, vault.WithToken(v.GetToken()),
+		v.Ctx, reqAlias, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return alias, fmt.Errorf("failed to create entity alias [error=%s]", err.Error())
@@ -279,7 +279,7 @@ func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
 	}
 
 	list, err := v.client.Identity.MfaListTotpMethods(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to list methods [error=%s]\n failed to find mfa method id. ask admin to create one", err.Error())
@@ -297,7 +297,7 @@ func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
 		MethodId: methodID,
 	}
 	adminGenResp, err := v.client.Identity.MfaAdminGenerateTotpSecret(
-		v.ctx, adminGenReq, vault.WithToken(v.GetToken()),
+		v.Ctx, adminGenReq, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to generate totp secret [error=%s]", err.Error())
@@ -319,7 +319,7 @@ func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
 		MfaMethodIds:        []string{methodID},
 	}
 	loginEnfResp, err := v.client.Identity.MfaWriteLoginEnforcement(
-		v.ctx, alias.userName+"-mfa", loginEnfReq, vault.WithToken(v.GetToken()),
+		v.Ctx, alias.userName+"-mfa", loginEnfReq, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create login enforcement [error=%s]", err.Error())

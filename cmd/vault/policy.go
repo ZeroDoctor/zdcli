@@ -85,7 +85,7 @@ func (v *Vault) newPolicy(name, file string) (interface{}, error) {
 
 	req := schema.PoliciesWriteAclPolicyRequest{Policy: string(data)}
 	resp, err := v.client.System.PoliciesWriteAclPolicy(
-		v.ctx, name, req, vault.WithToken(
+		v.Ctx, name, req, vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],
 		),
 	)
@@ -123,7 +123,7 @@ func (v *Vault) GetPolicy(policyName string) error {
 	}
 
 	data, err := v.client.System.PoliciesReadAclPolicy(
-		v.ctx,
+		v.Ctx,
 		policyName,
 		vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],
@@ -141,7 +141,7 @@ func (v *Vault) GetPolicy(policyName string) error {
 
 func (v *Vault) ListPolicies() error {
 	data, err := v.client.System.PoliciesListAclPolicies(
-		v.ctx, vault.WithToken(
+		v.Ctx, vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],
 		),
 	)

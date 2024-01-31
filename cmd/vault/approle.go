@@ -25,7 +25,7 @@ func (v *Vault) GetApprole(roleName string) (interface{}, error) {
 	var appRole AppRole
 
 	respRole, err := v.client.Auth.AppRoleReadRole(
-		v.ctx, roleName, vault.WithToken(v.GetToken()),
+		v.Ctx, roleName, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read [role_name=%s] [error=%s]", roleName, err.Error())
@@ -33,7 +33,7 @@ func (v *Vault) GetApprole(roleName string) (interface{}, error) {
 	appRole.ReadRole = respRole
 
 	respRoleID, err := v.client.Auth.AppRoleReadRoleId(
-		v.ctx, roleName, vault.WithToken(v.GetToken()),
+		v.Ctx, roleName, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read id [role_name=%s] [error=%s]", roleName, err.Error())
@@ -54,7 +54,7 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 	writeRequest := schema.AppRoleWriteRoleRequest{}
 	if withTokenSettings && file == "" {
 		respPolicy, err := v.client.System.PoliciesListAclPolicies(
-			v.ctx, vault.WithToken(v.GetToken()),
+			v.Ctx, vault.WithToken(v.GetToken()),
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to list policies [error=%s]", err.Error())
@@ -133,14 +133,14 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 
 func (v *Vault) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
 	_, err := v.client.Auth.AppRoleWriteRole(
-		v.ctx, *approleRequest.Name, *approleRequest.Approle, vault.WithToken(v.GetToken()),
+		v.Ctx, *approleRequest.Name, *approleRequest.Approle, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new approle [error=%s]", err.Error())
 	}
 
 	respRoleID, err := v.client.Auth.AppRoleReadRoleId(
-		v.ctx, *approleRequest.Name, vault.WithToken(v.GetToken()),
+		v.Ctx, *approleRequest.Name, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read role id [error=%s]", err.Error())
@@ -193,7 +193,7 @@ func (v *Vault) NewSecretID(roleName string, withSecretSettings bool) (string, e
 
 func (v *Vault) newSecretID(roleName string, secretRequest schema.AppRoleWriteSecretIdRequest) (string, error) {
 	respSecretID, err := v.tempClient.AppRoleWriteSecretId(
-		v.ctx, roleName, secretRequest, v.GetToken(),
+		v.Ctx, roleName, secretRequest, v.GetToken(),
 	)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate new secret id [error=%s]", err.Error())
@@ -204,7 +204,7 @@ func (v *Vault) newSecretID(roleName string, secretRequest schema.AppRoleWriteSe
 
 func (v *Vault) ListApprole() (interface{}, error) {
 	resp, err := v.client.Auth.AppRoleListRoles(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list approles [error=%s]", err.Error())
@@ -215,7 +215,7 @@ func (v *Vault) ListApprole() (interface{}, error) {
 
 func (v *Vault) ListApproleSecretAccessors(approle string) (interface{}, error) {
 	resp, err := v.client.Auth.AppRoleListSecretIds(
-		v.ctx, approle, vault.WithToken(v.GetToken()),
+		v.Ctx, approle, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list [approle=%s] secrets [error=%s]", approle, err.Error())
@@ -226,7 +226,7 @@ func (v *Vault) ListApproleSecretAccessors(approle string) (interface{}, error) 
 
 func (v *Vault) RemoveApprole(approle string) (interface{}, error) {
 	resp, err := v.client.Auth.AppRoleDeleteRole(
-		v.ctx, approle, vault.WithToken(v.GetToken()),
+		v.Ctx, approle, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete [approle=%s] [error=%s]", approle, err.Error())
