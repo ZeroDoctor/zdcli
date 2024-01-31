@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
+	"github.com/zerodoctor/zdcli/cmd/vault/temp"
 	"github.com/zerodoctor/zdcli/logger"
 	"github.com/zerodoctor/zdtui/ui"
 )
@@ -17,15 +18,15 @@ import (
 type AppRole struct {
 	RoleID     string                                            `json:"role_id"`
 	SecretID   string                                            `json:"secret_id"`
-	ReadRole   *vault.Response[schema.AppRoleReadRoleResponse]   `json:"read_role"`
+	ReadRole   *vault.Response[temp.AppRoleReadRoleResponse]     `json:"read_role"`
 	ReadRoleId *vault.Response[schema.AppRoleReadRoleIdResponse] `json:"read_role_id"`
 }
 
 func (v *Vault) GetApprole(roleName string) (interface{}, error) {
 	var appRole AppRole
 
-	respRole, err := v.client.Auth.AppRoleReadRole(
-		v.Ctx, roleName, vault.WithToken(v.GetToken()),
+	respRole, err := v.tempClient.AppRoleReadRole(
+		v.Ctx, roleName, v.GetToken(),
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read [role_name=%s] [error=%s]", roleName, err.Error())
