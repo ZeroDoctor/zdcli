@@ -11,7 +11,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) LoginUser() error {
+func (v *Vault) LoginUser() error {
 	user := ui.NewTextInput()
 	user.Input.Prompt = "Enter username: "
 	user.Input.Placeholder = "username"
@@ -32,7 +32,7 @@ func (v *VaultCmd) LoginUser() error {
 
 	if _, ok := v.cfg.VaultTokens[userName]; ok {
 		if _, err := v.client.Auth.TokenRevoke(
-			v.ctx,
+			v.Ctx,
 			schema.TokenRevokeRequest{
 				Token: v.cfg.VaultTokens[userName],
 			},
@@ -46,7 +46,7 @@ func (v *VaultCmd) LoginUser() error {
 	}
 
 	resp, err := v.client.Auth.UserpassLogin(
-		v.ctx,
+		v.Ctx,
 		user.Input.Value(),
 		schema.UserpassLoginRequest{
 			Password: pass.Input.Value(),
@@ -102,7 +102,7 @@ func (v *VaultCmd) LoginUser() error {
 			mfaRequirment.MFAConstraints[userName+"-mfa"].Any[mfaSelected].ID: []string{code.Input.Value()},
 		},
 	}
-	respMFAValidate, err := v.client.System.MfaValidate(v.ctx, reqMFAValidate)
+	respMFAValidate, err := v.client.System.MfaValidate(v.Ctx, reqMFAValidate)
 	if err != nil {
 		return fmt.Errorf("failed to validate mfa [error=%s]", err.Error())
 	}
@@ -116,9 +116,9 @@ func (v *VaultCmd) LoginUser() error {
 	return nil
 }
 
-func (v *VaultCmd) RevokeSelf() error {
+func (v *Vault) RevokeSelf() error {
 	if _, err := v.client.Auth.TokenRevoke(
-		v.ctx,
+		v.Ctx,
 		schema.TokenRevokeRequest{
 			Token: v.GetToken(),
 		},

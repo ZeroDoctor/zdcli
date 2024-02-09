@@ -10,7 +10,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) EnableMount() error {
+func (v *Vault) EnableMount() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount name: "
 	mount.Input.Placeholder = "key"
@@ -60,7 +60,7 @@ func (v *VaultCmd) EnableMount() error {
 	}
 
 	resp, err := v.client.System.MountsEnableSecretsEngine(
-		v.ctx, mount.Input.Value(), req, vault.WithToken(v.GetToken()),
+		v.Ctx, mount.Input.Value(), req, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to enable secret engine [path=%s] [error=%s]", mount.Input.Value(), err.Error())
@@ -75,7 +75,7 @@ func (v *VaultCmd) EnableMount() error {
 	return nil
 }
 
-func (v *VaultCmd) DisableMount() error {
+func (v *Vault) DisableMount() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount name: "
 	mount.Input.Placeholder = "key"
@@ -96,7 +96,7 @@ func (v *VaultCmd) DisableMount() error {
 	}
 
 	resp, err := v.client.System.MountsDisableSecretsEngine(
-		v.ctx, mount.Input.Value(), vault.WithToken(v.GetToken()),
+		v.Ctx, mount.Input.Value(), vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to disable secret engine [mount=%s] [error=%s]", mount.Input.Value(), err.Error())
@@ -111,9 +111,9 @@ func (v *VaultCmd) DisableMount() error {
 	return nil
 }
 
-func (v *VaultCmd) ListMounts() error {
+func (v *Vault) ListMounts() error {
 	resp, err := v.client.System.MountsListSecretsEngines(
-		v.ctx, vault.WithToken(v.GetToken()),
+		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
 		return err

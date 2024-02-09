@@ -14,7 +14,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *VaultCmd) NewKey() error {
+func (v *Vault) NewKey() error {
 	tiMount := ui.NewTextInput()
 	tiMount.Input.Prompt = "Enter mount: "
 	tiMount.Input.Placeholder = "key"
@@ -88,7 +88,7 @@ func (v *VaultCmd) NewKey() error {
 
 	req := schema.KvV2WriteRequest{Data: data}
 	resp, err := v.client.Secrets.KvV2Write(
-		v.ctx, tiPath.Input.Value(), req,
+		v.Ctx, tiPath.Input.Value(), req,
 		vault.WithMountPath(tiMount.Input.Value()),
 		vault.WithToken(
 			v.cfg.VaultTokens[v.cfg.VaultUser],
@@ -109,7 +109,7 @@ func (v *VaultCmd) NewKey() error {
 	return nil
 }
 
-func (v *VaultCmd) GetKey() error {
+func (v *Vault) GetKey() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount: "
 	mount.Input.Placeholder = "sys/mount"
@@ -137,7 +137,7 @@ func (v *VaultCmd) GetKey() error {
 	var data *vault.Response[schema.KvV2ReadResponse]
 	var err error
 	if data, err = v.client.Secrets.KvV2Read(
-		v.ctx, path.Input.Value(),
+		v.Ctx, path.Input.Value(),
 		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
 		vault.WithMountPath(mount.Input.Value()),
 	); err != nil {
@@ -153,7 +153,7 @@ func (v *VaultCmd) GetKey() error {
 	return nil
 }
 
-func (v *VaultCmd) ListKey() error {
+func (v *Vault) ListKey() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount: "
 	mount.Input.Placeholder = "keys"
@@ -178,7 +178,7 @@ func (v *VaultCmd) ListKey() error {
 	}
 
 	data, err := v.client.Secrets.KvV2List(
-		v.ctx, path.Input.Value(),
+		v.Ctx, path.Input.Value(),
 		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
 		vault.WithMountPath(mount.Input.Value()),
 	)

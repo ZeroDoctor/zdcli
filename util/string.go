@@ -2,15 +2,13 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
-	"time"
-)
 
-func init() {
-	rand.Seed(time.Now().Unix())
-}
+	"github.com/zerodoctor/zdcli/logger"
+)
 
 func RandString(n int) string {
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -34,7 +32,14 @@ func InArray(source string, strs []string) bool {
 	return false
 }
 
+var ErrNilInterface error = errors.New("interface is nil")
+
 func StructString(s interface{}) (string, error) {
+	if s == nil {
+		logger.Warnf("failed to convert to string [error=%s]", ErrNilInterface)
+		return "", nil
+	}
+
 	b, err := json.MarshalIndent(s, "", "\t")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal response [error=%s]", err.Error())

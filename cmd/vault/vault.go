@@ -10,13 +10,30 @@ import (
 	"github.com/urfave/cli/v2"
 	"github.com/zerodoctor/zdcli/cmd/vault/temp"
 	"github.com/zerodoctor/zdcli/config"
+	"github.com/zerodoctor/zdcli/util"
 )
 
-type VaultCmd struct {
+type Vault struct {
 	cfg        *config.Config
 	client     *vault.Client
 	tempClient *temp.Temp
-	ctx        context.Context
+	Ctx        context.Context
+}
+
+func NewVault(cfg *config.Config) (*Vault, error) {
+	client, err := vault.New(
+		vault.WithAddress(cfg.VaultEndpoint),
+		vault.WithRequestTimeout(30*time.Second),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault client [error=%s]", err.Error())
+	}
+
+	return &Vault{
+		cfg:        cfg,
+		client:     client,
+		tempClient: temp.NewTempClient(cfg.VaultEndpoint),
+	}, nil
 }
 
 func NewVaultCmd(cfg *config.Config) *cli.Command {
@@ -25,20 +42,10 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 		return nil
 	}
 
-	client, err := vault.New(
-		vault.WithAddress(cfg.VaultEndpoint),
-		vault.WithRequestTimeout(30*time.Second),
-	)
+	vault, err := NewVault(cfg)
 	if err != nil {
-		msg := fmt.Sprintf("failed to create vault client [error=%s]", err.Error())
-		cli.Exit(msg, 1)
+		cli.Exit(err.Error(), 1)
 		return nil
-	}
-
-	vault := &VaultCmd{
-		cfg:        cfg,
-		client:     client,
-		tempClient: temp.NewTempClient(cfg.VaultEndpoint),
 	}
 
 	return &cli.Command{
@@ -63,7 +70,7 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 			vault.RemoveSubCmd(),
 		},
 		Action: func(ctx *cli.Context) error {
-			vault.ctx = ctx.Context
+			vault.Ctx = ctx.Context
 
 			if ctx.String("switch") != "" {
 				if _, ok := vault.cfg.VaultTokens[ctx.String("switch")]; !ok {
@@ -82,10 +89,10 @@ func NewVaultCmd(cfg *config.Config) *cli.Command {
 	}
 }
 
-func (v *VaultCmd) GetToken() string      { return v.cfg.VaultTokens[v.cfg.VaultUser] }
-func (v *VaultCmd) SetToken(token string) { v.cfg.VaultTokens[v.cfg.VaultUser] = token }
+func (v *Vault) GetToken() string      { return v.cfg.VaultTokens[v.cfg.VaultUser] }
+func (v *Vault) SetToken(token string) { v.cfg.VaultTokens[v.cfg.VaultUser] = token }
 
-func (v *VaultCmd) LoginSubCmd() *cli.Command {
+func (v *Vault) LoginSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "login",
 		Usage: "used to login to vault server",
@@ -93,14 +100,14 @@ func (v *VaultCmd) LoginSubCmd() *cli.Command {
 			if err := validate(VEndpoint, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			return v.LoginUser()
 		},
 	}
 }
 
-func (v *VaultCmd) RevokeSelfSubCmd() *cli.Command {
+func (v *Vault) RevokeSelfSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "revoke-self",
 		Aliases: []string{"rs"},
@@ -113,14 +120,14 @@ func (v *VaultCmd) RevokeSelfSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			return v.RevokeSelf()
 		},
 	}
 }
 
-func (v *VaultCmd) NewSubCmd() *cli.Command {
+func (v *Vault) NewSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "new",
 		Usage: "used to create auth methods or secrets",
@@ -140,9 +147,20 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 				Aliases: []string{"u"},
 				Usage:   "create a new user",
 			},
+			&cli.StringFlag{
+				Name:     "name",
+				Aliases:  []string{"n"},
+				Usage:    "add name",
+				Required: true,
+			},
+			&cli.PathFlag{
+				Name:    "file",
+				Aliases: []string{"f"},
+				Usage:   "use file for settings",
+			},
 		},
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:    "alias",
 				Aliases: []string{"a"},
 				Usage:   "creates a new entity alias",
@@ -157,7 +175,7 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 					if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 						return err
 					}
-					v.ctx = ctx.Context
+					v.Ctx = ctx.Context
 
 					userName := ""
 					if ctx.Args().Len() > 0 {
@@ -168,7 +186,7 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 					return err
 				},
 			},
-			&cli.Command{
+			{
 				Name:    "approle",
 				Aliases: []string{"ar"},
 				Usage:   "creates a new approle",
@@ -194,18 +212,31 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 						Aliases: []string{"c"},
 						Usage:   "create new sceret",
 					},
+					&cli.PathFlag{
+						Name:    "file",
+						Aliases: []string{"f"},
+						Usage:   "create new sceret with file",
+					},
 				},
 				Action: func(ctx *cli.Context) error {
 					if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 						return err
 					}
 
-					v.ctx = ctx.Context
+					v.Ctx = ctx.Context
 
-					return v.NewApprole(
+					role, err := v.NewApprole(
 						ctx.String("name"), ctx.Bool("token"),
 						ctx.Bool("secret"), ctx.Bool("create"),
+						ctx.Path("file"),
 					)
+					if err != nil {
+						return err
+					}
+
+					str, err := util.StructString(role)
+					fmt.Println(str)
+					return err
 				},
 			},
 		},
@@ -213,10 +244,17 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("policy") {
-				return v.NewPolicy()
+				resp, err := v.NewPolicy(ctx.String("name"), ctx.Path("file"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			if ctx.String("user") != "" {
@@ -233,7 +271,7 @@ func (v *VaultCmd) NewSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) GetSubCmd() *cli.Command {
+func (v *Vault) GetSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "get",
 		Usage: "get secrets from vault",
@@ -263,7 +301,7 @@ func (v *VaultCmd) GetSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("key") {
 				return v.GetKey()
@@ -279,7 +317,14 @@ func (v *VaultCmd) GetSubCmd() *cli.Command {
 			}
 
 			if ctx.String("approle") != "" {
-				return v.GetApprole(ctx.String("approle"))
+				resp, err := v.GetApprole(ctx.String("approle"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -288,7 +333,7 @@ func (v *VaultCmd) GetSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) ListSubCmd() *cli.Command {
+func (v *Vault) ListSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:    "list",
 		Aliases: []string{"ls"},
@@ -329,7 +374,7 @@ func (v *VaultCmd) ListSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("key") {
 				return v.ListKey()
@@ -344,7 +389,14 @@ func (v *VaultCmd) ListSubCmd() *cli.Command {
 			}
 
 			if ctx.Bool("approle") {
-				return v.ListApprole()
+				resp, err := v.ListApprole()
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			if ctx.Bool("mount") {
@@ -352,7 +404,14 @@ func (v *VaultCmd) ListSubCmd() *cli.Command {
 			}
 
 			if ctx.String("secret-accessors") != "" {
-				return v.ListApproleSecretAccessors(ctx.String("secret-accessors"))
+				resp, err := v.ListApproleSecretAccessors(ctx.String("secret-accessors"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -361,7 +420,7 @@ func (v *VaultCmd) ListSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) EnableSubCmd() *cli.Command {
+func (v *Vault) EnableSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "enable",
 		Usage: "enable methods or systems",
@@ -390,7 +449,7 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 						return err
 					}
 
-					v.ctx = ctx.Context
+					v.Ctx = ctx.Context
 
 					return v.EnableTOTP(ctx.String("username"), ctx.Bool("with-meta"))
 				},
@@ -401,7 +460,7 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 				return err
 			}
 
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
 				return v.EnableMount()
@@ -413,7 +472,7 @@ func (v *VaultCmd) EnableSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) DisableSubCmd() *cli.Command {
+func (v *Vault) DisableSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "disable",
 		Usage: "disable methods or systems",
@@ -428,7 +487,7 @@ func (v *VaultCmd) DisableSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
 				return v.DisableMount()
@@ -440,7 +499,7 @@ func (v *VaultCmd) DisableSubCmd() *cli.Command {
 	}
 }
 
-func (v *VaultCmd) RemoveSubCmd() *cli.Command {
+func (v *Vault) RemoveSubCmd() *cli.Command {
 	return &cli.Command{
 		Name:  "remove",
 		Usage: "remove methods or secrets",
@@ -455,10 +514,17 @@ func (v *VaultCmd) RemoveSubCmd() *cli.Command {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
 				return err
 			}
-			v.ctx = ctx.Context
+			v.Ctx = ctx.Context
 
 			if ctx.String("approle") != "" {
-				return v.RemoveApprole(ctx.String("approle"))
+				resp, err := v.RemoveApprole(ctx.String("approle"))
+				if err != nil {
+					return err
+				}
+
+				str, err := util.StructString(resp)
+				fmt.Println(str)
+				return err
 			}
 
 			return nil
