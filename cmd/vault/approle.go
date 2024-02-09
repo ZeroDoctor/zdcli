@@ -19,8 +19,8 @@ type AppRole struct {
 }
 
 func (v *VaultCmd) GetApprole(roleName string) error {
-	respRole, err := v.client.Auth.AppRoleReadRole(
-		v.ctx, roleName, vault.WithToken(v.GetToken()),
+	respRole, err := v.tempClient.AppRoleReadRole(
+		v.ctx, roleName, v.GetToken(),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to read [role_name=%s] [error=%s]", roleName, err.Error())
