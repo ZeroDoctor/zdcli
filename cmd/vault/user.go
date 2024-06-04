@@ -69,12 +69,23 @@ func (v *Vault) NewUserInput(userName string) error {
 		policies = strings.Fields(area.Value())
 	}
 
-	return v.NewUser(userName, password, policies)
+	resp, err := v.NewUser(userName, password, policies)
+	if err != nil {
+		return err
+	}
+
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	return err
 }
 
-func (v *Vault) NewUser(name, password string, policies []string) error {
+func (v *Vault) NewUser(name, password string, policies []string) (interface{}, error) {
 	if err := validateUserName(name); err != nil {
-		return err
+		return nil, err
 	}
 
 	reqUserpass := schema.UserpassWriteUserRequest{
@@ -86,16 +97,10 @@ func (v *Vault) NewUser(name, password string, policies []string) error {
 		v.Ctx, name, reqUserpass, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create [user=%s] [error=%s]", name, err.Error())
+		return nil, fmt.Errorf("failed to create [user=%s] [error=%s]", name, err.Error())
 	}
 
-	str, err := util.StructString(respUserpass)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return respUserpass, nil
 }
 
 func (v *Vault) UpdateUserPolicies(userName string) error {
