@@ -14,7 +14,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *Vault) NewUser(userName string) error {
+func (v *Vault) NewUserInput(userName string) error {
 	form := ui.NewTextInputForm()
 	pass := ui.NewTextInput(ui.WithTIPassword())
 	pass.Input.Prompt = "Enter password: "
@@ -69,16 +69,24 @@ func (v *Vault) NewUser(userName string) error {
 		policies = strings.Fields(area.Value())
 	}
 
+	return v.NewUser(userName, password, policies)
+}
+
+func (v *Vault) NewUser(name, password string, policies []string) error {
+	if err := validateUserName(name); err != nil {
+		return err
+	}
+
 	reqUserpass := schema.UserpassWriteUserRequest{
 		Password:      password,
 		TokenPolicies: policies,
 	}
 
 	respUserpass, err := v.client.Auth.UserpassWriteUser(
-		v.Ctx, userName, reqUserpass, vault.WithToken(v.GetToken()),
+		v.Ctx, name, reqUserpass, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create [user=%s] [error=%s]", userName, err.Error())
+		return fmt.Errorf("failed to create [user=%s] [error=%s]", name, err.Error())
 	}
 
 	str, err := util.StructString(respUserpass)

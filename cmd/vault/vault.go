@@ -258,7 +258,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 			}
 
 			if ctx.String("user") != "" {
-				return v.NewUser(ctx.String("user"))
+				return v.NewUserInput(ctx.String("user"))
 			}
 
 			if ctx.Bool("key") {

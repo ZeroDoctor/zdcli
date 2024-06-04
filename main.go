@@ -151,7 +151,7 @@ func main() {
 
 		// meta stuff
 		cmd.NewSetupCmd(cfg),
-		&cli.Command{
+		{
 			Name:  "version",
 			Usage: "current version of cli",
 			Action: func(ctx *cli.Context) error {

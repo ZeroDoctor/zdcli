@@ -129,7 +129,7 @@ func (v *Vault) NewApprole(roleName string, withTokenSettings, withSecretSetting
 		}
 	}
 
-	return role, nil
+	return role, err
 }
 
 func (v *Vault) newApprole(approleRequest ApproleRequest) (*AppRole, error) {
