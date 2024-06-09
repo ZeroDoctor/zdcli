@@ -21,6 +21,7 @@ var (
 type Info struct {
 	Command string
 	Args    []string
+	Env     []string
 	Dir     string
 	Ctx     context.Context
 
@@ -64,6 +65,7 @@ func Exec(info *Info) error {
 	command, args := info.parseCommand()
 	cmd := exec.CommandContext(info.Ctx, command, args...)
 	cmd.Dir = info.Dir
+	cmd.Env = info.Env
 	// cmd.SysProcAttr = &syscall.SysProcAttr{}
 
 	if info.ErrFunc != nil {
