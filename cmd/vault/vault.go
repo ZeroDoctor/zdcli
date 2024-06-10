@@ -182,7 +182,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 						userName = ctx.Args().Get(0)
 					}
 
-					_, err := v.NewAlias(userName, ctx.Bool("with-meta"))
+					_, err := v.NewAliasInput(userName, ctx.Bool("with-meta"))
 					return err
 				},
 			},
@@ -451,7 +451,7 @@ func (v *Vault) EnableSubCmd() *cli.Command {
 
 					v.Ctx = ctx.Context
 
-					return v.EnableTOTP(ctx.String("username"), ctx.Bool("with-meta"))
+					return v.EnableTOTPInput(ctx.String("username"), ctx.Bool("with-meta"))
 				},
 			},
 		},
@@ -463,7 +463,7 @@ func (v *Vault) EnableSubCmd() *cli.Command {
 			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
-				return v.EnableMount()
+				return v.EnableMountInput()
 			}
 
 			cli.ShowAppHelp(ctx)
@@ -490,7 +490,7 @@ func (v *Vault) DisableSubCmd() *cli.Command {
 			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
-				return v.DisableMount()
+				return v.DisableMountInput()
 			}
 
 			cli.ShowAppHelp(ctx)

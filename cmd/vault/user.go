@@ -185,18 +185,7 @@ type Alias struct {
 	aliasID  string
 }
 
-func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
-	alias := Alias{userName: userName}
-	metaData := map[string]interface{}{}
-
-	userpassConfig, err := v.client.System.AuthReadConfiguration(
-		v.Ctx, "userpass", vault.WithToken(v.GetToken()),
-	)
-	if err != nil {
-		return Alias{}, fmt.Errorf("failed to read auth config [error=%s]", err.Error())
-	}
-	alias.accessor = userpassConfig.Data.Accessor
-
+func (v *Vault) NewAliasInput(userName string, withMeta bool) (Alias, error) {
 	if userName == "" {
 		user := ui.NewTextInput()
 		user.Input.Prompt = "Enter username: "
@@ -205,22 +194,22 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 
 		form := ui.NewTextInputForm(user)
 		if _, err := tea.NewProgram(form).Run(); err != nil {
-			return alias, fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
+			return Alias{}, fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
 		}
 		if form.WasCancel {
-			return alias, nil
+			return Alias{}, nil
 		}
 
-		alias.userName = user.Input.Value()
+		userName = user.Input.Value()
 	}
 
+	metaData := map[string]interface{}{}
 	if withMeta {
 		meta := ui.NewTextArea(
 			ui.WithTitle("Enter MetaData Key/Value Pair split by ':'"),
 		)
 		if _, err := tea.NewProgram(meta).Run(); err != nil {
-			logger.Errorf("failed to start tea ui [error=%s]", err.Error())
-			return alias, nil
+			return Alias{}, fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
 		}
 
 		metaSplit := strings.Split(meta.Value(), "\n")
@@ -232,6 +221,31 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 			}
 		}
 	}
+
+	alias, err := v.NewAlias(userName, metaData)
+	if err != nil {
+		return Alias{}, err
+	}
+
+	str, err := util.StructString(alias)
+	if err != nil {
+		return alias, err
+	}
+	fmt.Println(str)
+
+	return alias, nil
+}
+
+func (v *Vault) NewAlias(userName string, metaData map[string]interface{}) (Alias, error) {
+	alias := Alias{userName: userName}
+
+	userpassConfig, err := v.client.System.AuthReadConfiguration(
+		v.Ctx, "userpass", vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return Alias{}, fmt.Errorf("failed to read auth config [error=%s]", err.Error())
+	}
+	alias.accessor = userpassConfig.Data.Accessor
 
 	req := schema.EntityCreateRequest{
 		Name:     alias.userName + "-alias",
@@ -247,12 +261,6 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 			alias.userName, err.Error(),
 		)
 	}
-
-	str, err := util.StructString(resp)
-	if err != nil {
-		return alias, err
-	}
-	fmt.Println(str)
 
 	alias.entityID = resp.Data["id"].(string)
 
@@ -272,12 +280,6 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 		return alias, fmt.Errorf("failed to create entity alias [error=%s]", err.Error())
 	}
 
-	str, err = util.StructString(entityAlias)
-	if err != nil {
-		return alias, err
-	}
-	fmt.Println(str)
-
 	if entityAlias != nil && entityAlias.Data != nil {
 		alias.aliasID = entityAlias.Data["id"].(string)
 	}
@@ -285,21 +287,37 @@ func (v *Vault) NewAlias(userName string, withMeta bool) (Alias, error) {
 	return alias, nil
 }
 
-func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
-	alias, err := v.NewAlias(userName, withMeta)
+func (v *Vault) EnableTOTPInput(userName string, withMeta bool) error {
+	alias, err := v.NewAliasInput(userName, withMeta)
 	if err != nil {
 		return err
 	}
+
+	resp, err := v.EnableTOTP(alias)
+	if err != nil {
+		return err
+	}
+
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	return nil
+}
+
+func (v *Vault) EnableTOTP(alias Alias) (interface{}, error) {
 
 	list, err := v.client.Identity.MfaListTotpMethods(
 		v.Ctx, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to list methods [error=%s]\n failed to find mfa method id. ask admin to create one", err.Error())
+		return nil, fmt.Errorf("failed to list methods [error=%s]\n failed to find mfa method id. ask admin to create one", err.Error())
 	}
 
 	if len(list.Data.Keys) <= 0 {
-		return fmt.Errorf("failed to find mfa method id. ask admin to create one")
+		return nil, fmt.Errorf("failed to find mfa method id. ask admin to create one")
 	}
 
 	methodID := list.Data.Keys[0]
@@ -313,18 +331,12 @@ func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
 		v.Ctx, adminGenReq, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to generate totp secret [error=%s]", err.Error())
+		return nil, fmt.Errorf("failed to generate totp secret [error=%s]", err.Error())
 	}
-
-	str, err := util.StructString(adminGenResp)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
 
 	err = generate.TOTP(adminGenResp.Data["barcode"].(string))
 	if err != nil {
-		return fmt.Errorf("failed to generate qr code [error=%s]", err.Error())
+		return nil, fmt.Errorf("failed to generate qr code [error=%s]", err.Error())
 	}
 
 	loginEnfReq := schema.MfaWriteLoginEnforcementRequest{
@@ -335,14 +347,8 @@ func (v *Vault) EnableTOTP(userName string, withMeta bool) error {
 		v.Ctx, alias.userName+"-mfa", loginEnfReq, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to create login enforcement [error=%s]", err.Error())
+		return nil, fmt.Errorf("failed to create login enforcement [error=%s]", err.Error())
 	}
 
-	str, err = util.StructString(loginEnfResp)
-	if err != nil {
-		return err
-	}
-	fmt.Println(str)
-
-	return nil
+	return loginEnfResp, nil
 }

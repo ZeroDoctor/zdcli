@@ -10,7 +10,7 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-func (v *Vault) EnableMount() error {
+func (v *Vault) EnableMountInput() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount name: "
 	mount.Input.Placeholder = "key"
@@ -50,20 +50,9 @@ func (v *Vault) EnableMount() error {
 		)
 	}
 
-	req := schema.MountsEnableSecretsEngineRequest{
-		Description: desc.Input.Value(),
-		Type:        mtype.Input.Value(),
-	}
-	if mtype.Input.Value() == "kv" {
-		req.Options = make(map[string]interface{})
-		req.Options["version"] = "2"
-	}
-
-	resp, err := v.client.System.MountsEnableSecretsEngine(
-		v.Ctx, mount.Input.Value(), req, vault.WithToken(v.GetToken()),
-	)
+	resp, err := v.EnableMount(mount.Input.Value(), desc.Input.Value(), mtype.Input.Value())
 	if err != nil {
-		return fmt.Errorf("failed to enable secret engine [path=%s] [error=%s]", mount.Input.Value(), err.Error())
+		return err
 	}
 
 	str, err := util.StructString(resp)
@@ -75,7 +64,27 @@ func (v *Vault) EnableMount() error {
 	return nil
 }
 
-func (v *Vault) DisableMount() error {
+func (v *Vault) EnableMount(name, desc, mtype string) (interface{}, error) {
+	req := schema.MountsEnableSecretsEngineRequest{
+		Description: desc,
+		Type:        mtype,
+	}
+	if mtype == "kv" {
+		req.Options = make(map[string]interface{})
+		req.Options["version"] = "2"
+	}
+
+	resp, err := v.client.System.MountsEnableSecretsEngine(
+		v.Ctx, name, req, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to enable secret engine [path=%s] [error=%s]", name, err.Error())
+	}
+
+	return resp, nil
+}
+
+func (v *Vault) DisableMountInput() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount name: "
 	mount.Input.Placeholder = "key"
@@ -95,11 +104,9 @@ func (v *Vault) DisableMount() error {
 		)
 	}
 
-	resp, err := v.client.System.MountsDisableSecretsEngine(
-		v.Ctx, mount.Input.Value(), vault.WithToken(v.GetToken()),
-	)
+	resp, err := v.DisableMount(mount.Input.Value())
 	if err != nil {
-		return fmt.Errorf("failed to disable secret engine [mount=%s] [error=%s]", mount.Input.Value(), err.Error())
+		return err
 	}
 
 	str, err := util.StructString(resp)
@@ -109,6 +116,17 @@ func (v *Vault) DisableMount() error {
 	fmt.Println(str)
 
 	return nil
+}
+
+func (v *Vault) DisableMount(name string) (interface{}, error) {
+	resp, err := v.client.System.MountsDisableSecretsEngine(
+		v.Ctx, name, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to disable secret engine [mount=%s] [error=%s]", name, err.Error())
+	}
+
+	return resp, nil
 }
 
 func (v *Vault) ListMounts() error {
