@@ -33,20 +33,20 @@ func (v *Vault) EnableMountInput() error {
 	}
 
 	if mount.Input.Err != nil {
-		return fmt.Errorf("failed to get input [path_error=%s]",
-			mount.Input.Err.Error(),
+		return fmt.Errorf("failed to get input [path_error=%w]",
+			mount.Input.Err,
 		)
 	}
 
 	if mtype.Input.Err != nil {
-		return fmt.Errorf("failed to get input [type_error=%s]",
-			mtype.Input.Err.Error(),
+		return fmt.Errorf("failed to get input [type_error=%w]",
+			mtype.Input.Err,
 		)
 	}
 
 	if desc.Input.Err != nil {
-		return fmt.Errorf("failed to get input [desc_error=%s]",
-			mount.Input.Err.Error(),
+		return fmt.Errorf("failed to get input [desc_error=%w]",
+			mount.Input.Err,
 		)
 	}
 
@@ -64,7 +64,7 @@ func (v *Vault) EnableMountInput() error {
 	return nil
 }
 
-func (v *Vault) EnableMount(name, desc, mtype string) (interface{}, error) {
+func (v *Vault) EnableMount(path, desc, mtype string) (interface{}, error) {
 	req := schema.MountsEnableSecretsEngineRequest{
 		Description: desc,
 		Type:        mtype,
@@ -75,10 +75,10 @@ func (v *Vault) EnableMount(name, desc, mtype string) (interface{}, error) {
 	}
 
 	resp, err := v.client.System.MountsEnableSecretsEngine(
-		v.Ctx, name, req, vault.WithToken(v.GetToken()),
+		v.Ctx, path, req, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to enable secret engine [path=%s] [error=%s]", name, err.Error())
+		return nil, fmt.Errorf("failed to enable secret engine [path=%s] [error=%w]", path, err)
 	}
 
 	return resp, nil
@@ -92,15 +92,15 @@ func (v *Vault) DisableMountInput() error {
 
 	form := ui.NewTextInputForm(mount)
 	if _, err := tea.NewProgram(form).Run(); err != nil {
-		return fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
+		return fmt.Errorf("failed to start tea ui [error=%w]", err)
 	}
 	if form.WasCancel {
 		return nil
 	}
 
 	if mount.Input.Err != nil {
-		return fmt.Errorf("failed to get input [path_error=%s]",
-			mount.Input.Err.Error(),
+		return fmt.Errorf("failed to get input [error=%w]",
+			mount.Input.Err,
 		)
 	}
 
@@ -123,7 +123,7 @@ func (v *Vault) DisableMount(name string) (interface{}, error) {
 		v.Ctx, name, vault.WithToken(v.GetToken()),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to disable secret engine [mount=%s] [error=%s]", name, err.Error())
+		return nil, fmt.Errorf("failed to disable secret engine [mount=%s] [error=%w]", name, err)
 	}
 
 	return resp, nil

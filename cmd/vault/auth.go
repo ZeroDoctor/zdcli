@@ -136,3 +136,19 @@ func (v *Vault) RevokeSelf() error {
 
 	return nil
 }
+
+func (v *Vault) EnableAuthMethod(path, desc, mtype string) (interface{}, error) {
+	request := schema.AuthEnableMethodRequest{
+		Description: desc,
+		Type:        mtype,
+	}
+
+	resp, err := v.client.System.AuthEnableMethod(
+		v.Ctx, path, request, vault.WithToken(v.GetToken()),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to enable auth method [error=%w]", err)
+	}
+
+	return resp, nil
+}
