@@ -262,7 +262,15 @@ func (v *Vault) NewAlias(userName string, metaData map[string]interface{}) (Alia
 		)
 	}
 
-	alias.entityID = resp.Data["id"].(string)
+	str, _ := util.StructString(resp)
+
+	var ok bool
+	alias.entityID, ok = resp.Data["id"].(string)
+	if !ok {
+		return alias, fmt.Errorf("failed to create alias for [user=%s] [resp=%s]",
+			userName, str,
+		)
+	}
 
 	logger.Infof("creating alias with [userpass_accessor_id=%s] and [entity_id=%s]...",
 		alias.accessor, alias.entityID,
@@ -308,7 +316,6 @@ func (v *Vault) EnableTOTPInput(userName string, withMeta bool) error {
 }
 
 func (v *Vault) EnableTOTP(alias Alias) (interface{}, error) {
-
 	list, err := v.client.Identity.MfaListTotpMethods(
 		v.Ctx, vault.WithToken(v.GetToken()),
 	)
