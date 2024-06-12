@@ -341,7 +341,7 @@ func (v *Vault) EnableTOTP(alias Alias) (interface{}, error) {
 		return nil, fmt.Errorf("failed to generate totp secret [error=%s]", err.Error())
 	}
 
-	err = generate.TOTP(adminGenResp.Data["barcode"].(string))
+	err = generate.TOTP(alias.userName, adminGenResp.Data["barcode"].(string))
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate qr code [error=%s]", err.Error())
 	}

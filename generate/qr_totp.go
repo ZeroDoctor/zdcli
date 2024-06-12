@@ -8,7 +8,7 @@ import (
 	"github.com/zerodoctor/zdcli/util"
 )
 
-func TOTP(barcode string) error {
+func TOTP(prefix, barcode string) error {
 	tpl, err := template.New("qr_totp_template.html").
 		ParseFiles(util.EXEC_PATH + "/assets/qr_totp_template.html")
 	if err != nil {
@@ -27,5 +27,5 @@ func TOTP(barcode string) error {
 		return err
 	}
 
-	return os.WriteFile("totp_qr.html", buffer.Bytes(), 0777)
+	return os.WriteFile(prefix+"_totp_qr.html", buffer.Bytes(), 0777)
 }
