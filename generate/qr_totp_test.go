@@ -11,7 +11,7 @@ import (
 func TestGenerateTOTP(t *testing.T) {
 	util.EXEC_PATH = ".."
 
-	err := TOTP("test")
+	err := TOTP("test", "barcode")
 	if err != nil {
 		fmt.Printf("generate [error=%s]\n", err.Error())
 	}

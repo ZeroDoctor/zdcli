@@ -148,10 +148,9 @@ func (v *Vault) NewSubCmd() *cli.Command {
 				Usage:   "create a new user",
 			},
 			&cli.StringFlag{
-				Name:     "name",
-				Aliases:  []string{"n"},
-				Usage:    "add name",
-				Required: true,
+				Name:    "name",
+				Aliases: []string{"n"},
+				Usage:   "add name",
 			},
 			&cli.PathFlag{
 				Name:    "file",
@@ -247,6 +246,10 @@ func (v *Vault) NewSubCmd() *cli.Command {
 			v.Ctx = ctx.Context
 
 			if ctx.Bool("policy") {
+				if len(ctx.String("name")) == 0 {
+					return fmt.Errorf("name is required")
+				}
+
 				resp, err := v.NewPolicy(ctx.String("name"), ctx.Path("file"))
 				if err != nil {
 					return err

@@ -37,12 +37,17 @@ func (t *Temp) AppRoleWriteSecretId(ctx context.Context, roleName string, reques
 	requestPath = strings.Replace(requestPath, "{"+"approle_mount_path"+"}", url.PathEscape("approle"), -1)
 	requestPath = strings.Replace(requestPath, "{"+"role_name"+"}", url.PathEscape(roleName), -1)
 
+	requestUrl, err := url.JoinPath(t.Endpoint, requestPath)
+	if err != nil {
+		return nil, err
+	}
+
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(request); err != nil {
 		return nil, fmt.Errorf("could not encode request body: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, t.Endpoint+requestPath, bytes.NewReader(buf.Bytes()))
+	req, err := http.NewRequest(http.MethodPost, requestUrl, bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +98,12 @@ func (t *Temp) AppRoleReadRole(ctx context.Context, roleName string, token strin
 	requestPath = strings.Replace(requestPath, "{"+"approle_mount_path"+"}", url.PathEscape("approle"), -1)
 	requestPath = strings.Replace(requestPath, "{"+"role_name"+"}", url.PathEscape(roleName), -1)
 
-	req, err := http.NewRequest(http.MethodGet, t.Endpoint+requestPath, nil)
+	requestUrl, err := url.JoinPath(t.Endpoint, requestPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, requestUrl, nil)
 	if err != nil {
 		return nil, err
 	}
