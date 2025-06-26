@@ -109,6 +109,81 @@ func (v *Vault) NewKey() error {
 	return nil
 }
 
+func (v *Vault) RemoveKey() error {
+	tiMount := ui.NewTextInput()
+	tiMount.Input.Prompt = "Enter mount: "
+	tiMount.Input.Placeholder = "key"
+	tiMount.Focus()
+
+	tiPath := ui.NewTextInput()
+	tiPath.Input.Prompt = "Enter path: "
+	tiPath.Input.Placeholder = "github"
+
+	form := ui.NewTextInputForm(tiMount, tiPath)
+	if _, err := tea.NewProgram(form).Run(); err != nil {
+		return fmt.Errorf("failed to start tea ui [error=%s]", err.Error())
+	}
+	if form.WasCancel {
+		return nil
+	}
+
+	if tiMount.Input.Err != nil {
+		return fmt.Errorf("failed to get input [mount_error=%s]",
+			tiMount.Input.Err.Error(),
+		)
+	}
+
+	if tiPath.Input.Err != nil {
+		return fmt.Errorf("failed to get input [path_error=%s]",
+			tiPath.Input.Err.Error(),
+		)
+	}
+
+	resp, err := v.client.Secrets.KvV2Delete(
+		v.Ctx,
+		tiPath.Input.Value(),
+		vault.WithMountPath(tiMount.Input.Value()),
+		vault.WithToken(
+			v.cfg.VaultTokens[v.cfg.VaultUser],
+		),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete [path=%s] [error=%s]",
+			tiPath.Input.Value(), err.Error(),
+		)
+	}
+
+	logger.Infof("deleted [path=%s]", tiPath.Input.Value())
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	resp, err = v.client.Secrets.KvV2DeleteMetadataAndAllVersions(
+		v.Ctx,
+		tiPath.Input.Value(),
+		vault.WithMountPath(tiMount.Input.Value()),
+		vault.WithToken(
+			v.cfg.VaultTokens[v.cfg.VaultUser],
+		),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to delete all versions [path=%s] [error=%s]",
+			tiPath.Input.Value(), err.Error(),
+		)
+	}
+
+	logger.Infof("deleted all versions [path=%s]", tiPath.Input.Value())
+	str, err = util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+
+	return nil
+}
+
 func (v *Vault) GetKey() error {
 	mount := ui.NewTextInput()
 	mount.Input.Prompt = "Enter mount: "

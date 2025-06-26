@@ -512,6 +512,11 @@ func (v *Vault) RemoveSubCmd() *cli.Command {
 				Aliases: []string{"ar"},
 				Usage:   "remove vault approle",
 			},
+			&cli.BoolFlag{
+				Name:    "key",
+				Aliases: []string{"k"},
+				Usage:   "remove key",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
@@ -528,6 +533,10 @@ func (v *Vault) RemoveSubCmd() *cli.Command {
 				str, err := util.StructString(resp)
 				fmt.Println(str)
 				return err
+			}
+
+			if ctx.Bool("key") {
+				return v.RemoveKey()
 			}
 
 			return nil
