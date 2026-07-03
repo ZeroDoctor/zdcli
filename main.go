@@ -33,7 +33,7 @@ func RunScript(cmd string, cfg *config.Config) error {
 	rel := strings.ReplaceAll(name[0], ".", "/")
 
 	switch {
-	case zdgoutil.FileExists(cfg.RootLuaScriptDir + "/scripts/" + rel + ".lua"):
+	case zdgoutil.FileExists(cfg.RootLuaScriptDir + "/" + rel + ".lua"):
 		return StartLua(cmd, cfg)
 	case zdgoutil.FileExists(cfg.RootPythonScriptDir + "/" + rel + ".py"):
 		return StartPython(cmd, cfg)

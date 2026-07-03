@@ -7,7 +7,7 @@ local table_dump = require('lib.table_dump')
 local function find_script(script)
 	local str = string.gsub(script, '%.', '/')
 
-	return file.exists('./scripts/'..str..'.lua')
+	return file.exists('./'..str..'.lua')
 end
 
 local function set_flags(parser)
@@ -32,7 +32,7 @@ local function main()
 		util.perror('failed to find script named ['..app_name..']')
 		return
 	end
-	local app = require('scripts.'..app_name)
+	local app = require(app_name)
 
 	if #args.funcs < 1 then
 		util.perror('must call a function in [script='..app_name..']')

@@ -90,7 +90,7 @@ func (s *State) Exec(cmd string) error {
 		return nil
 
 	case "ls":
-		path := s.cfg.RootLuaScriptDir + "/scripts"
+		path := s.cfg.RootLuaScriptDir
 		files, err := ioutil.ReadDir(path)
 		if err != nil {
 			return err

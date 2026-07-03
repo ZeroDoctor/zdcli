@@ -52,7 +52,7 @@ return script
 		name += ".lua"
 	}
 
-	path := cfg.RootLuaScriptDir + "/scripts/" + name
+	path := cfg.RootLuaScriptDir + "/" + name
 
 	index := strings.LastIndex(path, "/")
 	if !zdgoutil.FolderExists(path[:index]) {
@@ -85,8 +85,8 @@ func RemoveLuaCmd(cfg *config.Config) *cli.Command {
 
 func RemoveLua(name string, cfg *config.Config) {
 
-	if zdgoutil.FolderExists(cfg.RootLuaScriptDir + "/scripts/" + name) {
-		os.RemoveAll(cfg.RootLuaScriptDir + "/scripts/" + name)
+	if zdgoutil.FolderExists(cfg.RootLuaScriptDir + "/" + name) {
+		os.RemoveAll(cfg.RootLuaScriptDir + "/" + name)
 
 		return
 	}
@@ -96,7 +96,7 @@ func RemoveLua(name string, cfg *config.Config) {
 		name += ".lua"
 	}
 
-	if err := os.Remove(cfg.RootLuaScriptDir + "/scripts/" + name); err != nil {
+	if err := os.Remove(cfg.RootLuaScriptDir + "/" + name); err != nil {
 		logger.Errorf("[error=%s]", err.Error())
 	}
 }
@@ -131,7 +131,7 @@ func EditLua(cmd string, cfg *config.Config) {
 	}
 
 	info := command.Info{
-		Command: cfg.EditorCmd + " ./scripts/" + strings.Join(cmdArr, " "),
+		Command: cfg.EditorCmd + " ./" + strings.Join(cmdArr, " "),
 		Dir:     cfg.RootLuaScriptDir,
 		Ctx:     context.Background(),
 		Stdout:  os.Stdout,
@@ -175,7 +175,7 @@ func NewFiles(path string, rel string, files ...fs.FileInfo) []File {
 }
 
 func ListLua(cfg *config.Config) {
-	path := cfg.RootLuaScriptDir + "/scripts"
+	path := cfg.RootLuaScriptDir
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		logger.Errorf("failed ls [error=%s]", err.Error())
