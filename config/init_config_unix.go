@@ -12,6 +12,7 @@ func Init() *Config {
 		LuaDownloadURL:      "https://sourceforge.net/projects/luabinaries/files/5.4.2/Tools%20Executables/lua-5.4.2_Linux54_64_bin.tar.gz",
 		PythonCmd:           "python",
 		RootPythonScriptDir: util.EXEC_PATH + "/python",
+		RootBashScriptDir:   util.EXEC_PATH + "/sh",
 		EditorCmd:           "nvim",
 		ShellCmd:            "bash -c",
 		ServerEndPoint:      "https://api.zerodoc.dev",

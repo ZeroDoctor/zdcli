@@ -17,6 +17,7 @@ type Config struct {
 	RootLuaScriptDir    string
 	PythonCmd           string
 	RootPythonScriptDir string
+	RootBashScriptDir   string
 	ScriptExec          string
 	EditorCmd           string
 	ServerEndPoint      string
@@ -98,6 +99,7 @@ func (c *Config) String() string {
 [RootLuaScriptDir=%s]
 [PythonCmd=%s]
 [RootPythonScriptDir=%s]
+[RootBashScriptDir=%s]
 [EditorCmd=%s]
 [ServerEndPoint=%s]
 [ShellCmd=%s]
@@ -108,7 +110,7 @@ func (c *Config) String() string {
 [OS=%s]
 [Arch=%s]`,
 		c.LuaCmd, c.RootLuaScriptDir,
-		c.PythonCmd, c.RootPythonScriptDir, c.EditorCmd,
+		c.PythonCmd, c.RootPythonScriptDir, c.RootBashScriptDir, c.EditorCmd,
 		c.ServerEndPoint, c.ShellCmd, c.VaultEndpoint,
 		c.VaultTokens, c.SWFSMasterEndpoint, c.SWFSFilerEndpoint,
 		c.OS, c.Arch,

@@ -19,7 +19,7 @@ func NewSeaweedFS(cfg *config.Config) *cli.Command {
 
 	return &cli.Command{
 		Name:        "weed",
-		Aliases:     []string{"fs"},
+		Aliases:     []string{"w"},
 		Description: "store folder and files to seaweed file system",
 		Subcommands: []*cli.Command{
 			s.UploadFilesCmd(cfg),
