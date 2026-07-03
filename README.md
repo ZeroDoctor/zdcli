@@ -58,7 +58,19 @@ GLOBAL OPTIONS:
 ```
 To run a script simply run:
 
-```sh 
+```sh
    zd test func_unix
 ```
-where "test" is the name of the lua file in './lua/scripts' and "func_unix" is the name of the function inside test.lua
+where "test" is the name of the lua file in './lua/scripts' and "func_unix" is the name of the function inside test.lua.
+
+### Languages
+
+`zd <name> [func] [args]` (also usable as `zdcli`) dispatches by where `<name>` lives, lua first:
+
+- **lua** — `lua/scripts/<name>.lua`, runs `func` via `build-app.lua`. Dotted names map to subdirs (`prod.vpn`).
+- **python** — `python/<name>.py`, runs `python3 main.py -s <name> -f <func|main> -a '<json-kwargs>'`.
+- **bash** — `sh/<name>.sh`, runs `bash <name>.sh <args>`.
+
+Interpreters and script dirs are set in `zdconfig.toml` (`LuaCmd`, `PythonCmd`, `Root*ScriptDir`).
+The seed script dirs (`lua/ python/ sh/`) ship with the repo; a real deployment may replace
+`lua/` with its own library (e.g. the `zdscripts` repo) — `make install` won't clobber existing dirs.
