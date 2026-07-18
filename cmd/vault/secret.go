@@ -14,6 +14,34 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
+// NewKeyNonInteractive writes an .env/.json file straight to the zdkey
+// mount at the given path, skipping the TUI. Used when both --name and
+// --file are supplied to `vault new -k`.
+func (v *Vault) NewKeyNonInteractive(kvPath, fileName string) error {
+	data, err := util.ConvertEnvFile(fileName)
+	if err != nil {
+		return fmt.Errorf("failed to read [file=%s] [error=%s]", fileName, err.Error())
+	}
+
+	req := schema.KvV2WriteRequest{Data: data}
+	resp, err := v.client.Secrets.KvV2Write(
+		v.Ctx, kvPath, req,
+		vault.WithMountPath("zdkey"),
+		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to write [path=%s] [file=%s] [error=%s]", kvPath, fileName, err.Error())
+	}
+
+	logger.Infof("seeded [mount=zdkey] [path=%s] [file=%s]", kvPath, fileName)
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+	return nil
+}
+
 func (v *Vault) NewKey() error {
 	tiMount := ui.NewTextInput()
 	tiMount.Input.Prompt = "Enter mount: "
