@@ -265,6 +265,9 @@ func (v *Vault) NewSubCmd() *cli.Command {
 			}
 
 			if ctx.Bool("key") {
+				if ctx.String("name") != "" && ctx.Path("file") != "" {
+					return v.NewKeyNonInteractive(ctx.String("name"), ctx.Path("file"))
+				}
 				return v.NewKey()
 			}
 
