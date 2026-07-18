@@ -157,6 +157,12 @@ func (v *Vault) NewSubCmd() *cli.Command {
 				Aliases: []string{"f"},
 				Usage:   "use file for settings",
 			},
+			&cli.StringFlag{
+				Name:    "mount",
+				Aliases: []string{"m"},
+				Usage:   "kv mount path (default: zdkey)",
+				Value:   "zdkey",
+			},
 		},
 		Subcommands: []*cli.Command{
 			{
@@ -266,7 +272,7 @@ func (v *Vault) NewSubCmd() *cli.Command {
 
 			if ctx.Bool("key") {
 				if ctx.String("name") != "" && ctx.Path("file") != "" {
-					return v.NewKeyNonInteractive(ctx.String("name"), ctx.Path("file"))
+					return v.NewKeyNonInteractive(ctx.String("mount"), ctx.String("name"), ctx.Path("file"))
 				}
 				return v.NewKey()
 			}
@@ -302,6 +308,16 @@ func (v *Vault) GetSubCmd() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "read approle info",
 			},
+			&cli.StringFlag{
+				Name:    "name",
+				Aliases: []string{"n"},
+				Usage:   "secret path (non-interactive, requires --mount)",
+			},
+			&cli.StringFlag{
+				Name:    "mount",
+				Aliases: []string{"m"},
+				Usage:   "kv mount path (non-interactive, requires --name)",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
@@ -310,6 +326,9 @@ func (v *Vault) GetSubCmd() *cli.Command {
 			v.Ctx = ctx.Context
 
 			if ctx.Bool("key") {
+				if ctx.String("name") != "" && ctx.String("mount") != "" {
+					return v.GetKeyNonInteractive(ctx.String("mount"), ctx.String("name"))
+				}
 				return v.GetKey()
 			}
 
@@ -436,6 +455,21 @@ func (v *Vault) EnableSubCmd() *cli.Command {
 				Aliases: []string{"s"},
 				Usage:   "enable secret engine",
 			},
+			&cli.StringFlag{
+				Name:    "name",
+				Aliases: []string{"n"},
+				Usage:   "mount path for the secret engine",
+			},
+			&cli.StringFlag{
+				Name:    "type",
+				Aliases: []string{"t"},
+				Usage:   "secret engine type (e.g. kv)",
+			},
+			&cli.StringFlag{
+				Name:    "desc",
+				Aliases: []string{"d"},
+				Usage:   "mount description",
+			},
 		},
 		Subcommands: []*cli.Command{
 			{
@@ -469,6 +503,9 @@ func (v *Vault) EnableSubCmd() *cli.Command {
 			v.Ctx = ctx.Context
 
 			if ctx.Bool("secret") {
+				if ctx.String("name") != "" && ctx.String("type") != "" {
+					return v.EnableMountNonInteractive(ctx.String("name"), ctx.String("desc"), ctx.String("type"))
+				}
 				return v.EnableMountInput()
 			}
 

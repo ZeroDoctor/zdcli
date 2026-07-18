@@ -64,6 +64,22 @@ func (v *Vault) EnableMountInput() error {
 	return nil
 }
 
+// EnableMountNonInteractive enables a secrets engine without the TUI form.
+// Used when --name and --type are both supplied to `vault enable -s`.
+func (v *Vault) EnableMountNonInteractive(path, desc, mtype string) error {
+	resp, err := v.EnableMount(path, desc, mtype)
+	if err != nil {
+		return err
+	}
+
+	str, err := util.StructString(resp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
+	return nil
+}
+
 func (v *Vault) EnableMount(path, desc, mtype string) (interface{}, error) {
 	req := schema.MountsEnableSecretsEngineRequest{
 		Description: desc,

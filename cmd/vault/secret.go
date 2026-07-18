@@ -14,10 +14,14 @@ import (
 	"github.com/zerodoctor/zdtui/ui"
 )
 
-// NewKeyNonInteractive writes an .env/.json file straight to the zdkey
+// NewKeyNonInteractive writes an .env/.json file straight to the given
 // mount at the given path, skipping the TUI. Used when both --name and
-// --file are supplied to `vault new -k`.
-func (v *Vault) NewKeyNonInteractive(kvPath, fileName string) error {
+// --file are supplied to `vault new -k` (mount defaults to "zdkey").
+func (v *Vault) NewKeyNonInteractive(mount, kvPath, fileName string) error {
+	if mount == "" {
+		mount = "zdkey"
+	}
+
 	data, err := util.ConvertEnvFile(fileName)
 	if err != nil {
 		return fmt.Errorf("failed to read [file=%s] [error=%s]", fileName, err.Error())
@@ -26,14 +30,14 @@ func (v *Vault) NewKeyNonInteractive(kvPath, fileName string) error {
 	req := schema.KvV2WriteRequest{Data: data}
 	resp, err := v.client.Secrets.KvV2Write(
 		v.Ctx, kvPath, req,
-		vault.WithMountPath("zdkey"),
+		vault.WithMountPath(mount),
 		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to write [path=%s] [file=%s] [error=%s]", kvPath, fileName, err.Error())
+		return fmt.Errorf("failed to write [mount=%s] [path=%s] [file=%s] [error=%s]", mount, kvPath, fileName, err.Error())
 	}
 
-	logger.Infof("seeded [mount=zdkey] [path=%s] [file=%s]", kvPath, fileName)
+	logger.Infof("seeded [mount=%s] [path=%s] [file=%s]", mount, kvPath, fileName)
 	str, err := util.StructString(resp)
 	if err != nil {
 		return err
@@ -253,6 +257,26 @@ func (v *Vault) GetKey() error {
 	}
 	fmt.Println(str)
 
+	return nil
+}
+
+// GetKeyNonInteractive reads a secret from the given mount/path without the
+// TUI. Used when both --mount and --name are supplied to `vault get -k`.
+func (v *Vault) GetKeyNonInteractive(mount, kvPath string) error {
+	data, err := v.client.Secrets.KvV2Read(
+		v.Ctx, kvPath,
+		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
+		vault.WithMountPath(mount),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to get secret [mount=%s] [path=%s] [error=%s]", mount, kvPath, err.Error())
+	}
+
+	str, err := util.StructString(data)
+	if err != nil {
+		return err
+	}
+	fmt.Println(str)
 	return nil
 }
 
