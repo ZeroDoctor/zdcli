@@ -141,6 +141,32 @@ func (v *Vault) NewKey() error {
 	return nil
 }
 
+// RemoveKeyNonInteractive deletes a secret (and all its versions) at the
+// given mount/path, skipping the TUI. Used when both --name and --mount are
+// supplied to `vault remove -k`.
+func (v *Vault) RemoveKeyNonInteractive(mount, kvPath string) error {
+	if _, err := v.client.Secrets.KvV2Delete(
+		v.Ctx, kvPath,
+		vault.WithMountPath(mount),
+		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
+	); err != nil {
+		return fmt.Errorf("failed to delete [mount=%s] [path=%s] [error=%s]", mount, kvPath, err.Error())
+	}
+
+	logger.Infof("deleted [mount=%s] [path=%s]", mount, kvPath)
+
+	if _, err := v.client.Secrets.KvV2DeleteMetadataAndAllVersions(
+		v.Ctx, kvPath,
+		vault.WithMountPath(mount),
+		vault.WithToken(v.cfg.VaultTokens[v.cfg.VaultUser]),
+	); err != nil {
+		return fmt.Errorf("failed to delete all versions [mount=%s] [path=%s] [error=%s]", mount, kvPath, err.Error())
+	}
+
+	logger.Infof("deleted all versions [mount=%s] [path=%s]", mount, kvPath)
+	return nil
+}
+
 func (v *Vault) RemoveKey() error {
 	tiMount := ui.NewTextInput()
 	tiMount.Input.Prompt = "Enter mount: "

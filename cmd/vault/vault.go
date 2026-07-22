@@ -557,6 +557,16 @@ func (v *Vault) RemoveSubCmd() *cli.Command {
 				Aliases: []string{"k"},
 				Usage:   "remove key",
 			},
+			&cli.StringFlag{
+				Name:    "name",
+				Aliases: []string{"n"},
+				Usage:   "secret path (non-interactive, requires --mount)",
+			},
+			&cli.StringFlag{
+				Name:    "mount",
+				Aliases: []string{"m"},
+				Usage:   "kv mount path (non-interactive, requires --name)",
+			},
 		},
 		Action: func(ctx *cli.Context) error {
 			if err := validate(VEndpoint|VToken, v.cfg); err != nil {
@@ -576,6 +586,9 @@ func (v *Vault) RemoveSubCmd() *cli.Command {
 			}
 
 			if ctx.Bool("key") {
+				if ctx.String("name") != "" && ctx.String("mount") != "" {
+					return v.RemoveKeyNonInteractive(ctx.String("mount"), ctx.String("name"))
+				}
 				return v.RemoveKey()
 			}
 
